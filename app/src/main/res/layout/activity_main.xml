@@ -81,5 +81,12 @@
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
         android:text="Connect"/>
+    <TextView
+        android:id="@+id/heartRateText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:text="Heart Rate: -- bpm"
+        android:textSize="24sp" />
 
 </LinearLayout>

@@ -4,22 +4,24 @@ import android.os.Bundle
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import android.widget.Button
 import android.widget.Spinner
 import android.widget.TextView
-import androidx.activity.ComponentActivity
-import android.widget.Button
 import android.widget.Toast
+import androidx.activity.ComponentActivity
 
 class MainActivity : ComponentActivity() {
 
-        private var selectedDeviceName: String = ""
+    private var selectedDeviceName: String = ""
 
-       override fun onCreate(savedInstanceState: Bundle?) {
+    override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         val spinner = findViewById<Spinner>(R.id.deviceSpinner)
         val selectedText = findViewById<TextView>(R.id.selectedDeviceText)
+        val connectButton = findViewById<Button>(R.id.connectButton)
+        val heartRateText = findViewById<TextView>(R.id.heartRateText)
 
         val devices = listOf(
             "Polar H10",
@@ -52,23 +54,27 @@ class MainActivity : ComponentActivity() {
                     selectedText.text = "No device selected"
                 }
             }
-           val connectButton = findViewById<Button>(R.id.connectButton)
 
-           connectButton.setOnClickListener {
+        connectButton.setOnClickListener {
 
-               if (selectedDeviceName.isNotEmpty()) {
-                   Toast.makeText(
-                       this,
-                       "Connecting to $selectedDeviceName",
-                       Toast.LENGTH_SHORT
-                   ).show()
-               } else {
-                   Toast.makeText(
-                       this,
-                       "Select a device first",
-                       Toast.LENGTH_SHORT
-                   ).show()
-               }
-           }
+            if (selectedDeviceName.isNotEmpty()) {
+
+                Toast.makeText(
+                    this,
+                    "Connecting to $selectedDeviceName",
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                heartRateText.text = "Heart Rate: 72 bpm"
+
+            } else {
+
+                Toast.makeText(
+                    this,
+                    "Select a device first",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
     }
 }
