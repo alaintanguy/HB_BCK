@@ -1,8 +1,11 @@
 package com.healthbridge
 
 import android.os.Bundle
+import android.view.View
+import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Spinner
+import android.widget.TextView
 import androidx.activity.ComponentActivity
 
 class MainActivity : ComponentActivity() {
@@ -12,6 +15,7 @@ class MainActivity : ComponentActivity() {
         setContentView(R.layout.activity_main)
 
         val spinner = findViewById<Spinner>(R.id.deviceSpinner)
+        val selectedText = findViewById<TextView>(R.id.selectedDeviceText)
 
         val devices = listOf(
             "Polar H10",
@@ -26,5 +30,23 @@ class MainActivity : ComponentActivity() {
         )
 
         spinner.adapter = adapter
+
+        spinner.onItemSelectedListener =
+            object : AdapterView.OnItemSelectedListener {
+
+                override fun onItemSelected(
+                    parent: AdapterView<*>?,
+                    view: View?,
+                    position: Int,
+                    id: Long
+                ) {
+                    val selectedDevice = devices[position]
+                    selectedText.text = "Selected: $selectedDevice"
+                }
+
+                override fun onNothingSelected(parent: AdapterView<*>?) {
+                    selectedText.text = "No device selected"
+                }
+            }
     }
 }

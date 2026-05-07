@@ -41,7 +41,13 @@
         android:text="Member"
         android:textSize="18sp"
         android:layout_marginBottom="20dp"/>
-
+    <TextView
+        android:id="@+id/selectedDeviceText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:text="No device selected"
+        android:textSize="18sp"/>
     <!-- HEART RATE -->
     <TextView
         android:layout_width="wrap_content"
