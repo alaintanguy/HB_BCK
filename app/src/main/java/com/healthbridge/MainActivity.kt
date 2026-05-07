@@ -7,10 +7,14 @@ import android.widget.ArrayAdapter
 import android.widget.Spinner
 import android.widget.TextView
 import androidx.activity.ComponentActivity
+import android.widget.Button
+import android.widget.Toast
 
 class MainActivity : ComponentActivity() {
 
-    override fun onCreate(savedInstanceState: Bundle?) {
+        private var selectedDeviceName: String = ""
+
+       override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
@@ -40,13 +44,31 @@ class MainActivity : ComponentActivity() {
                     position: Int,
                     id: Long
                 ) {
-                    val selectedDevice = devices[position]
-                    selectedText.text = "Selected: $selectedDevice"
+                    selectedDeviceName = devices[position]
+                    selectedText.text = "Selected: $selectedDeviceName"
                 }
 
                 override fun onNothingSelected(parent: AdapterView<*>?) {
                     selectedText.text = "No device selected"
                 }
             }
+           val connectButton = findViewById<Button>(R.id.connectButton)
+
+           connectButton.setOnClickListener {
+
+               if (selectedDeviceName.isNotEmpty()) {
+                   Toast.makeText(
+                       this,
+                       "Connecting to $selectedDeviceName",
+                       Toast.LENGTH_SHORT
+                   ).show()
+               } else {
+                   Toast.makeText(
+                       this,
+                       "Select a device first",
+                       Toast.LENGTH_SHORT
+                   ).show()
+               }
+           }
     }
 }
