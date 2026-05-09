@@ -16,6 +16,9 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val telemetryManager = TelemetryManager()
+
+        telemetryManager.uploadTelemetry()
         setContentView(R.layout.activity_main)
 
         val spinner = findViewById<Spinner>(R.id.deviceSpinner)
@@ -77,4 +80,5 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
 }
