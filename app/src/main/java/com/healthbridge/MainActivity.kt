@@ -8,23 +8,21 @@ import android.widget.Button
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
-import androidx.activity.ComponentActivity
+import androidx.appcompat.app.AppCompatActivity
 
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
 
     private var selectedDeviceName: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val telemetryManager = TelemetryManager()
-
-        telemetryManager.uploadTelemetry()
         setContentView(R.layout.activity_main)
 
         val spinner = findViewById<Spinner>(R.id.deviceSpinner)
         val selectedText = findViewById<TextView>(R.id.selectedDeviceText)
         val connectButton = findViewById<Button>(R.id.connectButton)
         val heartRateText = findViewById<TextView>(R.id.heartRateText)
+        val statusText = findViewById<TextView>(R.id.statusText)
 
         val devices = listOf(
             "Polar H10",
@@ -49,12 +47,19 @@ class MainActivity : ComponentActivity() {
                     position: Int,
                     id: Long
                 ) {
+
                     selectedDeviceName = devices[position]
-                    selectedText.text = "Selected: $selectedDeviceName"
+
+                    selectedText.text =
+                        "Selected: $selectedDeviceName"
                 }
 
-                override fun onNothingSelected(parent: AdapterView<*>?) {
-                    selectedText.text = "No device selected"
+                override fun onNothingSelected(
+                    parent: AdapterView<*>?
+                ) {
+
+                    selectedText.text =
+                        "No device selected"
                 }
             }
 
@@ -62,15 +67,22 @@ class MainActivity : ComponentActivity() {
 
             if (selectedDeviceName.isNotEmpty()) {
 
+                statusText.text =
+                    "Status: Connected"
+
+                heartRateText.text =
+                    "Heart Rate: ${(65..90).random()} bpm"
+
                 Toast.makeText(
                     this,
-                    "Connecting to $selectedDeviceName",
+                    "Connected to $selectedDeviceName",
                     Toast.LENGTH_SHORT
                 ).show()
 
-                heartRateText.text = "Heart Rate: 72 bpm"
-
             } else {
+
+                statusText.text =
+                    "Status: Device not connected"
 
                 Toast.makeText(
                     this,
@@ -80,5 +92,4 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-
 }
