@@ -9,6 +9,7 @@ import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.google.firebase.database.FirebaseDatabase
 
 class MainActivity : AppCompatActivity() {
 
@@ -49,7 +50,12 @@ class MainActivity : AppCompatActivity() {
             android.R.layout.simple_spinner_dropdown_item,
             devices
         )
+        val database = FirebaseDatabase.getInstance()
 
+        val memberRef =
+            database.getReference(
+                "groups/family_001/members/alain"
+            )
         spinner.adapter = adapter
 
         spinner.onItemSelectedListener =
@@ -99,6 +105,11 @@ class MainActivity : AppCompatActivity() {
 
                         textHR.text =
                             "$randomHR bpm"
+                        memberRef.child("heartRate")
+                            .setValue(randomHR)
+
+                        memberRef.child("timestamp")
+                            .setValue(System.currentTimeMillis())
 
                         textTime.text =
                             "Live update"
