@@ -1,98 +1,147 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="20dp">
+    android:padding="24dp"
+    android:background="#000000">
 
     <!-- I AM -->
+
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="👤 I AM"
+        android:textColor="#FFFF00"
         android:textStyle="bold"
-        android:textSize="16sp"/>
+        android:textSize="24sp"
+        android:paddingBottom="8dp" />
 
     <TextView
         android:id="@+id/textMe"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="alain"
-        android:textSize="20sp"
-        android:layout_marginBottom="16dp"/>
+        android:textColor="#FFFF00"
+        android:textStyle="bold"
+        android:textSize="32sp"
+        android:paddingBottom="24dp" />
 
     <!-- VIEW MEMBER -->
+
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="👁 VIEW MEMBER"
+        android:textColor="#FFFF00"
         android:textStyle="bold"
-        android:textSize="16sp"/>
+        android:textSize="24sp"
+        android:paddingBottom="8dp" />
 
     <Spinner
         android:id="@+id/deviceSpinner"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="16dp"/>
+        android:layout_marginBottom="16dp" />
+
     <TextView
         android:id="@+id/textMember"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Member"
-        android:textSize="18sp"
-        android:layout_marginBottom="20dp"/>
+        android:textColor="#FFFF00"
+        android:textStyle="bold"
+        android:textSize="24sp"
+        android:paddingBottom="12dp" />
+
     <TextView
         android:id="@+id/selectedDeviceText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_margin="16dp"
         android:text="No device selected"
-        android:textSize="18sp"/>
+        android:textColor="#FFFF00"
+        android:textStyle="bold"
+        android:textSize="24sp"
+        android:paddingBottom="24dp" />
+
     <!-- HEART RATE -->
+
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="❤️ Heart Rate"
-        android:textSize="18sp"/>
+        android:text="❤️ HEART RATE"
+        android:textColor="#FFFF00"
+        android:textStyle="bold"
+        android:textSize="28sp"
+        android:paddingBottom="12dp" />
 
     <TextView
         android:id="@+id/textHR"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="--"
-        android:textSize="40sp"/>
+        android:text="Waiting..."
+        android:textColor="#FFFF00"
+        android:textStyle="bold"
+        android:textSize="56sp"
+        android:paddingBottom="24dp"
+        android:contentDescription="Current heart rate" />
 
-    <!-- TIME -->
+    <!-- LAST UPDATE -->
+
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="⏱ Last Update"
-        android:textSize="18sp"/>
+        android:text="⏱ LAST UPDATE"
+        android:textColor="#FFFF00"
+        android:textStyle="bold"
+        android:textSize="28sp"
+        android:paddingBottom="12dp" />
 
     <TextView
         android:id="@+id/textTime"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="--"
-        android:textSize="24sp"/>
+        android:text="No Update Yet"
+        android:textColor="#FFFF00"
+        android:textStyle="bold"
+        android:textSize="28sp"
+        android:paddingBottom="32dp" />
+
+    <!-- CONNECT BUTTON -->
+
     <Button
         android:id="@+id/connectButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        android:text="Connect"/>
+        android:layout_width="match_parent"
+        android:layout_height="72dp"
+        android:text="CONNECT DEVICE"
+        android:textColor="#000000"
+        android:textStyle="bold"
+        android:textSize="24sp"
+        android:backgroundTint="#FFFF00"
+        android:layout_marginBottom="24dp" />
+
+    <!-- HEART RATE STATUS -->
+
     <TextView
         android:id="@+id/heartRateText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        android:text="Heart Rate: -- bpm"
-        android:textSize="24sp" />
+        android:text="Heart Rate: Waiting..."
+        android:textColor="#FFFF00"
+        android:textStyle="bold"
+        android:textSize="28sp"
+        android:paddingBottom="16dp" />
+
+    <!-- CONNECTION STATUS -->
 
     <TextView
         android:id="@+id/statusText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Status: Disconnected"/>
+        android:text="Status: Disconnected"
+        android:textColor="#FFFF00"
+        android:textStyle="bold"
+        android:textSize="24sp" />
 
 </LinearLayout>

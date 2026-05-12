@@ -19,10 +19,24 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val spinner = findViewById<Spinner>(R.id.deviceSpinner)
-        val selectedText = findViewById<TextView>(R.id.selectedDeviceText)
-        val connectButton = findViewById<Button>(R.id.connectButton)
-        val heartRateText = findViewById<TextView>(R.id.heartRateText)
-        val statusText = findViewById<TextView>(R.id.statusText)
+
+        val selectedText =
+            findViewById<TextView>(R.id.selectedDeviceText)
+
+        val connectButton =
+            findViewById<Button>(R.id.connectButton)
+
+        val heartRateText =
+            findViewById<TextView>(R.id.heartRateText)
+
+        val statusText =
+            findViewById<TextView>(R.id.statusText)
+
+        val textHR =
+            findViewById<TextView>(R.id.textHR)
+
+        val textTime =
+            findViewById<TextView>(R.id.textTime)
 
         val devices = listOf(
             "Polar H10",
@@ -48,7 +62,8 @@ class MainActivity : AppCompatActivity() {
                     id: Long
                 ) {
 
-                    selectedDeviceName = devices[position]
+                    selectedDeviceName =
+                        devices[position]
 
                     selectedText.text =
                         "Selected: $selectedDeviceName"
@@ -67,11 +82,20 @@ class MainActivity : AppCompatActivity() {
 
             if (selectedDeviceName.isNotEmpty()) {
 
+                val randomHR =
+                    (65..90).random()
+
                 statusText.text =
                     "Status: Connected"
 
                 heartRateText.text =
-                    "Heart Rate: ${(65..90).random()} bpm"
+                    "Heart Rate: $randomHR bpm"
+
+                textHR.text =
+                    "$randomHR bpm"
+
+                textTime.text =
+                    "Updated just now"
 
                 Toast.makeText(
                     this,
