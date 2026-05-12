@@ -1,6 +1,8 @@
 package com.healthbridge
 
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
@@ -19,7 +21,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val spinner = findViewById<Spinner>(R.id.deviceSpinner)
+        val spinner =
+            findViewById<Spinner>(R.id.deviceSpinner)
 
         val selectedText =
             findViewById<TextView>(R.id.selectedDeviceText)
@@ -39,6 +42,14 @@ class MainActivity : AppCompatActivity() {
         val textTime =
             findViewById<TextView>(R.id.textTime)
 
+        val database =
+            FirebaseDatabase.getInstance()
+
+        val memberRef =
+            database.getReference(
+                "groups/family_001/members/alain"
+            )
+
         val devices = listOf(
             "Polar H10",
             "Garmin HRM",
@@ -50,12 +61,7 @@ class MainActivity : AppCompatActivity() {
             android.R.layout.simple_spinner_dropdown_item,
             devices
         )
-        val database = FirebaseDatabase.getInstance()
 
-        val memberRef =
-            database.getReference(
-                "groups/family_001/members/alain"
-            )
         spinner.adapter = adapter
 
         spinner.onItemSelectedListener =
@@ -91,40 +97,48 @@ class MainActivity : AppCompatActivity() {
                 statusText.text =
                     "Status: Connected"
 
-                val handler = android.os.Handler(mainLooper)
-
-                val runnable = object : Runnable {
-
-                    override fun run() {
-
-                        val randomHR =
-                            (65..90).random()
-
-                        heartRateText.text =
-                            "Heart Rate: $randomHR bpm"
-
-                        textHR.text =
-                            "$randomHR bpm"
-                        memberRef.child("heartRate")
-                            .setValue(randomHR)
-
-                        memberRef.child("timestamp")
-                            .setValue(System.currentTimeMillis())
-
-                        textTime.text =
-                            "Live update"
-
-                        handler.postDelayed(this, 2000)
-                    }
-                }
-
-                handler.post(runnable)
-
                 Toast.makeText(
                     this,
                     "Connected to $selectedDeviceName",
                     Toast.LENGTH_SHORT
                 ).show()
+
+                val handler =
+                    Handler(Looper.getMainLooper())
+
+                val runnable =
+                    object : Runnable {
+
+                        override fun run() {
+
+                            val randomHR =
+                                (65..90).random()
+
+                            heartRateText.text =
+                                "Heart Rate: $randomHR bpm"
+
+                            textHR.text =
+                                "$randomHR bpm"
+
+                            textTime.text =
+                                "Live update"
+
+                            memberRef.child("heartRate")
+                                .setValue(randomHR)
+
+                            memberRef.child("timestamp")
+                                .setValue(
+                                    System.currentTimeMillis()
+                                )
+
+                            handler.postDelayed(
+                                this,
+                                2000
+                            )
+                        }
+                    }
+
+                handler.post(runnable)
 
             } else {
 
