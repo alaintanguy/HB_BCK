@@ -82,20 +82,32 @@ class MainActivity : AppCompatActivity() {
 
             if (selectedDeviceName.isNotEmpty()) {
 
-                val randomHR =
-                    (65..90).random()
-
                 statusText.text =
                     "Status: Connected"
 
-                heartRateText.text =
-                    "Heart Rate: $randomHR bpm"
+                val handler = android.os.Handler(mainLooper)
 
-                textHR.text =
-                    "$randomHR bpm"
+                val runnable = object : Runnable {
 
-                textTime.text =
-                    "Updated just now"
+                    override fun run() {
+
+                        val randomHR =
+                            (65..90).random()
+
+                        heartRateText.text =
+                            "Heart Rate: $randomHR bpm"
+
+                        textHR.text =
+                            "$randomHR bpm"
+
+                        textTime.text =
+                            "Live update"
+
+                        handler.postDelayed(this, 2000)
+                    }
+                }
+
+                handler.post(runnable)
 
                 Toast.makeText(
                     this,
