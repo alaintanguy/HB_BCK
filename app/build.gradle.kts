@@ -1,12 +1,12 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-    id("com.google.gms.google-services") version "4.4.2"
+    id("com.google.gms.google-services")
 }
 
 android {
 
-    namespace = "com.healthbridge"
+        namespace = "com.healthbridge"
 
     compileSdk = 35
 
@@ -54,5 +54,9 @@ dependencies {
 
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
 
-    implementation("com.google.firebase:firebase-database-ktx:21.0.0")
+    implementation(platform("com.google.firebase:firebase-bom:33.1.0"))
+
+    implementation("com.google.firebase:firebase-database-ktx")
+
+    implementation("com.google.firebase:firebase-auth-ktx")
 }

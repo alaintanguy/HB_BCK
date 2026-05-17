@@ -7,8 +7,15 @@
     android:padding="24dp"
     android:background="#000000">
 
-    <!-- I AM -->
+    <!-- Text View for FireBase  -->
+    <TextView
+        android:id="@+id/firebaseStatusText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Firebase status..."
+        android:textSize="18sp"/>
 
+    <!-- I am -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -23,7 +30,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="alain"
-        android:textColor="#FFFF00"
+        android:textColor="#FF0000"
         android:textStyle="bold"
         android:textSize="32sp"
         android:paddingBottom="24dp" />
