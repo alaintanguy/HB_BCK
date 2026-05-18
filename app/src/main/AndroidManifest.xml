@@ -8,11 +8,6 @@
         <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
         <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
 
-        <application
-        ...
-    </application>
-
-</manifest>
 
     <application
         android:allowBackup="true"
@@ -31,7 +26,9 @@
             </intent-filter>
 
         </activity>
-
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyBsrBzYkGHdWvZ5v_J68AcxpfPz4_x0KsE"/>
     </application>
 
 </manifest>
