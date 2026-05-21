@@ -14,6 +14,7 @@
         android:label="HealthBridge"
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat.Light.DarkActionBar">
+        android:usesCleartextTraffic="true"
 
         <activity
             android:name=".MainActivity"

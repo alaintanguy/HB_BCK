@@ -1,5 +1,6 @@
 package com.healthbridge.telemetry
 
+import android.util.Log
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
@@ -9,26 +10,39 @@ import com.healthbridge.models.HealthData
 object TelemetryRepository {
 
     fun listenToHealthUpdates(
+        memberId: String,
         onUpdate: (HealthData?) -> Unit
     ) {
 
+        Log.d("HB", "LISTENER ATTACH")
+
         FirebaseManager
-            .memberReference()
+            .memberReference(memberId)
             .addValueEventListener(object : ValueEventListener {
 
-                override fun onDataChange(snapshot: DataSnapshot) {
+                override fun onDataChange(
+                    snapshot: DataSnapshot
+                ) {
 
-                    if (snapshot.exists()) {
+                    Log.d("HB", "FIREBASE UPDATE")
 
-                        val data = snapshot.getValue(
-                            HealthData::class.java
-                        )
+                    val data = snapshot.getValue(
+                        HealthData::class.java
+                    )
 
-                        onUpdate(data)
-                    }
+                    Log.d("HB", "DATA = $data")
+
+                    onUpdate(data)
                 }
 
-                override fun onCancelled(error: DatabaseError) {
+                override fun onCancelled(
+                    error: DatabaseError
+                ) {
+
+                    Log.d(
+                        "HB",
+                        error.message
+                    )
                 }
             })
     }

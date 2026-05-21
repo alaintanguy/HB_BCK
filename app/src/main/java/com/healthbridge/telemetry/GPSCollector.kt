@@ -2,8 +2,7 @@ package com.healthbridge.telemetry
 
 import android.annotation.SuppressLint
 import android.content.Context
-import com.google.android.gms.location.LocationServices
-import com.google.android.gms.location.Priority
+import com.google.android.gms.location.*
 import com.google.android.gms.tasks.CancellationTokenSource
 
 class GpsCollector(
@@ -31,5 +30,44 @@ class GpsCollector(
                 )
             }
         }
+    }
+
+    @SuppressLint("MissingPermission")
+    fun startLocationUpdates(
+        intervalMillis: Long,
+        onLocation: (Double, Double) -> Unit
+    ) {
+
+        val locationRequest =
+            LocationRequest.Builder(
+                Priority.PRIORITY_HIGH_ACCURACY,
+                intervalMillis
+            ).build()
+
+        val locationCallback =
+            object : LocationCallback() {
+
+                override fun onLocationResult(
+                    result: LocationResult
+                ) {
+
+                    val location =
+                        result.lastLocation
+
+                    if (location != null) {
+
+                        onLocation(
+                            location.latitude,
+                            location.longitude
+                        )
+                    }
+                }
+            }
+
+        fusedLocationClient.requestLocationUpdates(
+            locationRequest,
+            locationCallback,
+            null
+        )
     }
 }
