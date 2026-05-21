@@ -8,6 +8,7 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
@@ -16,22 +17,22 @@ import com.google.firebase.database.ValueEventListener
 import com.healthbridge.firebase.FirebaseManager
 import com.healthbridge.telemetry.TelemetryEngine
 
-
 class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var googleMap: GoogleMap
-    private var firebaseMarker:
-            com.google.android.gms.maps.model.Marker? = null
 
+    // MULTIUSER MARKERS
+    private val memberMarkers =
+        mutableMapOf<String, Marker>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val telemetryEngine= TelemetryEngine(this)
-        telemetryEngine.start()
-
-
         setContentView(R.layout.activity_main)
+
+        // START REALTIME GPS TELEMETRY
+        val telemetryEngine = TelemetryEngine(this)
+        telemetryEngine.start()
 
         FirebaseAuth.getInstance()
             .signInAnonymously()
@@ -55,7 +56,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
         googleMap = map
 
-
         // FIREBASE LISTENER
         FirebaseManager
             .memberReference("alain")
@@ -73,13 +73,13 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
                         val latitude =
                             snapshot.child("latitude")
-                                .value.toString()
-                                .toDouble()
+                                .getValue(Double::class.java)
+                                ?: 0.0
 
                         val longitude =
                             snapshot.child("longitude")
-                                .value.toString()
-                                .toDouble()
+                                .getValue(Double::class.java)
+                                ?: 0.0
 
                         Log.d(
                             "HB",
@@ -96,13 +96,24 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                             longitude
                         )
 
-                        if (firebaseMarker == null) {
+                        val memberId = "alain"
 
-                            firebaseMarker = googleMap.addMarker(
+                        val existingMarker =
+                            memberMarkers[memberId]
+
+                        if (existingMarker == null) {
+
+                            val marker = googleMap.addMarker(
                                 MarkerOptions()
                                     .position(firebaseLocation)
-                                    .title("Alain")
+                                    .title(memberId)
                             )
+
+                            if (marker != null) {
+
+                                memberMarkers[memberId] =
+                                    marker
+                            }
 
                             googleMap.moveCamera(
                                 CameraUpdateFactory.newLatLngZoom(
@@ -113,7 +124,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
                         } else {
 
-                            firebaseMarker?.position = firebaseLocation
+                            existingMarker.position =
+                                firebaseLocation
                         }
                     }
 
