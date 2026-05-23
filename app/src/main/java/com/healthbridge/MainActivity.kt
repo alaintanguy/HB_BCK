@@ -1,8 +1,13 @@
 package com.healthbridge
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -10,10 +15,12 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
+
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
+
 import com.healthbridge.firebase.FirebaseManager
 import com.healthbridge.telemetry.TelemetryEngine
 
@@ -21,18 +28,37 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var googleMap: GoogleMap
 
-    // MULTIUSER MARKERS
     private val memberMarkers =
         mutableMapOf<String, Marker>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.activity_main)
 
-        // START REALTIME GPS TELEMETRY
-        val telemetryEngine = TelemetryEngine(this)
-        telemetryEngine.start()
+        if (
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+
+            val telemetryEngine =
+                TelemetryEngine(this)
+
+            telemetryEngine.start()
+
+        } else {
+
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                ),
+                1001
+            )
+        }
 
         FirebaseAuth.getInstance()
             .signInAnonymously()
@@ -40,9 +66,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
                 Log.d("HB", "AUTH OK")
 
-                val mapFragment = supportFragmentManager
-                    .findFragmentById(R.id.map)
-                        as SupportMapFragment
+                val mapFragment =
+                    supportFragmentManager
+                        .findFragmentById(R.id.map)
+                            as SupportMapFragment
 
                 mapFragment.getMapAsync(this)
             }
@@ -54,11 +81,15 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
     override fun onMapReady(map: GoogleMap) {
 
+        Log.d(
+            "HB_MAP",
+            "MAP READY"
+        )
+
         googleMap = map
 
-        // FIREBASE LISTENER
         FirebaseManager
-            .memberReference("alain")
+            .memberReference("mary")
             .addValueEventListener(
                 object : ValueEventListener {
 
@@ -72,12 +103,14 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                         )
 
                         val latitude =
-                            snapshot.child("latitude")
+                            snapshot.child("latest")
+                                .child("latitude")
                                 .getValue(Double::class.java)
                                 ?: 0.0
 
                         val longitude =
-                            snapshot.child("longitude")
+                            snapshot.child("latest")
+                                .child("longitude")
                                 .getValue(Double::class.java)
                                 ?: 0.0
 
@@ -91,23 +124,25 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                             "LON=$longitude"
                         )
 
-                        val firebaseLocation = LatLng(
-                            latitude,
-                            longitude
-                        )
+                        val firebaseLocation =
+                            LatLng(
+                                latitude,
+                                longitude
+                            )
 
-                        val memberId = "alain"
+                        val memberId = "mary"
 
                         val existingMarker =
                             memberMarkers[memberId]
 
                         if (existingMarker == null) {
 
-                            val marker = googleMap.addMarker(
-                                MarkerOptions()
-                                    .position(firebaseLocation)
-                                    .title(memberId)
-                            )
+                            val marker =
+                                googleMap.addMarker(
+                                    MarkerOptions()
+                                        .position(firebaseLocation)
+                                        .title(memberId)
+                                )
 
                             if (marker != null) {
 
@@ -116,10 +151,11 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                             }
 
                             googleMap.moveCamera(
-                                CameraUpdateFactory.newLatLngZoom(
-                                    firebaseLocation,
-                                    15f
-                                )
+                                CameraUpdateFactory
+                                    .newLatLngZoom(
+                                        firebaseLocation,
+                                        15f
+                                    )
                             )
 
                         } else {
@@ -140,5 +176,31 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                     }
                 }
             )
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+
+        super.onRequestPermissionsResult(
+            requestCode,
+            permissions,
+            grantResults
+        )
+
+        if (
+            requestCode == 1001 &&
+            grantResults.isNotEmpty() &&
+            grantResults[0] ==
+            PackageManager.PERMISSION_GRANTED
+        ) {
+
+            val telemetryEngine =
+                TelemetryEngine(this)
+
+            telemetryEngine.start()
+        }
     }
 }

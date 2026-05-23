@@ -10,16 +10,24 @@ class TelemetryEngine(
     private val gpsCollector =
         GpsCollector(context)
 
-    private var intervalMillis: Long = 60000
+    private var intervalMillis: Long = 50000
 
     fun start() {
+        android.util.Log.d(
+            "HB_GPS",
+            "TelemetryEngine STARTED"
+        )
 
         gpsCollector.startLocationUpdates(
             intervalMillis
         ) { latitude, longitude ->
+            android.util.Log.d(
+                "HB_GPS",
+                "GPS UPDATE: $latitude , $longitude"
+            )
 
             FirebaseManager.updateLocation(
-                memberId = "alain",
+                memberId = "mary",
                 latitude,
                 longitude
             )
