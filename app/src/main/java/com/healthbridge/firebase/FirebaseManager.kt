@@ -18,4 +18,34 @@ object FirebaseManager {
             .child("members")
             .child(memberId)
     }
+
+    fun updateLocation(
+        memberId: String,
+        latitude: Double,
+        longitude: Double
+    ) {
+
+        val updates = mapOf(
+            "latest/lat" to latitude,
+            "latest/lng" to longitude,
+            "latest/time" to System.currentTimeMillis()
+        )
+
+        memberReference(memberId)
+            .updateChildren(updates)
+            .addOnSuccessListener {
+
+                android.util.Log.d(
+                    "HB",
+                    "FIREBASE WRITE SUCCESS"
+                )
+            }
+            .addOnFailureListener { error ->
+
+                android.util.Log.e(
+                    "HB",
+                    "FIREBASE WRITE FAILED: ${error.message}"
+                )
+            }
+    }
 }

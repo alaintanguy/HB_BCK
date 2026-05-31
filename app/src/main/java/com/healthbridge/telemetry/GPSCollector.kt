@@ -2,49 +2,46 @@ package com.healthbridge.telemetry
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.os.Looper
+import android.util.Log
+
 import com.google.android.gms.location.*
-import com.google.android.gms.tasks.CancellationTokenSource
 
 class GpsCollector(
     private val context: Context
 ) {
 
     private val fusedLocationClient =
-        LocationServices.getFusedLocationProviderClient(context)
+        LocationServices
+            .getFusedLocationProviderClient(context)
 
-    @SuppressLint("MissingPermission")
-    fun getCurrentLocation(
-        onLocation: (Double, Double) -> Unit
-    ) {
-
-        fusedLocationClient.getCurrentLocation(
-            Priority.PRIORITY_HIGH_ACCURACY,
-            CancellationTokenSource().token
-        ).addOnSuccessListener { location ->
-
-            if (location != null) {
-
-                onLocation(
-                    location.latitude,
-                    location.longitude
-                )
-            }
-        }
-    }
+    private var locationCallback:
+            LocationCallback? = null
 
     @SuppressLint("MissingPermission")
     fun startLocationUpdates(
         intervalMillis: Long,
-        onLocation: (Double, Double) -> Unit
+        onLocation: (
+            Double,
+            Double
+        ) -> Unit
     ) {
+
+        Log.d(
+            "HB",
+            "START LOCATION UPDATES"
+        )
 
         val locationRequest =
             LocationRequest.Builder(
                 Priority.PRIORITY_HIGH_ACCURACY,
                 intervalMillis
-            ).build()
+            )
+                .setMinUpdateIntervalMillis(2000)
+                .setWaitForAccurateLocation(true)
+                .build()
 
-        val locationCallback =
+        locationCallback =
             object : LocationCallback() {
 
                 override fun onLocationResult(
@@ -56,6 +53,18 @@ class GpsCollector(
 
                     if (location != null) {
 
+                        Log.d(
+                            "HB",
+                            "GPS CALLBACK RECEIVED"
+                        )
+
+                        Log.d(
+                            "HB",
+                            "REAL GPS: " +
+                                    "${location.latitude} , " +
+                                    "${location.longitude}"
+                        )
+
                         onLocation(
                             location.latitude,
                             location.longitude
@@ -66,8 +75,19 @@ class GpsCollector(
 
         fusedLocationClient.requestLocationUpdates(
             locationRequest,
-            locationCallback,
-            null
+            locationCallback!!,
+            Looper.getMainLooper()
         )
+    }
+
+    fun stopLocationUpdates() {
+
+        if (locationCallback != null) {
+
+            fusedLocationClient
+                .removeLocationUpdates(
+                    locationCallback!!
+                )
+        }
     }
 }

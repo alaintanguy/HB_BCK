@@ -43,7 +43,7 @@ class MainActivity : AppCompatActivity(),
         setContentView(R.layout.activity_main)
 
         telemetryEngine =
-            TelemetryEngine(this)
+            TelemetryEngine(this, "alain")
 
         ActivityCompat.requestPermissions(
             this,
@@ -56,6 +56,22 @@ class MainActivity : AppCompatActivity(),
             ),
             1001
         )
+
+        if (
+            ActivityCompat.checkSelfPermission(
+                this,
+                android.Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+
+            android.util.Log.d(
+                "HB",
+                "PERMISSION ALREADY GRANTED"
+            )
+
+            telemetryEngine.start()
+        }
+
 
         FirebaseAuth.getInstance()
             .signInAnonymously()
@@ -81,7 +97,7 @@ class MainActivity : AppCompatActivity(),
 
         googleMap = map
 
-        listenToMember("alain")
+       listenToMember("alain")
 
         // LATER:
         // listenToMember("mary")
@@ -103,13 +119,13 @@ class MainActivity : AppCompatActivity(),
 
                         val latitude =
                             snapshot.child("latest")
-                                .child("latitude")
+                                .child("lat")
                                 .getValue(Double::class.java)
                                 ?: return
 
                         val longitude =
                             snapshot.child("latest")
-                                .child("longitude")
+                                .child("lng")
                                 .getValue(Double::class.java)
                                 ?: return
 
