@@ -23,17 +23,22 @@ class TelemetryEngine(
 
         gpsCollector.startLocationUpdates(
             intervalMillis
-        ) { latitude, longitude ->
+        ) { latitude, longitude, altitude ->
 
             Log.d(
                 "HB",
                 "REAL GPS UPDATE: $latitude , $longitude"
             )
+            Log.d(
+                "HB",
+                "ALTITUDE: $altitude"
+            )
 
             FirebaseManager.updateLocation(
                 memberId,
                 latitude,
-                longitude
+                longitude,
+                altitude
             )
         }
     }

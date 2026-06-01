@@ -22,12 +22,14 @@ object FirebaseManager {
     fun updateLocation(
         memberId: String,
         latitude: Double,
-        longitude: Double
+        longitude: Double,
+        altitude : Double
     ) {
 
         val updates = mapOf(
             "latest/lat" to latitude,
             "latest/lng" to longitude,
+            "latest/altitude" to altitude,
             "latest/time" to System.currentTimeMillis()
         )
 

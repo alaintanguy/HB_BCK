@@ -23,6 +23,7 @@ class GpsCollector(
         intervalMillis: Long,
         onLocation: (
             Double,
+            Double,
             Double
         ) -> Unit
     ) {
@@ -67,7 +68,8 @@ class GpsCollector(
 
                         onLocation(
                             location.latitude,
-                            location.longitude
+                            location.longitude,
+                            location.altitude
                         )
                     }
                 }
