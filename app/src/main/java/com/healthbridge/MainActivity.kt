@@ -11,6 +11,8 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
+
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
@@ -25,6 +27,18 @@ import com.healthbridge.telemetry.TelemetryEngine
 
 class MainActivity : AppCompatActivity(),
     OnMapReadyCallback {
+
+    companion object {
+
+        // CHANGE THIS FOR EACH PHONE======================================
+
+        const val MEMBER_ID = "alain"
+        //const val MEMBER_ID = "mary"
+
+        // FUTURE USE
+
+        const val ROLE = "elder"
+    }
 
     private lateinit var googleMap: GoogleMap
 
@@ -42,8 +56,16 @@ class MainActivity : AppCompatActivity(),
 
         setContentView(R.layout.activity_main)
 
+        Log.d(
+            "HB",
+            "PHONE MEMBER_ID = $MEMBER_ID"
+        )
+
         telemetryEngine =
-            TelemetryEngine(this, "alain")
+            TelemetryEngine(
+                this,
+                MEMBER_ID
+            )
 
         ActivityCompat.requestPermissions(
             this,
@@ -60,18 +82,18 @@ class MainActivity : AppCompatActivity(),
         if (
             ActivityCompat.checkSelfPermission(
                 this,
-                android.Manifest.permission.ACCESS_FINE_LOCATION
+                android.Manifest.permission
+                    .ACCESS_FINE_LOCATION
             ) == PackageManager.PERMISSION_GRANTED
         ) {
 
-            android.util.Log.d(
+            Log.d(
                 "HB",
                 "PERMISSION ALREADY GRANTED"
             )
 
             telemetryEngine.start()
         }
-
 
         FirebaseAuth.getInstance()
             .signInAnonymously()
@@ -97,10 +119,8 @@ class MainActivity : AppCompatActivity(),
 
         googleMap = map
 
-       listenToMember("alain")
-
-        // LATER:
-        // listenToMember("mary")
+        listenToMember("alain")
+        listenToMember("mary")
     }
 
     private fun listenToMember(
@@ -116,6 +136,11 @@ class MainActivity : AppCompatActivity(),
                     override fun onDataChange(
                         snapshot: DataSnapshot
                     ) {
+
+                        Log.d(
+                            "HB",
+                            "LISTENER UPDATE FOR $memberId"
+                        )
 
                         val latitude =
                             snapshot.child("latest")
@@ -140,6 +165,22 @@ class MainActivity : AppCompatActivity(),
 
                         if (existingMarker == null) {
 
+                            val markerColor =
+                                when (memberId) {
+
+                                    "alain" ->
+                                        BitmapDescriptorFactory
+                                            .HUE_RED
+
+                                    "mary" ->
+                                        BitmapDescriptorFactory
+                                            .HUE_BLUE
+
+                                    else ->
+                                        BitmapDescriptorFactory
+                                            .HUE_GREEN
+                                }
+
                             val marker =
                                 googleMap.addMarker(
                                     MarkerOptions()
@@ -147,6 +188,12 @@ class MainActivity : AppCompatActivity(),
                                             firebaseLocation
                                         )
                                         .title(memberId)
+                                        .icon(
+                                            BitmapDescriptorFactory
+                                                .defaultMarker(
+                                                    markerColor
+                                                )
+                                        )
                                 )
 
                             if (marker != null) {
@@ -159,7 +206,7 @@ class MainActivity : AppCompatActivity(),
                                 CameraUpdateFactory
                                     .newLatLngZoom(
                                         firebaseLocation,
-                                        16f
+                                        12f
                                     )
                             )
 
