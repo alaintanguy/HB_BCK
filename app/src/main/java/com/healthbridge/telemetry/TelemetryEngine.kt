@@ -16,23 +16,11 @@ class TelemetryEngine(
 
     fun start() {
 
-        Log.d(
-            "HB",
-            "TelemetryEngine STARTED for $memberId"
-        )
 
         gpsCollector.startLocationUpdates(
             intervalMillis
         ) { latitude, longitude, altitude ->
 
-            Log.d(
-                "HB",
-                "REAL GPS UPDATE: $latitude , $longitude"
-            )
-            Log.d(
-                "HB",
-                "ALTITUDE: $altitude"
-            )
 
             FirebaseManager.updateLocation(
                 memberId,

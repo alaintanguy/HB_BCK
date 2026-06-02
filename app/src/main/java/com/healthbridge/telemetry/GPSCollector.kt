@@ -3,7 +3,6 @@ package com.healthbridge.telemetry
 import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Looper
-import android.util.Log
 
 import com.google.android.gms.location.*
 
@@ -28,10 +27,6 @@ class GpsCollector(
         ) -> Unit
     ) {
 
-        Log.d(
-            "HB",
-            "START LOCATION UPDATES"
-        )
 
         val locationRequest =
             LocationRequest.Builder(
@@ -54,17 +49,8 @@ class GpsCollector(
 
                     if (location != null) {
 
-                        Log.d(
-                            "HB",
-                            "GPS CALLBACK RECEIVED"
-                        )
 
-                        Log.d(
-                            "HB",
-                            "REAL GPS: " +
-                                    "${location.latitude} , " +
-                                    "${location.longitude}"
-                        )
+
 
                         onLocation(
                             location.latitude,

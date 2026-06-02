@@ -37,10 +37,7 @@ object FirebaseManager {
             .updateChildren(updates)
             .addOnSuccessListener {
 
-                android.util.Log.d(
-                    "HB",
-                    "FIREBASE WRITE SUCCESS"
-                )
+
             }
             .addOnFailureListener { error ->
 

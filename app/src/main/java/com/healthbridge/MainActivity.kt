@@ -2,7 +2,7 @@ package com.healthbridge
 
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.util.Log
+
 
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -32,8 +32,8 @@ class MainActivity : AppCompatActivity(),
 
         // CHANGE THIS FOR EACH PHONE======================================
 
-        const val MEMBER_ID = "alain"
-        //const val MEMBER_ID = "mary"
+       // const val MEMBER_ID = "alain"
+        const val MEMBER_ID = "mary"
 
         // FUTURE USE
 
@@ -56,10 +56,7 @@ class MainActivity : AppCompatActivity(),
 
         setContentView(R.layout.activity_main)
 
-        Log.d(
-            "HB",
-            "PHONE MEMBER_ID = $MEMBER_ID"
-        )
+
 
         telemetryEngine =
             TelemetryEngine(
@@ -87,10 +84,7 @@ class MainActivity : AppCompatActivity(),
             ) == PackageManager.PERMISSION_GRANTED
         ) {
 
-            Log.d(
-                "HB",
-                "PERMISSION ALREADY GRANTED"
-            )
+
 
             telemetryEngine.start()
         }
@@ -99,10 +93,7 @@ class MainActivity : AppCompatActivity(),
             .signInAnonymously()
             .addOnSuccessListener {
 
-                Log.d(
-                    "HB",
-                    "AUTH OK"
-                )
+
 
                 val mapFragment =
                     supportFragmentManager
@@ -137,10 +128,6 @@ class MainActivity : AppCompatActivity(),
                         snapshot: DataSnapshot
                     ) {
 
-                        Log.d(
-                            "HB",
-                            "LISTENER UPDATE FOR $memberId"
-                        )
 
                         val latitude =
                             snapshot.child("latest")
@@ -153,6 +140,14 @@ class MainActivity : AppCompatActivity(),
                                 .child("lng")
                                 .getValue(Double::class.java)
                                 ?: return
+
+
+                        if (
+                            latitude == 0.0 &&
+                            longitude == 0.0
+                        ) {
+                            return
+                        }
 
                         val firebaseLocation =
                             LatLng(
@@ -221,10 +216,7 @@ class MainActivity : AppCompatActivity(),
                         error: DatabaseError
                     ) {
 
-                        Log.d(
-                            "HB",
-                            error.message
-                        )
+
                     }
                 }
             )
