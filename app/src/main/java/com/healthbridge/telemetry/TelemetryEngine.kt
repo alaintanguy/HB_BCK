@@ -1,8 +1,8 @@
 package com.healthbridge.telemetry
 
 import android.content.Context
-import android.util.Log
 import com.healthbridge.firebase.FirebaseManager
+import android.util.Log
 
 class TelemetryEngine(
     private val context: Context,
@@ -12,7 +12,7 @@ class TelemetryEngine(
     private val gpsCollector =
         GpsCollector(context)
 
-    private var intervalMillis: Long = 5000
+    private var intervalMillis: Long = 60000
 
     fun start() {
 
@@ -20,18 +20,23 @@ class TelemetryEngine(
         gpsCollector.startLocationUpdates(
             intervalMillis
         ) { latitude, longitude, altitude ->
+            Log.d(
+                "HB",
+                "GPS UPDATE: $latitude , $longitude , $altitude"
+            )
 
-
-            FirebaseManager.updateLocation(
-                memberId,
-                latitude,
-                longitude,
-                altitude
+            FirebaseManager.updateTelemetry(
+                memberId = memberId,
+                latitude = latitude,
+                longitude = longitude,
+                altitude = altitude
             )
         }
     }
 
-  //  fun setInterval(milliseconds: Long) {
-
-       // intervalMillis = milliseconds}
+    fun setInterval(
+        milliseconds: Long
+    ) {
+        intervalMillis = milliseconds
+    }
 }

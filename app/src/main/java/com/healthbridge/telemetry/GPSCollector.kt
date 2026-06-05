@@ -3,6 +3,7 @@ package com.healthbridge.telemetry
 import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Looper
+import android.util.Log
 
 import com.google.android.gms.location.*
 
@@ -19,6 +20,7 @@ class GpsCollector(
 
     @SuppressLint("MissingPermission")
     fun startLocationUpdates(
+
         intervalMillis: Long,
         onLocation: (
             Double,
@@ -26,7 +28,6 @@ class GpsCollector(
             Double
         ) -> Unit
     ) {
-
 
         val locationRequest =
             LocationRequest.Builder(
@@ -44,13 +45,20 @@ class GpsCollector(
                     result: LocationResult
                 ) {
 
+                    Log.d(
+                        "HB",
+                        "LOCATION CALLBACK FIRED"
+                    )
+
                     val location =
                         result.lastLocation
 
                     if (location != null) {
 
-
-
+                        Log.d(
+                            "HB",
+                            "RAW GPS: ${location.latitude} , ${location.longitude}"
+                        )
 
                         onLocation(
                             location.latitude,

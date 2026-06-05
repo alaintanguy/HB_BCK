@@ -1,50 +1,74 @@
 package com.healthbridge.firebase
 
-import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 object FirebaseManager {
 
-    private val database: FirebaseDatabase =
+    private val database =
         FirebaseDatabase.getInstance()
 
     fun memberReference(
         memberId: String
-    ): DatabaseReference {
+    ) =
+        database.getReference(
+            "groups/family_001/members/$memberId"
+        )
 
-        return database.reference
-            .child("families")
-            .child("family_001")
-            .child("members")
-            .child(memberId)
-    }
-
-    fun updateLocation(
+    fun updateTelemetry(
         memberId: String,
         latitude: Double,
         longitude: Double,
-        altitude : Double
+        altitude: Double
     ) {
 
+        val timestamp =
+            System.currentTimeMillis()
+
+        val dateFormat =
+            SimpleDateFormat(
+                "yyyy-MM-dd",
+                Locale.getDefault()
+            )
+
+        val timeFormat =
+            SimpleDateFormat(
+                "HH:mm:ss",
+                Locale.getDefault()
+            )
+
+        val currentDate =
+            dateFormat.format(
+                Date(timestamp)
+            )
+
+        val currentTime =
+            timeFormat.format(
+                Date(timestamp)
+            )
+
+        val reference =
+            database.getReference(
+                "groups/family_001/members/$memberId/telemetry"
+            )
+
         val updates = mapOf(
-            "latest/lat" to latitude,
-            "latest/lng" to longitude,
-            "latest/altitude" to altitude,
-            "latest/time" to System.currentTimeMillis()
+
+            "timestamp" to timestamp,
+
+            "readable/date" to currentDate,
+
+            "readable/time" to currentTime,
+
+            "location/lat" to latitude,
+
+            "location/lng" to longitude,
+
+            "location/altitude" to altitude
         )
 
-        memberReference(memberId)
-            .updateChildren(updates)
-            .addOnSuccessListener {
-
-
-            }
-            .addOnFailureListener { error ->
-
-                android.util.Log.e(
-                    "HB",
-                    "FIREBASE WRITE FAILED: ${error.message}"
-                )
-            }
+        reference.updateChildren(updates)
     }
 }

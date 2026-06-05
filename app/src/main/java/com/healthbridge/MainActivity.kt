@@ -24,20 +24,22 @@ import com.google.firebase.database.ValueEventListener
 
 import com.healthbridge.firebase.FirebaseManager
 import com.healthbridge.telemetry.TelemetryEngine
+import android.content.Intent
+import com.healthbridge.telemetry.TelemetryForegroundService
+import kotlin.collections.getValue
 
 class MainActivity : AppCompatActivity(),
     OnMapReadyCallback {
 
     companion object {
 
-        // CHANGE THIS FOR EACH PHONE======================================
+        // CHANGE THIS FOR EACH PHONE ======================
 
-       // const val MEMBER_ID = "alain"
-        const val MEMBER_ID = "mary"
+        const val MEMBER_ID = "alain"
+         //const val MEMBER_ID = "mary"
 
-        // FUTURE USE
-
-        const val ROLE = "elder"
+        const val IS_PUBLISHER = true
+        const val IS_VIEWER = true
     }
 
     private lateinit var googleMap: GoogleMap
@@ -56,13 +58,14 @@ class MainActivity : AppCompatActivity(),
 
         setContentView(R.layout.activity_main)
 
-
-
         telemetryEngine =
             TelemetryEngine(
                 this,
                 MEMBER_ID
             )
+        if (IS_PUBLISHER) {
+            telemetryEngine.start()
+        }
 
         ActivityCompat.requestPermissions(
             this,
@@ -84,16 +87,25 @@ class MainActivity : AppCompatActivity(),
             ) == PackageManager.PERMISSION_GRANTED
         ) {
 
+            if (IS_PUBLISHER) {
 
+                val intent = Intent(
+                    this,
+                    TelemetryForegroundService::class.java
+                )
 
-            telemetryEngine.start()
+                intent.putExtra(
+                    "MEMBER_ID",
+                    MEMBER_ID
+                )
+
+                startForegroundService(intent)
+            }
         }
 
         FirebaseAuth.getInstance()
             .signInAnonymously()
             .addOnSuccessListener {
-
-
 
                 val mapFragment =
                     supportFragmentManager
@@ -110,8 +122,11 @@ class MainActivity : AppCompatActivity(),
 
         googleMap = map
 
-        listenToMember("alain")
-        listenToMember("mary")
+        if (IS_VIEWER) {
+
+            listenToMember("alain")
+            listenToMember("mary")
+        }
     }
 
     private fun listenToMember(
@@ -128,19 +143,19 @@ class MainActivity : AppCompatActivity(),
                         snapshot: DataSnapshot
                     ) {
 
-
                         val latitude =
-                            snapshot.child("latest")
+                            snapshot.child("telemetry")
+                                .child("location")
                                 .child("lat")
                                 .getValue(Double::class.java)
                                 ?: return
 
                         val longitude =
-                            snapshot.child("latest")
+                            snapshot.child("telemetry")
+                                .child("location")
                                 .child("lng")
                                 .getValue(Double::class.java)
                                 ?: return
-
 
                         if (
                             latitude == 0.0 &&
@@ -216,7 +231,6 @@ class MainActivity : AppCompatActivity(),
                         error: DatabaseError
                     ) {
 
-
                     }
                 }
             )
@@ -241,7 +255,10 @@ class MainActivity : AppCompatActivity(),
             == PackageManager.PERMISSION_GRANTED
         ) {
 
-            telemetryEngine.start()
+            if (IS_PUBLISHER) {
+
+                telemetryEngine.start()
+            }
         }
     }
 }
