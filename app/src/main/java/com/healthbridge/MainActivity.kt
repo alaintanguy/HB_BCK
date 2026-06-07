@@ -58,14 +58,7 @@ class MainActivity : AppCompatActivity(),
 
         setContentView(R.layout.activity_main)
 
-        telemetryEngine =
-            TelemetryEngine(
-                this,
-                MEMBER_ID
-            )
-        if (IS_PUBLISHER) {
-            telemetryEngine.start()
-        }
+
 
         ActivityCompat.requestPermissions(
             this,
@@ -255,10 +248,7 @@ class MainActivity : AppCompatActivity(),
             == PackageManager.PERMISSION_GRANTED
         ) {
 
-            if (IS_PUBLISHER) {
 
-                telemetryEngine.start()
-            }
         }
     }
 }

@@ -21,7 +21,9 @@ object FirebaseManager {
         memberId: String,
         latitude: Double,
         longitude: Double,
-        altitude: Double
+        altitude: Double,
+        accuracy: Float,
+        speed: Float
     ) {
 
         val timestamp =
@@ -66,7 +68,11 @@ object FirebaseManager {
 
             "location/lng" to longitude,
 
-            "location/altitude" to altitude
+            "location/altitude" to altitude,
+
+            "location/accuracy" to accuracy,
+
+            "location/speed" to speed
         )
 
         reference.updateChildren(updates)

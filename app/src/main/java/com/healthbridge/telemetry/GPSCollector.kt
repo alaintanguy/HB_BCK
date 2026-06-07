@@ -25,7 +25,9 @@ class GpsCollector(
         onLocation: (
             Double,
             Double,
-            Double
+            Double,
+            Float,
+            Float,
         ) -> Unit
     ) {
 
@@ -63,7 +65,9 @@ class GpsCollector(
                         onLocation(
                             location.latitude,
                             location.longitude,
-                            location.altitude
+                            location.altitude,
+                            location.accuracy,
+                            location.speed
                         )
                     }
                 }
