@@ -1,15 +1,17 @@
 package com.healthbridge.telemetry
 
-import android.location.Location
-import android.util.Log
 import android.content.Context
-
+import android.location.Location
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
 import com.healthbridge.firebase.FirebaseManager
 
 class TelemetryEngine(
     private val context: Context,
     private val memberId: String
 ) {
+
 
     companion object {
 
@@ -23,57 +25,100 @@ class TelemetryEngine(
     private val gpsCollector =
         GpsCollector(context)
 
+    private val batteryCollector =
+        BatteryCollector(context)
+
     private var currentInterval =
         NORMAL_INTERVAL
-
-    private var emergencyMode = false
-
-    private val accuracyLimit = 15f
-
-    private val movementThreshold = 10f
 
     private var lastLatitude: Double? = null
 
     private var lastLongitude: Double? = null
 
+    private val movementThreshold = 10f
+
+    private val heartbeatHandler =
+        Handler(Looper.getMainLooper())
+
+    private val heartbeatRunnable =
+        object : Runnable {
+
+            override fun run() {
+
+                Log.d(
+                    "HB",
+                    "HEARTBEAT RUNNING"
+                )
+
+                val battery =
+                    batteryCollector.getBatteryLevel()
+
+                FirebaseManager.updateBattery(
+                    memberId,
+                    battery
+                )
+
+                FirebaseManager.updateLastSeen(
+                    memberId
+                )
+
+                FirebaseManager.updateStatus(
+                    memberId,
+                    "online"
+                )
+
+                FirebaseManager.updateLowBatteryAlert(
+                    memberId,
+                    battery <= 20
+                )
+
+                Log.d(
+                    "HB",
+                    "HEARTBEAT SENT"
+                )
+
+                heartbeatHandler.postDelayed(
+                    this,
+                    currentInterval
+                )
+            }
+        }
+
     fun setEmergencyMode(
         enabled: Boolean
     ) {
 
-        emergencyMode = enabled
-
         currentInterval =
             if (enabled) {
-
                 EMERGENCY_INTERVAL
-
             } else {
-
                 NORMAL_INTERVAL
             }
     }
 
     fun start() {
 
+        Log.d(
+            "HB",
+            "ENTERED TelemetryEngine.start()"
+        )
+
+        heartbeatHandler.post(
+            heartbeatRunnable
+        )
+
         gpsCollector.startLocationUpdates(
             currentInterval
-        ) {
-                latitude,
-                longitude,
-                altitude,
-                accuracy,
-                speed ->
+        ) { latitude,
+            longitude,
+            altitude,
+            accuracy,
+            speed ->
 
             Log.d(
                 "HB",
                 "GPS UPDATE: $latitude , $longitude"
             )
-
-          //  if (accuracy > accuracyLimit) {
-
-               // Log.d("HB","IGNORED: BAD ACCURACY = $accuracy")
-
-                //return@startLocationUpdates }
 
             val previousLat = lastLatitude
             val previousLng = lastLongitude
@@ -95,29 +140,23 @@ class TelemetryEngine(
 
                 val distanceMeters = results[0]
 
-                if (
-                    distanceMeters <
-                    movementThreshold
-                ) {
-
-                    Log.d(
-                        "HB",
-                        "SMALL MOVEMENT -> HEARTBEAT ONLY = $distanceMeters"
-                    )
-                }
+                Log.d(
+                    "HB",
+                    "DISTANCE = $distanceMeters"
+                )
             }
 
-            FirebaseManager.updateTelemetry(
+            FirebaseManager.updateLocation(
                 memberId,
                 latitude,
                 longitude,
-                altitude,
-                accuracy,
-                speed
+                altitude
             )
 
             lastLatitude = latitude
             lastLongitude = longitude
         }
     }
+
+
 }

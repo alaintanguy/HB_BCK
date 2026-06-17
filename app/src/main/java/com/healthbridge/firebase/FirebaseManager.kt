@@ -1,80 +1,141 @@
 package com.healthbridge.firebase
 
+import android.util.Log
+import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 object FirebaseManager {
 
-    private val database =
-        FirebaseDatabase.getInstance()
+    private val database: DatabaseReference =
+        FirebaseDatabase
+            .getInstance()
+            .reference
 
     fun memberReference(
         memberId: String
-    ) =
-        database.getReference(
-            "groups/family_001/members/$memberId"
-        )
+    ): DatabaseReference {
 
-    fun updateTelemetry(
+        return database
+            .child("groups")
+            .child("family_001")
+            .child("members")
+            .child(memberId)
+    }
+
+    fun updateLocation(
         memberId: String,
         latitude: Double,
         longitude: Double,
-        altitude: Double,
-        accuracy: Float,
-        speed: Float
+        altitude: Double
     ) {
 
-        val timestamp =
+        val currentTime =
             System.currentTimeMillis()
 
-        val dateFormat =
-            SimpleDateFormat(
+        val readableDate =
+            java.text.SimpleDateFormat(
                 "yyyy-MM-dd",
-                Locale.getDefault()
+                java.util.Locale.getDefault()
+            ).format(
+                java.util.Date(currentTime)
             )
 
-        val timeFormat =
-            SimpleDateFormat(
+        val readableTime =
+            java.text.SimpleDateFormat(
                 "HH:mm:ss",
-                Locale.getDefault()
+                java.util.Locale.getDefault()
+            ).format(
+                java.util.Date(currentTime)
             )
 
-        val currentDate =
-            dateFormat.format(
-                Date(timestamp)
+        val updates =
+            mapOf(
+                "telemetry/location/lat" to latitude,
+                "telemetry/location/lng" to longitude,
+                "telemetry/location/altitude" to altitude,
+
+                "telemetry/timestamp" to currentTime,
+
+                "telemetry/readable/date" to readableDate,
+                "telemetry/readable/time" to readableTime
             )
 
-        val currentTime =
-            timeFormat.format(
-                Date(timestamp)
+        memberReference(memberId)
+            .updateChildren(updates)
+            .addOnSuccessListener {
+
+                Log.d(
+                    "HB",
+                    "FIREBASE TELEMETRY SUCCESS"
+                )
+            }
+            .addOnFailureListener { error ->
+
+                Log.e(
+                    "HB",
+                    "FIREBASE TELEMETRY FAILED",
+                    error
+                )
+            }
+    }
+
+    fun updateLastSeen(
+        memberId: String
+    ) {
+
+        memberReference(memberId)
+            .child("device")
+            .child("lastSeen")
+            .setValue(
+                System.currentTimeMillis()
             )
+    }
 
-        val reference =
-            database.getReference(
-                "groups/family_001/members/$memberId/telemetry"
-            )
+    fun updateStatus(
+        memberId: String,
+        status: String
+    ) {
 
-        val updates = mapOf(
+        memberReference(memberId)
+            .child("device")
+            .child("status")
+            .setValue(status)
+    }
 
-            "timestamp" to timestamp,
+    fun updateBattery(
+        memberId: String,
+        battery: Int
+    ) {
 
-            "readable/date" to currentDate,
+        memberReference(memberId)
+            .child("device")
+            .child("phoneBattery")
+            .setValue(battery)
+            .addOnSuccessListener {
 
-            "readable/time" to currentTime,
+                Log.d(
+                    "HB",
+                    "FIREBASE BATTERY SUCCESS"
+                )
+            }
+            .addOnFailureListener { error ->
 
-            "location/lat" to latitude,
+                Log.e(
+                    "HB",
+                    "FIREBASE BATTERY FAILED",
+                    error
+                )
+            }
+    }
 
-            "location/lng" to longitude,
+    fun updateLowBatteryAlert(
+        memberId: String,
+        isLow: Boolean
+    ) {
 
-            "location/altitude" to altitude,
-
-            "location/accuracy" to accuracy,
-
-            "location/speed" to speed
-        )
-
-        reference.updateChildren(updates)
+        memberReference(memberId)
+            .child("alerts")
+            .child("lowBattery")
+            .setValue(isLow)
     }
 }

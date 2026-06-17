@@ -36,6 +36,7 @@ class GpsCollector(
                 Priority.PRIORITY_HIGH_ACCURACY,
                 intervalMillis
             )
+
                 .setMinUpdateIntervalMillis(2000)
                 .setWaitForAccurateLocation(true)
                 .build()
