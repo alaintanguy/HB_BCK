@@ -28,7 +28,10 @@ object FirebaseManager {
         longitude: Double,
         altitude: Double
     ) {
-
+        Log.d(
+            "HB",
+            "WRITING GPS: $latitude , $longitude"
+        )
         val currentTime =
             System.currentTimeMillis()
 
@@ -67,6 +70,15 @@ object FirebaseManager {
                 Log.d(
                     "HB",
                     "FIREBASE TELEMETRY SUCCESS"
+                )
+                Log.d(
+                    "HB",
+                    "FB MEMBER = $memberId"
+                )
+
+                Log.d(
+                    "HB",
+                    "FB PATH = groups/family_001/members/$memberId"
                 )
             }
             .addOnFailureListener { error ->

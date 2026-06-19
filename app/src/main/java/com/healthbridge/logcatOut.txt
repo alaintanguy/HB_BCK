@@ -1,0 +1,36 @@
+2026-06-18 16:13:32.428 10940-10940 HB                      com.healthbridge                     D  HEARTBEAT RUNNING
+2026-06-18 16:13:32.436 10940-10940 HB                      com.healthbridge                     D  HEARTBEAT SENT
+2026-06-18 16:13:32.535 10940-10940 HB                      com.healthbridge                     D  FIREBASE BATTERY SUCCESS
+2026-06-18 16:13:34.038 10940-10940 HB                      com.healthbridge                     D  HEARTBEAT RUNNING
+2026-06-18 16:13:34.047 10940-10940 HB                      com.healthbridge                     D  HEARTBEAT SENT
+2026-06-18 16:13:34.381 10940-10940 HB                      com.healthbridge                     D  FIREBASE BATTERY SUCCESS
+2026-06-18 16:13:34.955 10940-10940 HB                      com.healthbridge                     D  LOCATION CALLBACK FIRED
+2026-06-18 16:13:34.955 10940-10940 HB                      com.healthbridge                     D  RAW GPS: 38.5819577 , -122.5838233
+2026-06-18 16:13:34.955 10940-10940 HB                      com.healthbridge                     D  GPS UPDATE: 38.5819577 , -122.5838233
+2026-06-18 16:13:34.955 10940-10940 HB                      com.healthbridge                     D  DISTANCE = 6.5179143
+2026-06-18 16:13:34.955 10940-10940 HB                      com.healthbridge                     D  WRITING GPS: 38.5819577 , -122.5838233
+2026-06-18 16:13:34.960 10940-10940 HB                      com.healthbridge                     D  LOCATION CALLBACK FIRED
+2026-06-18 16:13:34.960 10940-10940 HB                      com.healthbridge                     D  RAW GPS: 38.5819577 , -122.5838233
+2026-06-18 16:13:34.960 10940-10940 HB                      com.healthbridge                     D  GPS UPDATE: 38.5819577 , -122.5838233
+2026-06-18 16:13:34.960 10940-10940 HB                      com.healthbridge                     D  DISTANCE = 6.5179143
+2026-06-18 16:13:34.960 10940-10940 HB                      com.healthbridge                     D  WRITING GPS: 38.5819577 , -122.5838233
+2026-06-18 16:13:35.049 10940-10940 HB                      com.healthbridge                     D  FIREBASE TELEMETRY SUCCESS
+2026-06-18 16:13:35.083 10940-10940 HB                      com.healthbridge                     D  FIREBASE TELEMETRY SUCCESS
+2026-06-18 16:14:32.496 10940-10940 HB                      com.healthbridge                     D  HEARTBEAT RUNNING
+2026-06-18 16:14:32.506 10940-10940 HB                      com.healthbridge                     D  HEARTBEAT SENT
+2026-06-18 16:14:32.593 10940-10940 HB                      com.healthbridge                     D  FIREBASE BATTERY SUCCESS
+2026-06-18 16:14:34.051 10940-10940 HB                      com.healthbridge                     D  HEARTBEAT RUNNING
+2026-06-18 16:14:34.061 10940-10940 HB                      com.healthbridge                     D  HEARTBEAT SENT
+2026-06-18 16:14:34.148 10940-10940 HB                      com.healthbridge                     D  FIREBASE BATTERY SUCCESS
+2026-06-18 16:14:36.184 10940-10940 HB                      com.healthbridge                     D  LOCATION CALLBACK FIRED
+2026-06-18 16:14:36.185 10940-10940 HB                      com.healthbridge                     D  RAW GPS: 38.5819688 , -122.5837683
+2026-06-18 16:14:36.185 10940-10940 HB                      com.healthbridge                     D  GPS UPDATE: 38.5819688 , -122.5837683
+2026-06-18 16:14:36.185 10940-10940 HB                      com.healthbridge                     D  DISTANCE = 4.948231
+2026-06-18 16:14:36.185 10940-10940 HB                      com.healthbridge                     D  WRITING GPS: 38.5819688 , -122.5837683
+2026-06-18 16:14:36.186 10940-10940 HB                      com.healthbridge                     D  LOCATION CALLBACK FIRED
+2026-06-18 16:14:36.186 10940-10940 HB                      com.healthbridge                     D  RAW GPS: 38.5819688 , -122.5837683
+2026-06-18 16:14:36.186 10940-10940 HB                      com.healthbridge                     D  GPS UPDATE: 38.5819688 , -122.5837683
+2026-06-18 16:14:36.186 10940-10940 HB                      com.healthbridge                     D  DISTANCE = 4.948231
+2026-06-18 16:14:36.186 10940-10940 HB                      com.healthbridge                     D  WRITING GPS: 38.5819688 , -122.5837683
+2026-06-18 16:14:36.282 10940-10940 HB                      com.healthbridge                     D  FIREBASE TELEMETRY SUCCESS
+2026-06-18 16:14:36.322 10940-10940 HB                      com.healthbridge                     D  FIREBASE TELEMETRY SUCCESS

@@ -34,10 +34,9 @@ class GpsCollector(
         val locationRequest =
             LocationRequest.Builder(
                 Priority.PRIORITY_HIGH_ACCURACY,
-                intervalMillis
+                60000L
             )
-
-                .setMinUpdateIntervalMillis(2000)
+                .setMinUpdateIntervalMillis(60000L)
                 .setWaitForAccurateLocation(true)
                 .build()
 
@@ -79,16 +78,5 @@ class GpsCollector(
             locationCallback!!,
             Looper.getMainLooper()
         )
-    }
-
-    fun stopLocationUpdates() {
-
-        if (locationCallback != null) {
-
-            fusedLocationClient
-                .removeLocationUpdates(
-                    locationCallback!!
-                )
         }
     }
-}

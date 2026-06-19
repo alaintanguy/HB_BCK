@@ -102,6 +102,14 @@ class TelemetryEngine(
             "HB",
             "ENTERED TelemetryEngine.start()"
         )
+        Log.d(
+            "HB",
+            "ENGINE HASH = ${hashCode()}"
+        )
+        Log.d(
+            "HB",
+            "POSTING HEARTBEAT"
+        )
 
         heartbeatHandler.post(
             heartbeatRunnable

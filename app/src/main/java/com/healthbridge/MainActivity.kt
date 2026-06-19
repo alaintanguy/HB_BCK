@@ -30,15 +30,17 @@ class MainActivity :
     OnMapReadyCallback {
 
     companion object {
-        //  const val MEMBER_ID = "alain"
-        //  const val IS_PUBLISHER = false
+        const val MEMBER_ID = "M2"   // M1=Motorola M2=samsung
 
-        const val MEMBER_ID = "mary"
-        const val IS_PUBLISHER = true
+
     }
+
 
     private lateinit var telemetryEngine:
             TelemetryEngine
+
+
+    private var isPublisher = false
 
     private lateinit var googleMap:
             GoogleMap
@@ -87,7 +89,7 @@ class MainActivity :
     override fun onCreate(
         savedInstanceState: Bundle?
     ) {
-        Log.e("HB", "MARY BUILD JUNE16")
+
 
         super.onCreate(savedInstanceState)
 
@@ -106,7 +108,48 @@ class MainActivity :
 
         mapFragment.getMapAsync(this)
 
-        if (IS_PUBLISHER) {
+        loadRole()
+
+
+    }
+
+    private fun loadRole() {
+
+        Log.d(
+            "HB",
+            "LOADROLE CALLED"
+        )
+
+        FirebaseManager
+            .memberReference(MEMBER_ID)
+            .child("profile")
+            .child("role")
+            .get()
+            .addOnSuccessListener { snapshot ->
+
+                val role =
+                    snapshot.getValue(String::class.java)
+                        ?: "caregiver"
+
+                isPublisher =
+                    role == "patient"
+
+                Log.d(
+                    "HB",
+                    "ROLE = $role  PUBLISHER = $isPublisher"
+                )
+
+                startAccordingToRole()
+            }
+    }
+
+    private fun startAccordingToRole() {
+        Log.d(
+            "HB",
+            "LOADROLE CALLED"
+        )
+
+        if (isPublisher) {
 
             Log.d(
                 "HB",
@@ -115,15 +158,10 @@ class MainActivity :
 
             if (!hasLocationPermission()) {
 
-                infoText.text =
-                    "LOCATION PERMISSION REQUIRED\n" +
-                            "Settings → HealthBridge → Permissions → Location → Allow all the time"
-
                 requestLocationPermission()
 
                 return
             }
-
 
             telemetryEngine =
                 TelemetryEngine(
@@ -132,10 +170,11 @@ class MainActivity :
                 )
 
             telemetryEngine.start()
+
+        } else {
+
+            listenToMember("M2")
         }
-        listenToMember("mary") //MEMBER_ID)
-
-
     }
 
         override fun onMapReady(
@@ -162,9 +201,14 @@ class MainActivity :
         private fun listenToMember(
             memberId: String
         ) {
+            Log.d(
+                "HB",
+                "LISTENER ADDED FOR $memberId"
+            )
 
             FirebaseManager
                 .memberReference(memberId)
+
                 .addValueEventListener(
 
                     object : ValueEventListener {
@@ -192,7 +236,8 @@ class MainActivity :
 
                             Log.d(
                                 "HB",
-                                "MARY MARKER: $latitude , $longitude"
+                                "$memberId MARKER: $latitude , $longitude"
+
                             )
 
                             val altitude =

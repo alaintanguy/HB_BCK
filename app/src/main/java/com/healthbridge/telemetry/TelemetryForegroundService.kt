@@ -63,7 +63,7 @@ class TelemetryForegroundService : Service() {
                 memberId
             )
 
-        telemetryEngine.start()
+       // telemetryEngine.start()
 
         return START_STICKY
     }
