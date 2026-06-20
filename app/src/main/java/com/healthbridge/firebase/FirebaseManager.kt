@@ -3,6 +3,9 @@ package com.healthbridge.firebase
 import android.util.Log
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
 
 object FirebaseManager {
 
@@ -118,17 +121,19 @@ object FirebaseManager {
         memberId: String,
         battery: Int
     ) {
-
+        Log.d(
+            "HB",
+            "WRITING BATTERY = $battery"
+        )
         memberReference(memberId)
             .child("device")
             .child("phoneBattery")
+
+
             .setValue(battery)
             .addOnSuccessListener {
 
-                Log.d(
-                    "HB",
-                    "FIREBASE BATTERY SUCCESS"
-                )
+
             }
             .addOnFailureListener { error ->
 
@@ -139,7 +144,35 @@ object FirebaseManager {
                 )
             }
     }
+    fun listenToLowBatteryThreshold(
+        memberId: String,
+        onThreshold: (Int) -> Unit
+    ) {
 
+        memberReference(memberId)
+            .child("settings")
+            .child("lowBatteryThreshold")
+            .addValueEventListener(
+                object : ValueEventListener {
+
+                    override fun onDataChange(
+                        snapshot: DataSnapshot
+                    ) {
+
+                        val threshold =
+                            snapshot.getValue(Int::class.java)
+                                ?: 20
+
+                        onThreshold(threshold)
+                    }
+
+                    override fun onCancelled(
+                        error: DatabaseError
+                    ) {
+                    }
+                }
+            )
+    }
     fun updateLowBatteryAlert(
         memberId: String,
         isLow: Boolean

@@ -37,6 +37,8 @@ class TelemetryEngine(
 
     private val movementThreshold = 10f
 
+    private var lowBatteryThreshold = 20
+
     private val heartbeatHandler =
         Handler(Looper.getMainLooper())
 
@@ -52,6 +54,10 @@ class TelemetryEngine(
 
                 val battery =
                     batteryCollector.getBatteryLevel()
+                Log.d(
+                    "HB",
+                    "BATTERY LEVEL = $battery"
+                )
 
                 FirebaseManager.updateBattery(
                     memberId,
@@ -69,7 +75,7 @@ class TelemetryEngine(
 
                 FirebaseManager.updateLowBatteryAlert(
                     memberId,
-                    battery <= 20
+                    battery <= lowBatteryThreshold
                 )
 
                 Log.d(
@@ -102,14 +108,18 @@ class TelemetryEngine(
             "HB",
             "ENTERED TelemetryEngine.start()"
         )
-        Log.d(
-            "HB",
-            "ENGINE HASH = ${hashCode()}"
-        )
-        Log.d(
-            "HB",
-            "POSTING HEARTBEAT"
-        )
+
+        FirebaseManager.listenToLowBatteryThreshold(
+            memberId
+        ) { threshold ->
+
+            lowBatteryThreshold = threshold
+
+            Log.d(
+                "HB",
+                "LOW BATTERY THRESHOLD = $threshold"
+            )
+        }
 
         heartbeatHandler.post(
             heartbeatRunnable

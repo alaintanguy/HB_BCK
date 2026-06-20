@@ -40,7 +40,7 @@ class MainActivity :
             TelemetryEngine
 
 
-    private var isPublisher = false
+    private var isPublisher = true
 
     private lateinit var googleMap:
             GoogleMap
@@ -90,7 +90,6 @@ class MainActivity :
         savedInstanceState: Bundle?
     ) {
 
-
         super.onCreate(savedInstanceState)
 
         setContentView(
@@ -99,6 +98,12 @@ class MainActivity :
 
         infoText =
             findViewById(R.id.infoText)
+        infoText = findViewById(R.id.infoText)
+
+        infoText.bringToFront()
+
+        infoText.text = "You have a message"
+
 
         val mapFragment =
             supportFragmentManager
@@ -279,6 +284,14 @@ class MainActivity :
                                 "HB",
                                 "FB LOCATION: $latitude , $longitude"
                             )
+
+                            val memberName =
+                                snapshot
+                                    .child("profile")
+                                    .child("name")
+                                    .getValue(String::class.java)
+                                    ?: memberId
+
                             val lastSeen =
                                 snapshot
                                     .child("device")
@@ -337,9 +350,12 @@ class MainActivity :
                                 )
 
                                 infoText.text =
-                                    "Lat: $latitude  Lng: $longitude\n" +
-                                            "$memberId - $status - LS: $ageMinutes min - Bat: $battery%"
-
+                                    if (status == "OFFLINE")
+                                        "$memberName | OFFLINE | LS: ${ageMinutes}m"
+                                    else if (lowBattery)
+                                        "$memberName | ONLINE | LOW BATTERY $battery% | LS: ${ageMinutes}m"
+                                    else
+                                        "$memberName | ONLINE | Bat: $battery% | LS: ${ageMinutes}m"
                             }
                         }
 

@@ -2,7 +2,6 @@
 
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:map="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -11,10 +10,10 @@
     <TextView
         android:id="@+id/infoText"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="100dp"
         android:text="HealthBridge"
         android:textColor="#FFFF00"
-        android:textSize="16sp"
+        android:textSize="20sp"
         android:padding="8dp"
         android:background="#000000" />
 
