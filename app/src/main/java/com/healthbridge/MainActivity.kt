@@ -24,17 +24,20 @@ import android.net.Uri
 import android.provider.Settings
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.google.firebase.database.FirebaseDatabase
 
 class MainActivity :
     AppCompatActivity(),
     OnMapReadyCallback {
 
     companion object {
-        const val MEMBER_ID = "M2"   // M1=Motorola M2=samsung
+        const val MEMBER_ID = "M1"   // M1=Motorola M2=samsung
 
 
     }
+    private var fullMessageVisible = false
 
+    private var currentMessage = ""
 
     private lateinit var telemetryEngine:
             TelemetryEngine
@@ -96,13 +99,15 @@ class MainActivity :
             R.layout.activity_main
         )
 
-        infoText =
-            findViewById(R.id.infoText)
         infoText = findViewById(R.id.infoText)
 
         infoText.bringToFront()
 
         infoText.text = "You have a message"
+        infoText.setOnClickListener {
+
+            acknowledgeMessage()
+        }
 
 
         val mapFragment =
@@ -146,7 +151,7 @@ class MainActivity :
 
                 startAccordingToRole()
             }
-    }
+        }
 
     private fun startAccordingToRole() {
         Log.d(
@@ -176,10 +181,93 @@ class MainActivity :
 
             telemetryEngine.start()
 
+            listenToMessages()
+
         } else {
 
             listenToMember("M2")
         }
+    }
+
+    private fun acknowledgeMessage() {
+
+        FirebaseDatabase
+            .getInstance()
+            .getReference(
+                "groups/family_001/messages/M2/msg_002/acknowledged"
+            )
+            .setValue(true)
+
+        infoText.text =
+            "MESSAGE ACKNOWLEDGED"
+    }
+
+    private fun displayMessage() {
+
+        Log.d(
+            "HB",
+            "MESSAGE LENGTH = ${currentMessage.length}"
+        )
+
+        if (currentMessage.length <= 80) {
+
+            infoText.text =
+                currentMessage
+
+            return
+        }
+
+        if (fullMessageVisible) {
+
+            infoText.text =
+                currentMessage +
+                        "\n\n[LESS]"
+
+        } else {
+
+            infoText.text =
+                currentMessage.take(80) +
+                        "..." +
+                        "\n\n[MORE]"
+        }
+    }
+
+    private fun listenToMessages() {
+
+        FirebaseDatabase
+            .getInstance()
+            .getReference(
+                "groups/family_001/messages/M2"
+            )
+            .addValueEventListener(
+
+                object : ValueEventListener {
+
+                    override fun onDataChange(
+                        snapshot: DataSnapshot
+                    ) {
+
+                        val message =
+                            snapshot
+                                .child("msg_002")
+                                .child("text")
+                                .getValue(String::class.java)
+                                ?: "No messages"
+
+                        runOnUiThread {
+
+                            currentMessage = message
+
+                            displayMessage()
+                        }
+                    }
+
+                    override fun onCancelled(
+                        error: DatabaseError
+                    ) {
+                    }
+                }
+            )
     }
 
         override fun onMapReady(
@@ -349,13 +437,16 @@ class MainActivity :
                                         .newLatLng(position)
                                 )
 
-                                infoText.text =
-                                    if (status == "OFFLINE")
-                                        "$memberName | OFFLINE | LS: ${ageMinutes}m"
-                                    else if (lowBattery)
-                                        "$memberName | ONLINE | LOW BATTERY $battery% | LS: ${ageMinutes}m"
-                                    else
-                                        "$memberName | ONLINE | Bat: $battery% | LS: ${ageMinutes}m"
+                                if (!isPublisher) {
+
+                                    infoText.text =
+                                        if (status == "OFFLINE")
+                                            "$memberName | OFFLINE | LS: ${ageMinutes}m"
+                                        else if (lowBattery)
+                                            "$memberName | ONLINE | LOW BATTERY $battery% | LS: ${ageMinutes}m"
+                                        else
+                                            "$memberName | ONLINE | Bat: $battery% | LS: ${ageMinutes}m"
+                                }
                             }
                         }
 
