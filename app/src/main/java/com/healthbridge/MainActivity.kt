@@ -25,19 +25,23 @@ import android.provider.Settings
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.firebase.database.FirebaseDatabase
+import android.speech.tts.TextToSpeech
+import java.util.Locale
 
 class MainActivity :
     AppCompatActivity(),
     OnMapReadyCallback {
 
     companion object {
-        const val MEMBER_ID = "M1"   // M1=Motorola M2=samsung
+        const val MEMBER_ID = "M2"   // M1=Motorola M2=samsung
 
 
     }
     private var fullMessageVisible = false
 
     private var currentMessage = ""
+
+    private var currentMessageId = ""
 
     private lateinit var telemetryEngine:
             TelemetryEngine
@@ -53,6 +57,10 @@ class MainActivity :
 
     private lateinit var infoText:
             TextView
+
+    private lateinit var textToSpeech: TextToSpeech
+
+    private var lastMessage = ""
 
     private fun hasLocationPermission(): Boolean {
 
@@ -98,19 +106,46 @@ class MainActivity :
         setContentView(
             R.layout.activity_main
         )
+        Log.d(
+            "HB",
+            "BEFORE TTS"
+        )
 
+        textToSpeech = TextToSpeech(this) { status ->
+
+            Log.d(
+                "HB",
+                "TTS CALLBACK STATUS = $status"
+            )
+
+            if (status == TextToSpeech.SUCCESS) {
+
+                Log.d(
+                    "HB",
+                    "TTS READY"
+                )
+
+                textToSpeech.language = Locale.US
+
+                textToSpeech.speak(
+                    "Health Bridge voice test",
+                    TextToSpeech.QUEUE_FLUSH,
+                    null,
+                    "TEST"
+                )
+            }
+        }
         infoText = findViewById(R.id.infoText)
 
         infoText.bringToFront()
 
-        infoText.text = "You have a message"
+        infoText.text = "No message"
         infoText.setOnClickListener {
 
             acknowledgeMessage()
         }
 
-
-        val mapFragment =
+          val mapFragment =
             supportFragmentManager
                 .findFragmentById(
                     R.id.map
@@ -119,15 +154,31 @@ class MainActivity :
         mapFragment.getMapAsync(this)
 
         loadRole()
+        infoText.postDelayed({
 
+            textToSpeech.speak(
+                "Hello Mary",
+                TextToSpeech.QUEUE_FLUSH,
+                null,
+                "TEST"
+            )
+
+            Log.d(
+                "HB",
+                "DIRECT TTS TEST"
+            )
+
+        }, 5000)
 
     }
+
+
 
     private fun loadRole() {
 
         Log.d(
             "HB",
-            "LOADROLE CALLED"
+            "LOAD ROLE CALLED"
         )
 
         FirebaseManager
@@ -156,7 +207,7 @@ class MainActivity :
     private fun startAccordingToRole() {
         Log.d(
             "HB",
-            "LOADROLE CALLED"
+            "LOAD ROLE CALLED"
         )
 
         if (isPublisher) {
@@ -189,25 +240,51 @@ class MainActivity :
         }
     }
 
+
     private fun acknowledgeMessage() {
+        Log.d(
+            "HB",
+            "ACK FUNCTION pressED"
+        )
+
+        Log.d(
+            "HB",
+            "CURRENT MESSAGE ID = $currentMessageId"
+        )
+
+
+
+        if (currentMessageId.isEmpty())
+            return
 
         FirebaseDatabase
             .getInstance()
             .getReference(
-                "groups/family_001/messages/M2/msg_002/acknowledged"
+                "groups/family_001/messages/M2/$currentMessageId/acknowledged"
             )
             .setValue(true)
+            .addOnSuccessListener {
 
-        infoText.text =
-            "MESSAGE ACKNOWLEDGED"
+                Log.d(
+                    "HB",
+                    "ACK SUCCESS"
+                )
+            }
+            .addOnFailureListener { error ->
+
+                Log.e(
+                    "HB",
+                    "ACK FAILED",
+                    error
+                )
+            }
+
+
     }
 
     private fun displayMessage() {
 
-        Log.d(
-            "HB",
-            "MESSAGE LENGTH = ${currentMessage.length}"
-        )
+
 
         if (currentMessage.length <= 80) {
 
@@ -230,9 +307,13 @@ class MainActivity :
                         "..." +
                         "\n\n[MORE]"
         }
+
+
     }
 
     private fun listenToMessages() {
+
+
 
         FirebaseDatabase
             .getInstance()
@@ -247,12 +328,53 @@ class MainActivity :
                         snapshot: DataSnapshot
                     ) {
 
-                        val message =
-                            snapshot
-                                .child("msg_002")
-                                .child("text")
-                                .getValue(String::class.java)
-                                ?: "No messages"
+                        var newestTimestamp = 0L
+                        var newestMessage = "No messages"
+
+                        for (messageSnapshot in snapshot.children) {
+
+                            val timestamp =
+                                messageSnapshot
+                                    .child("timestamp")
+                                    .getValue(Long::class.java)
+                                    ?: 0L
+
+                            val text =
+                                messageSnapshot
+                                    .child("text")
+                                    .getValue(String::class.java)
+                                    ?: ""
+
+                            val messageId =
+                                messageSnapshot.key ?: ""
+
+                            if (timestamp > newestTimestamp) {
+
+                                newestTimestamp = timestamp
+                                newestMessage = text
+                                currentMessageId = messageId
+                            }
+                        }
+                        val message = newestMessage
+
+                        Log.d(
+                            "HB",
+                            "MESSAGE = $message"
+                        )
+
+                        Log.d(
+                            "HB",
+                            "SPEAKING MESSAGE: $message"
+                        )
+
+                        textToSpeech.speak(
+                            message,
+                            TextToSpeech.QUEUE_FLUSH,
+                            null,
+                            "HB_MESSAGE"
+                        )
+
+                        lastMessage = message
 
                         runOnUiThread {
 
@@ -268,9 +390,16 @@ class MainActivity :
                     }
                 }
             )
+
+
     }
 
-        override fun onMapReady(
+
+
+
+
+
+    override fun onMapReady(
             map: GoogleMap
         ) {
 
@@ -447,6 +576,10 @@ class MainActivity :
                                         else
                                             "$memberName | ONLINE | Bat: $battery% | LS: ${ageMinutes}m"
                                 }
+                                Log.d(
+                                    "HB",
+                                    "MESSAGE SNAPSHOT = ${snapshot.value}"
+                                )
                             }
                         }
 
@@ -463,5 +596,12 @@ class MainActivity :
                     }
                 )
         }
+    override fun onDestroy() {
+
+        textToSpeech.stop()
+        textToSpeech.shutdown()
+
+        super.onDestroy()
     }
+}
 
