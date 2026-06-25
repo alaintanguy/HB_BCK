@@ -27,6 +27,7 @@ import androidx.core.content.ContextCompat
 import com.google.firebase.database.FirebaseDatabase
 import android.speech.tts.TextToSpeech
 import java.util.Locale
+import android.widget.Button
 
 class MainActivity :
     AppCompatActivity(),
@@ -37,6 +38,9 @@ class MainActivity :
 
 
     }
+
+    private lateinit var ackButton: Button
+
     private var fullMessageVisible = false
 
     private var currentMessage = ""
@@ -106,24 +110,15 @@ class MainActivity :
         setContentView(
             R.layout.activity_main
         )
-        Log.d(
-            "HB",
-            "BEFORE TTS"
-        )
+
 
         textToSpeech = TextToSpeech(this) { status ->
 
-            Log.d(
-                "HB",
-                "TTS CALLBACK STATUS = $status"
-            )
+
 
             if (status == TextToSpeech.SUCCESS) {
 
-                Log.d(
-                    "HB",
-                    "TTS READY"
-                )
+
 
                 textToSpeech.language = Locale.US
 
@@ -136,6 +131,13 @@ class MainActivity :
             }
         }
         infoText = findViewById(R.id.infoText)
+
+        ackButton = findViewById(R.id.ackButton)
+
+        ackButton.setOnClickListener {
+
+            acknowledgeMessage()
+        }
 
         infoText.bringToFront()
 
@@ -161,11 +163,6 @@ class MainActivity :
                 TextToSpeech.QUEUE_FLUSH,
                 null,
                 "TEST"
-            )
-
-            Log.d(
-                "HB",
-                "DIRECT TTS TEST"
             )
 
         }, 5000)
@@ -242,25 +239,16 @@ class MainActivity :
 
 
     private fun acknowledgeMessage() {
-        Log.d(
-            "HB",
-            "ACK FUNCTION pressED"
-        )
 
         Log.d(
             "HB",
-            "CURRENT MESSAGE ID = $currentMessageId"
+            "ACKNOWLEDGE PRESSED"
         )
-
-
-
-        if (currentMessageId.isEmpty())
-            return
 
         FirebaseDatabase
             .getInstance()
             .getReference(
-                "groups/family_001/messages/M2/$currentMessageId/acknowledged"
+                "groups/family_001/messages/M2/msg_002/acknowledged"
             )
             .setValue(true)
             .addOnSuccessListener {
@@ -269,6 +257,9 @@ class MainActivity :
                     "HB",
                     "ACK SUCCESS"
                 )
+
+                infoText.text =
+                    "MESSAGE ACKNOWLEDGED"
             }
             .addOnFailureListener { error ->
 
@@ -278,8 +269,6 @@ class MainActivity :
                     error
                 )
             }
-
-
     }
 
     private fun displayMessage() {
