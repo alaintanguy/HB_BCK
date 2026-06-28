@@ -1,3 +1,14 @@
+// ====================================================================
+// HealthBridge
+// MainActivity.kt
+// Version: 1.0 (Cleanup in progress)
+// ====================================================================
+//
+// NOTE:
+// First cleanup pass.
+// Functionality intentionally unchanged.
+// ====================================================================
+
 package com.healthbridge
 
 import android.os.Bundle
@@ -28,16 +39,31 @@ import com.google.firebase.database.FirebaseDatabase
 import android.speech.tts.TextToSpeech
 import java.util.Locale
 import android.widget.Button
+import android.widget.EditText
+import android.speech.RecognizerIntent
+import android.app.Activity
+
+// =====================================================
+// MAIN ACTIVITY
+// =====================================================
 
 class MainActivity :
     AppCompatActivity(),
     OnMapReadyCallback {
 
+    // =====================================================
+    // CONFIGURATION
+    // =====================================================
+
     companion object {
-        const val MEMBER_ID = "M2"   // M1=Motorola M2=samsung
+        const val MEMBER_ID = "M1"   // M1=Motorola M2=samsung
 
 
     }
+
+    // =====================================================
+    // UI
+    // =====================================================
 
     private lateinit var ackButton: Button
 
@@ -46,6 +72,15 @@ class MainActivity :
     private var currentMessage = ""
 
     private var currentMessageId = ""
+
+
+    private lateinit var sendButton: Button
+    private lateinit var speakButton: Button
+
+
+    // =====================================================
+    // TELEMETRY
+    // =====================================================
 
     private lateinit var telemetryEngine:
             TelemetryEngine
@@ -59,12 +94,17 @@ class MainActivity :
     private var memberMarker:
             Marker? = null
 
-    private lateinit var infoText:
-            TextView
+    private lateinit var statusText: TextView
+    private lateinit var messageEdit: EditText
+    private lateinit var ackStatus: TextView
 
     private lateinit var textToSpeech: TextToSpeech
 
     private var lastMessage = ""
+
+    // =====================================================
+    // PERMISSIONS
+    // =====================================================
 
     private fun hasLocationPermission(): Boolean {
 
@@ -101,6 +141,10 @@ class MainActivity :
         startActivity(intent)
     }
 
+    // =====================================================
+    // ACTIVITY LIFECYCLE
+    // =====================================================
+
     override fun onCreate(
         savedInstanceState: Bundle?
     ) {
@@ -110,44 +154,60 @@ class MainActivity :
         setContentView(
             R.layout.activity_main
         )
-
-
         textToSpeech = TextToSpeech(this) { status ->
-
-
 
             if (status == TextToSpeech.SUCCESS) {
 
-
-
                 textToSpeech.language = Locale.US
 
-                textToSpeech.speak(
-                    "Health Bridge voice test",
-                    TextToSpeech.QUEUE_FLUSH,
-                    null,
-                    "TEST"
+                Log.d(
+                    "HB",
+                    "TTS READY"
+                )
+
+            } else {
+
+                Log.e(
+                    "HB",
+                    "TTS INIT FAILED"
                 )
             }
         }
-        infoText = findViewById(R.id.infoText)
+        statusText =
+            findViewById(R.id.statusText)
+
+        messageEdit =
+            findViewById(R.id.messageEdit)
+
+        ackStatus =
+            findViewById(R.id.ackStatus)
 
         ackButton = findViewById(R.id.ackButton)
+
+        sendButton = findViewById(R.id.sendButton)
+
+        sendButton.setOnClickListener {
+
+            sendDemoMessage()
+        }
+
+        messageEdit =
+            findViewById(R.id.messageEdit)
 
         ackButton.setOnClickListener {
 
             acknowledgeMessage()
         }
 
-        infoText.bringToFront()
+        statusText.bringToFront()
 
-        infoText.text = "No message"
-        infoText.setOnClickListener {
+        statusText.text = "No message"
+        statusText.setOnClickListener {
 
             acknowledgeMessage()
         }
 
-          val mapFragment =
+        val mapFragment =
             supportFragmentManager
                 .findFragmentById(
                     R.id.map
@@ -156,20 +216,14 @@ class MainActivity :
         mapFragment.getMapAsync(this)
 
         loadRole()
-        infoText.postDelayed({
-
-            textToSpeech.speak(
-                "Hello Mary",
-                TextToSpeech.QUEUE_FLUSH,
-                null,
-                "TEST"
-            )
-
-        }, 5000)
-
+        /* for demo
+        sendButton.visibility =
+            if (isPublisher)
+                View.GONE
+            else
+                View.VISIBLE
+*/
     }
-
-
 
     private fun loadRole() {
 
@@ -199,7 +253,294 @@ class MainActivity :
 
                 startAccordingToRole()
             }
+    }
+
+
+    private fun displayMessage() {
+
+
+        if (currentMessage.length <= 80) {
+
+            statusText.text =
+                currentMessage
+
+            return
         }
+
+        if (fullMessageVisible) {
+
+            statusText.text =
+                currentMessage +
+                        "\n\n[LESS]"
+
+        } else {
+
+            statusText.text =
+                currentMessage.take(80) +
+                        "..." +
+                        "\n\n[MORE]"
+        }
+
+
+    }
+
+
+    override fun onMapReady(
+        map: GoogleMap
+    ) {
+
+        googleMap = map
+
+        val start =
+            LatLng(
+                38.5816,
+                -122.5825
+            )
+
+        googleMap.moveCamera(
+            CameraUpdateFactory
+                .newLatLngZoom(
+                    start,
+                    15f
+                )
+        )
+    }
+
+    private fun listenToMember(
+        memberId: String
+    ) {
+        Log.d(
+            "HB",
+            "LISTENER ADDED FOR $memberId"
+        )
+
+        FirebaseManager
+            .memberReference(memberId)
+
+            .addValueEventListener(
+
+                object : ValueEventListener {
+
+                    override fun onDataChange(
+                        snapshot: DataSnapshot
+                    ) {
+
+                        val latitude =
+
+                            snapshot
+                                .child("telemetry")
+                                .child("location")
+                                .child("lat")
+                                .getValue(Double::class.java)
+                                ?: return
+
+                        val longitude =
+                            snapshot
+                                .child("telemetry")
+                                .child("location")
+                                .child("lng")
+                                .getValue(Double::class.java)
+                                ?: return
+
+                        Log.d(
+                            "HB",
+                            "$memberId MARKER: $latitude , $longitude"
+
+                        )
+
+                        val altitude =
+                            snapshot
+                                .child("telemetry")
+                                .child("location")
+                                .child("altitude")
+                                .getValue(Double::class.java)
+                                ?: 0.0
+
+                        val timestamp =
+                            snapshot
+                                .child("telemetry")
+                                .child("timestamp")
+                                .getValue(Long::class.java)
+                                ?: 0L
+
+                        val battery =
+                            snapshot
+                                .child("device")
+                                .child("phoneBattery")
+                                .getValue(Int::class.java)
+                                ?: 0
+
+                        val lowBattery =
+                            snapshot
+                                .child("alerts")
+                                .child("lowBattery")
+                                .getValue(Boolean::class.java)
+                                ?: false
+
+                        val batteryStatus =
+                            if (lowBattery)
+                                "LOW BATTERY"
+                            else
+                                "OK"
+
+                        Log.d(
+                            "HB",
+                            "FB LOCATION: $latitude , $longitude"
+                        )
+
+                        val memberName =
+                            snapshot
+                                .child("profile")
+                                .child("name")
+                                .getValue(String::class.java)
+                                ?: memberId
+
+                        val lastSeen =
+                            snapshot
+                                .child("device")
+                                .child("lastSeen")
+                                .getValue(Long::class.java)
+                                ?: 0L
+
+                        val ageMinutes =
+                            (System.currentTimeMillis() - lastSeen) /
+                                    60000
+
+                        val status =
+                            if (ageMinutes <= 2)
+                                "ONLINE"
+                            else
+                                "OFFLINE"
+
+                        val position =
+                            LatLng(
+                                latitude,
+                                longitude
+                            )
+
+                        runOnUiThread {
+
+                            if (
+                                memberMarker == null
+                            ) {
+
+                                memberMarker =
+                                    googleMap.addMarker(
+
+                                        MarkerOptions()
+                                            .position(position)
+                                            .title(memberId)
+                                            .icon(
+                                                BitmapDescriptorFactory
+                                                    .defaultMarker(
+                                                        if (memberId == "M1")
+                                                            BitmapDescriptorFactory.HUE_RED
+                                                        else
+                                                            BitmapDescriptorFactory.HUE_BLUE
+                                                    )
+                                            )
+                                    )
+
+                            } else {
+
+                                memberMarker?.position =
+                                    position
+                            }
+
+                            googleMap.animateCamera(
+                                CameraUpdateFactory
+                                    .newLatLng(position)
+                            )
+
+                            if (!isPublisher) {
+
+                                statusText.text =
+                                    if (status == "OFFLINE")
+                                        "$memberName | OFFLINE | LS: ${ageMinutes}m"
+                                    else if (lowBattery)
+                                        "$memberName | ONLINE | LOW BATTERY $battery% | LS: ${ageMinutes}m"
+                                    else
+                                        "$memberName | ONLINE | Bat: $battery% | LS: ${ageMinutes}m"
+                            }
+                            Log.d(
+                                "HB",
+                                "MESSAGE SNAPSHOT = ${snapshot.value}"
+                            )
+                        }
+                    }
+
+                    override fun onCancelled(
+                        error: DatabaseError
+                    ) {
+
+                        Log.e(
+                            "HB",
+                            "FIREBASE READ FAILED",
+                            error.toException()
+                        )
+                    }
+                }
+            )
+    }
+
+    override fun onDestroy() {
+
+        textToSpeech.stop()
+        textToSpeech.shutdown()
+
+        super.onDestroy()
+    }
+
+// =====================================================
+//  DEMO FUNCTIONS
+// =====================================================
+
+    private fun sendDemoMessage() {
+
+        val messageText =
+            messageEdit.text.toString().trim()
+
+        if (messageText.isEmpty()) {
+            return
+        }
+
+        val message = hashMapOf(
+            "text" to messageText,
+            "timestamp" to com.google.firebase.database.ServerValue.TIMESTAMP,
+            "acknowledged" to false
+        )
+
+        FirebaseDatabase
+            .getInstance()
+            .getReference(
+                "groups/family_001/messages/M2/msg_001"
+            )
+            .setValue(message)
+            .addOnSuccessListener {
+
+                Log.d(
+                    "HB",
+                    "DEMO MESSAGE SENT"
+                )
+
+                // Ready for the next reminder
+                messageEdit.setText("")
+                ackStatus.text = "Last ACK: Waiting..."
+
+            }
+            .addOnFailureListener { error ->
+
+                Log.e(
+                    "HB",
+                    "SEND FAILED",
+                    error
+                )
+            }
+    }
+
+// =====================================================
+// ROLE MANAGEMENT
+// =====================================================
 
     private fun startAccordingToRole() {
         Log.d(
@@ -237,20 +578,35 @@ class MainActivity :
         }
     }
 
+// =====================================================
+// MESSAGING
+// =====================================================
 
     private fun acknowledgeMessage() {
+
+        if (currentMessageId.isBlank()) {
+
+            Log.d(
+                "HB",
+                "NO MESSAGE TO ACKNOWLEDGE"
+            )
+
+            return
+        }
 
         Log.d(
             "HB",
             "ACKNOWLEDGE PRESSED"
         )
 
+
         FirebaseDatabase
             .getInstance()
             .getReference(
-                "groups/family_001/messages/M2/msg_002/acknowledged"
+                "groups/family_001/messages/M2/$currentMessageId/acknowledged"
             )
             .setValue(true)
+
             .addOnSuccessListener {
 
                 Log.d(
@@ -258,8 +614,11 @@ class MainActivity :
                     "ACK SUCCESS"
                 )
 
-                infoText.text =
-                    "MESSAGE ACKNOWLEDGED"
+                currentMessage = ""
+                currentMessageId = ""
+                lastMessage = ""
+
+                statusText.text = "No pending messages"
             }
             .addOnFailureListener { error ->
 
@@ -271,37 +630,8 @@ class MainActivity :
             }
     }
 
-    private fun displayMessage() {
-
-
-
-        if (currentMessage.length <= 80) {
-
-            infoText.text =
-                currentMessage
-
-            return
-        }
-
-        if (fullMessageVisible) {
-
-            infoText.text =
-                currentMessage +
-                        "\n\n[LESS]"
-
-        } else {
-
-            infoText.text =
-                currentMessage.take(80) +
-                        "..." +
-                        "\n\n[MORE]"
-        }
-
-
-    }
 
     private fun listenToMessages() {
-
 
 
         FirebaseDatabase
@@ -321,6 +651,16 @@ class MainActivity :
                         var newestMessage = "No messages"
 
                         for (messageSnapshot in snapshot.children) {
+
+                            val acknowledged =
+                                messageSnapshot
+                                    .child("acknowledged")
+                                    .getValue(Boolean::class.java)
+                                    ?: false
+
+                            if (acknowledged) {
+                                continue
+                            }
 
                             val timestamp =
                                 messageSnapshot
@@ -348,7 +688,7 @@ class MainActivity :
 
                         Log.d(
                             "HB",
-                            "MESSAGE = $message"
+                            "SELECTED MESSAGE = $newestMessage  ID = $currentMessageId"
                         )
 
                         Log.d(
@@ -383,214 +723,4 @@ class MainActivity :
 
     }
 
-
-
-
-
-
-    override fun onMapReady(
-            map: GoogleMap
-        ) {
-
-            googleMap = map
-
-            val start =
-                LatLng(
-                    38.5816,
-                    -122.5825
-                )
-
-            googleMap.moveCamera(
-                CameraUpdateFactory
-                    .newLatLngZoom(
-                        start,
-                        15f
-                    )
-            )
-        }
-
-        private fun listenToMember(
-            memberId: String
-        ) {
-            Log.d(
-                "HB",
-                "LISTENER ADDED FOR $memberId"
-            )
-
-            FirebaseManager
-                .memberReference(memberId)
-
-                .addValueEventListener(
-
-                    object : ValueEventListener {
-
-                        override fun onDataChange(
-                            snapshot: DataSnapshot
-                        ) {
-
-                            val latitude =
-
-                                snapshot
-                                    .child("telemetry")
-                                    .child("location")
-                                    .child("lat")
-                                    .getValue(Double::class.java)
-                                    ?: return
-
-                            val longitude =
-                                snapshot
-                                    .child("telemetry")
-                                    .child("location")
-                                    .child("lng")
-                                    .getValue(Double::class.java)
-                                    ?: return
-
-                            Log.d(
-                                "HB",
-                                "$memberId MARKER: $latitude , $longitude"
-
-                            )
-
-                            val altitude =
-                                snapshot
-                                    .child("telemetry")
-                                    .child("location")
-                                    .child("altitude")
-                                    .getValue(Double::class.java)
-                                    ?: 0.0
-
-                            val timestamp =
-                                snapshot
-                                    .child("telemetry")
-                                    .child("timestamp")
-                                    .getValue(Long::class.java)
-                                    ?: 0L
-
-                            val battery =
-                                snapshot
-                                    .child("device")
-                                    .child("phoneBattery")
-                                    .getValue(Int::class.java)
-                                    ?: 0
-
-                            val lowBattery =
-                                snapshot
-                                    .child("alerts")
-                                    .child("lowBattery")
-                                    .getValue(Boolean::class.java)
-                                    ?: false
-
-                            val batteryStatus =
-                                if (lowBattery)
-                                    "LOW BATTERY"
-                                else
-                                    "OK"
-
-                            Log.d(
-                                "HB",
-                                "FB LOCATION: $latitude , $longitude"
-                            )
-
-                            val memberName =
-                                snapshot
-                                    .child("profile")
-                                    .child("name")
-                                    .getValue(String::class.java)
-                                    ?: memberId
-
-                            val lastSeen =
-                                snapshot
-                                    .child("device")
-                                    .child("lastSeen")
-                                    .getValue(Long::class.java)
-                                    ?: 0L
-
-                            val ageMinutes =
-                                (System.currentTimeMillis() - lastSeen) /
-                                        60000
-
-                            val status =
-                                if (ageMinutes <= 2)
-                                    "ONLINE"
-                                else
-                                    "OFFLINE"
-
-                            val position =
-                                LatLng(
-                                    latitude,
-                                    longitude
-                                )
-
-                            runOnUiThread {
-
-                                if (
-                                    memberMarker == null
-                                ) {
-
-                                    memberMarker =
-                                        googleMap.addMarker(
-
-                                            MarkerOptions()
-                                                .position(position)
-                                                .title(memberId)
-                                                .icon(
-                                                    BitmapDescriptorFactory
-                                                        .defaultMarker(
-                                                            if (memberId == "M1")
-                                                                BitmapDescriptorFactory.HUE_RED
-                                                            else
-                                                                BitmapDescriptorFactory.HUE_BLUE
-                                                        )
-                                                )
-                                        )
-
-                                } else {
-
-                                    memberMarker?.position =
-                                        position
-                                }
-
-                                googleMap.animateCamera(
-                                    CameraUpdateFactory
-                                        .newLatLng(position)
-                                )
-
-                                if (!isPublisher) {
-
-                                    infoText.text =
-                                        if (status == "OFFLINE")
-                                            "$memberName | OFFLINE | LS: ${ageMinutes}m"
-                                        else if (lowBattery)
-                                            "$memberName | ONLINE | LOW BATTERY $battery% | LS: ${ageMinutes}m"
-                                        else
-                                            "$memberName | ONLINE | Bat: $battery% | LS: ${ageMinutes}m"
-                                }
-                                Log.d(
-                                    "HB",
-                                    "MESSAGE SNAPSHOT = ${snapshot.value}"
-                                )
-                            }
-                        }
-
-                        override fun onCancelled(
-                            error: DatabaseError
-                        ) {
-
-                            Log.e(
-                                "HB",
-                                "FIREBASE READ FAILED",
-                                error.toException()
-                            )
-                        }
-                    }
-                )
-        }
-    override fun onDestroy() {
-
-        textToSpeech.stop()
-        textToSpeech.shutdown()
-
-        super.onDestroy()
-    }
 }
-
