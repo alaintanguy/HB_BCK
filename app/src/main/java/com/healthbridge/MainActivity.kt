@@ -186,9 +186,20 @@ class MainActivity :
 
         sendButton = findViewById(R.id.sendButton)
 
+        speakButton = findViewById(R.id.speakButton)
+
+        speakButton.setOnClickListener {
+
+            Log.d("HB", "SPEAK BUTTON CLICKED")
+
+            statusText.text = "BUTTON WORKS"
+
+        }
+
         sendButton.setOnClickListener {
 
-            sendDemoMessage()
+            //sendDemoMessage()
+            statusText.text = "SEND WORKS"
         }
 
         messageEdit =
@@ -536,6 +547,70 @@ class MainActivity :
                     error
                 )
             }
+    }
+
+    // =====================================================
+// SPEECH RECOGNITION
+// =====================================================
+
+    private val speechLauncher =
+        registerForActivityResult(
+            androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+
+            if (result.resultCode == Activity.RESULT_OK) {
+
+                val matches =
+                    result.data?.getStringArrayListExtra(
+                        RecognizerIntent.EXTRA_RESULTS
+                    )
+
+                if (!matches.isNullOrEmpty()) {
+
+                    val spokenText = matches[0]
+
+                    Log.d(
+                        "HB",
+                        "SPEECH = $spokenText"
+                    )
+                    Log.d(
+                        "HB",
+                        "SPEECH RESULT = $spokenText"
+                    )
+
+                    messageEdit.setText(spokenText)
+                    Log.d(
+                        "HB",
+                        "EDITTEXT NOW = ${messageEdit.text}"
+                    )
+                }
+            }
+        }
+
+    private fun startSpeechRecognition() {
+        Log.d("HB", "LAUNCHING SPEECH")
+
+        val intent = Intent(
+            RecognizerIntent.ACTION_RECOGNIZE_SPEECH
+        )
+
+        intent.putExtra(
+            RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+            RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+        )
+
+        intent.putExtra(
+            RecognizerIntent.EXTRA_LANGUAGE,
+            Locale.getDefault()
+        )
+
+        intent.putExtra(
+            RecognizerIntent.EXTRA_PROMPT,
+            "Speak your reminder"
+        )
+        Log.d("HB", "LAUNCHING SPEECH")
+
+        speechLauncher.launch(intent)
     }
 
 // =====================================================

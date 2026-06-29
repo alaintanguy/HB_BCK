@@ -24,9 +24,7 @@
         android:background="#000000"
         android:text="Status"/>
 
-    android:id="@+id/messageEdit"
 
-    android:id="@+id/ackStatus"
 
     <EditText
         android:id="@+id/messageEdit"
