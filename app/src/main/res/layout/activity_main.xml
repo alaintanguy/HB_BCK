@@ -7,6 +7,10 @@
     android:orientation="vertical"
     android:background="#000000">
 
+    <!-- ========================= -->
+    <!-- MAP -->
+    <!-- ========================= -->
+
     <fragment
         android:id="@+id/map"
         android:name="com.google.android.gms.maps.SupportMapFragment"
@@ -14,62 +18,91 @@
         android:layout_height="0dp"
         android:layout_weight="1"/>
 
+    <!-- ========================= -->
+    <!-- STATUS -->
+    <!-- ========================= -->
+
     <TextView
         android:id="@+id/statusText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="#202020"
+        android:padding="6dp"
+        android:text="🟢 ONLINE    🕒 --:--    🔋 --%"
+        android:textAlignment="center"
         android:textColor="#FFFF00"
-        android:textSize="20sp"
-        android:padding="8dp"
-        android:background="#000000"
-        android:text="Status"/>
+        android:textSize="18sp"
+        android:textStyle="bold"/>
 
-
+    <!-- ========================= -->
+    <!-- REMINDER -->
+    <!-- ========================= -->
 
     <EditText
         android:id="@+id/messageEdit"
         android:layout_width="match_parent"
-        android:layout_height="100dp"
-        android:hint="Speak or type your reminder..."
+        android:layout_height="150dp"
+        android:layout_margin="8dp"
+        android:background="#FFFFFF"
         android:gravity="top|start"
+        android:hint="Speak or type your reminder..."
         android:inputType="textMultiLine"
-        android:minLines="3"
-        android:maxLines="5"/>
+        android:padding="12dp"
+        android:textColor="#000000"
+        android:textSize="22sp"/>
+
+    <!-- ========================= -->
+    <!-- ACTION BUTTONS -->
+    <!-- ========================= -->
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp">
 
         <Button
             android:id="@+id/speakButton"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="🎤 Speak"/>
+            android:layout_width="90dp"
+            android:layout_height="90dp"
+            android:layout_margin="12dp"
+            android:text="🎤"
+            android:textSize="34sp"/>
 
         <Button
             android:id="@+id/sendButton"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Send Reminder"/>
+            android:layout_width="90dp"
+            android:layout_height="90dp"
+            android:layout_margin="12dp"
+            android:text="📤"
+            android:textSize="34sp"/>
+
+
+
+        <Button
+            android:id="@+id/ackButton"
+            android:layout_width="1dp"
+            android:layout_height="1dp"
+            android:visibility="gone"
+            android:text="ACK"/>
 
     </LinearLayout>
 
-    <Button
-        android:id="@+id/ackButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="ACKNOWLEDGE"/>
+    <!-- ========================= -->
+    <!-- ACK -->
+    <!-- ========================= -->
 
     <TextView
         android:id="@+id/ackStatus"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Last ACK: Waiting..."
+        android:gravity="center"
+        android:padding="8dp"
+        android:text="✔ Waiting for ACK"
         android:textColor="#00FF00"
-        android:textSize="18sp"
-        android:padding="8dp"/>
+        android:textSize="8sp"
+        android:textStyle="bold"/>
 
 </LinearLayout>

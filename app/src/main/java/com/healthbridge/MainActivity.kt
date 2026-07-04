@@ -56,7 +56,7 @@ class MainActivity :
     // =====================================================
 
     companion object {
-        const val MEMBER_ID = "M1"   // M1=Motorola M2=samsung
+        const val MEMBER_ID = "M2"   // M1=Motorola M2=samsung
 
 
     }
@@ -190,16 +190,20 @@ class MainActivity :
 
         speakButton.setOnClickListener {
 
-            Log.d("HB", "SPEAK BUTTON CLICKED")
+            Log.d("HB", "MIC BUTTON PRESSED")
 
-            statusText.text = "BUTTON WORKS"
+            statusText.text = "STARTING SPEECH"
 
+            startSpeechRecognition()
         }
 
         sendButton.setOnClickListener {
+            Log.d("HB", "SEND BUTTON PRESSED")
 
-            //sendDemoMessage()
-            statusText.text = "SEND WORKS"
+            sendDemoMessage()
+
+
+
         }
 
         messageEdit =
@@ -250,6 +254,7 @@ class MainActivity :
             .get()
             .addOnSuccessListener { snapshot ->
 
+
                 val role =
                     snapshot.getValue(String::class.java)
                         ?: "caregiver"
@@ -257,12 +262,16 @@ class MainActivity :
                 isPublisher =
                     role == "patient"
 
-                Log.d(
-                    "HB",
-                    "ROLE = $role  PUBLISHER = $isPublisher"
-                )
+                Log.d("HB", "ROLE = $isPublisher")
+
+                if (isPublisher) {
+                    Log.d("HB", "I AM THE PATIENT")
+                } else {
+                    Log.d("HB", "I AM THE CAREGIVER")
+                }
 
                 startAccordingToRole()
+
             }
     }
 
@@ -328,7 +337,7 @@ class MainActivity :
         FirebaseManager
             .memberReference(memberId)
 
-            .addValueEventListener(
+            .addListenerForSingleValueEvent(
 
                 object : ValueEventListener {
 
@@ -515,30 +524,47 @@ class MainActivity :
             return
         }
 
+        // -------------------------------------------------
+        // Determine who receives the message
+        // -------------------------------------------------
+
+        val target =
+
+            if (MEMBER_ID == "M1")
+                "M2"
+            else
+                "M1"
+
         val message = hashMapOf(
+
             "text" to messageText,
-            "timestamp" to com.google.firebase.database.ServerValue.TIMESTAMP,
+
+            "timestamp" to
+                    com.google.firebase.database.ServerValue.TIMESTAMP,
+
             "acknowledged" to false
         )
 
         FirebaseDatabase
             .getInstance()
             .getReference(
-                "groups/family_001/messages/M2/msg_001"
+                "groups/family_001/messages/$target/msg_001"
             )
             .setValue(message)
+
             .addOnSuccessListener {
 
                 Log.d(
                     "HB",
-                    "DEMO MESSAGE SENT"
+                    "MESSAGE SENT TO $target"
                 )
 
-                // Ready for the next reminder
                 messageEdit.setText("")
-                ackStatus.text = "Last ACK: Waiting..."
+
+              //  ackStatus.text = "Message sent"
 
             }
+
             .addOnFailureListener { error ->
 
                 Log.e(
@@ -546,6 +572,7 @@ class MainActivity :
                     "SEND FAILED",
                     error
                 )
+
             }
     }
 
@@ -558,6 +585,9 @@ class MainActivity :
             androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
         ) { result ->
 
+            Log.d("HB", "RESULT CODE = ${result.resultCode}")
+            Log.d("HB", "RESULT DATA = ${result.data}")
+
             if (result.resultCode == Activity.RESULT_OK) {
 
                 val matches =
@@ -565,28 +595,32 @@ class MainActivity :
                         RecognizerIntent.EXTRA_RESULTS
                     )
 
+                Log.d("HB", "MATCHES = $matches")
+
                 if (!matches.isNullOrEmpty()) {
 
                     val spokenText = matches[0]
 
-                    Log.d(
-                        "HB",
-                        "SPEECH = $spokenText"
-                    )
-                    Log.d(
-                        "HB",
-                        "SPEECH RESULT = $spokenText"
-                    )
+                    Log.d("HB", "SPEECH = $spokenText")
 
                     messageEdit.setText(spokenText)
+
+                    statusText.text = spokenText
+
                     Log.d(
                         "HB",
                         "EDITTEXT NOW = ${messageEdit.text}"
                     )
                 }
+
+            } else {
+
+                Log.d(
+                    "HB",
+                    "SPEECH CANCELLED OR FAILED"
+                )
             }
         }
-
     private fun startSpeechRecognition() {
         Log.d("HB", "LAUNCHING SPEECH")
 
@@ -650,6 +684,8 @@ class MainActivity :
         } else {
 
             listenToMember("M2")
+
+            listenToMessages()
         }
     }
 
@@ -678,7 +714,7 @@ class MainActivity :
         FirebaseDatabase
             .getInstance()
             .getReference(
-                "groups/family_001/messages/M2/$currentMessageId/acknowledged"
+                "groups/family_001/messages/$MEMBER_ID/$currentMessageId/acknowledged"
             )
             .setValue(true)
 
@@ -712,7 +748,7 @@ class MainActivity :
         FirebaseDatabase
             .getInstance()
             .getReference(
-                "groups/family_001/messages/M2"
+                "groups/family_001/messages/$MEMBER_ID"
             )
             .addValueEventListener(
 
@@ -721,11 +757,26 @@ class MainActivity :
                     override fun onDataChange(
                         snapshot: DataSnapshot
                     ) {
+                        Log.d("HB", "MESSAGE LISTENER FIRED")
+                        Log.d("HB", "PATH = groups/family_001/messages/$MEMBER_ID")
+                        Log.d("HB", "EXISTS = ${snapshot.exists()}")
+                        Log.d("HB", "CHILD COUNT = ${snapshot.childrenCount}")
+                        Log.d("HB", "ROOT = ${snapshot.value}")
 
                         var newestTimestamp = 0L
                         var newestMessage = "No messages"
 
+                        Log.d("HB", "ROOT KEY = ${snapshot.key}")
+
                         for (messageSnapshot in snapshot.children) {
+
+                            Log.d(
+                                "HB",
+                                "KEY = ${messageSnapshot.key}"
+                            )
+
+                            Log.d("HB", "CHILD KEY = ${messageSnapshot.key}")
+                            Log.d("HB", "CHILD VALUE = ${messageSnapshot.value}")
 
                             val acknowledged =
                                 messageSnapshot
@@ -752,12 +803,21 @@ class MainActivity :
                             val messageId =
                                 messageSnapshot.key ?: ""
 
+                            Log.d(
+                                "HB",
+                                "MSG id=$messageId  text='$text'  ts=$timestamp  ack=$acknowledged"
+                            )
+                   /*
                             if (timestamp > newestTimestamp) {
 
                                 newestTimestamp = timestamp
                                 newestMessage = text
                                 currentMessageId = messageId
                             }
+
+                    */
+                            newestMessage = text
+                            currentMessageId = messageId
                         }
                         val message = newestMessage
 
@@ -771,20 +831,28 @@ class MainActivity :
                             "SPEAKING MESSAGE: $message"
                         )
 
+                        Log.d("HB", "SPEAKING: $message")
+
                         textToSpeech.speak(
                             message,
                             TextToSpeech.QUEUE_FLUSH,
                             null,
                             "HB_MESSAGE"
+
                         )
 
+
                         lastMessage = message
+
+
 
                         runOnUiThread {
 
                             currentMessage = message
 
-                            displayMessage()
+                            messageEdit.setText(message)
+
+                            statusText.text = "New message received"
                         }
                     }
 
