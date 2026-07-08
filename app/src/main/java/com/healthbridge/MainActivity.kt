@@ -41,6 +41,7 @@ import java.util.Locale
 import android.widget.Button
 import android.widget.EditText
 import android.speech.RecognizerIntent
+import android.view.WindowManager
 import android.app.Activity
 
 // =====================================================
@@ -56,7 +57,7 @@ class MainActivity :
     // =====================================================
 
     companion object {
-        const val MEMBER_ID = "M1"   // M1=Motorola M2=samsung
+        const val MEMBER_ID = "M2"   // M1=Motorola M2=samsung
 
     }
 
@@ -87,8 +88,8 @@ class MainActivity :
     private lateinit var googleMap:
             GoogleMap
 
-    private var memberMarker:
-            Marker? = null
+    private val memberMarkers =
+        mutableMapOf<String, Marker>()
 
     private lateinit var statusText: TextView
     private lateinit var messageEdit: EditText
@@ -149,11 +150,33 @@ class MainActivity :
 
         setContentView(R.layout.activity_main)
 
-        Log.e(
-            "HB",
-            "********** HB STARTED  M1 **********"
+        window.setSoftInputMode(
+            WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN
         )
 
+        Log.i(
+            "HB",
+            "========================================"
+        )
+
+        Log.i(
+            "HB",
+            "HealthBridge STARTED  -  $MEMBER_ID"
+        )
+
+        Log.i(
+            "HB",
+            "========================================"
+        )
+        Log.i(
+            "HB",
+            "HealthBridge STARTED  -  $MEMBER_ID"
+        )
+
+        Log.i(
+            "HB",
+            "========================================"
+        )
         textToSpeech = TextToSpeech(this) { status ->
 
             if (status == TextToSpeech.SUCCESS) {
@@ -172,12 +195,14 @@ class MainActivity :
             findViewById(R.id.statusText)
 
         statusText.text =
-            "BUILD JULY 7 - $MEMBER_ID"
+            "No pending messages"
 
         messageEdit =
             findViewById(R.id.messageEdit)
         ackStatus =
             findViewById(R.id.ackStatus)
+
+        messageEdit.clearFocus()
 
         ackButton = findViewById(R.id.ackButton)
 
@@ -411,31 +436,33 @@ class MainActivity :
 
                         runOnUiThread {
 
-                            if (
-                                memberMarker == null
-                            ) {
+                            val marker = memberMarkers[memberId]
 
-                                memberMarker =
+                            if (marker == null) {
+
+                                val newMarker =
                                     googleMap.addMarker(
 
                                         MarkerOptions()
                                             .position(position)
-                                            .title(memberId)
+                                            .title(memberName)
                                             .icon(
-                                                BitmapDescriptorFactory
-                                                    .defaultMarker(
-                                                        if (memberId == "M1")
-                                                            BitmapDescriptorFactory.HUE_RED
-                                                        else
-                                                            BitmapDescriptorFactory.HUE_BLUE
-                                                    )
+                                                BitmapDescriptorFactory.defaultMarker(
+                                                    if (memberId == "M1")
+                                                        BitmapDescriptorFactory.HUE_RED
+                                                    else
+                                                        BitmapDescriptorFactory.HUE_BLUE
+                                                )
                                             )
                                     )
 
+                                if (newMarker != null) {
+                                    memberMarkers[memberId] = newMarker
+                                }
+
                             } else {
 
-                                memberMarker?.position =
-                                    position
+                                marker.position = position
                             }
 
                             googleMap.animateCamera(
@@ -663,10 +690,16 @@ class MainActivity :
 
             telemetryEngine.start()
 
+            // Show BOTH members on the map
+            listenToMember("M1")
+            listenToMember("M2")
+
             listenToMessages()
 
         } else {
 
+            // Viewer also shows BOTH members
+            listenToMember("M1")
             listenToMember("M2")
 
             listenToMessages()
@@ -712,7 +745,7 @@ class MainActivity :
                 currentMessageId = ""
                 lastMessage = ""
 
-                statusText.text = "No pending messages"
+
             }
             .addOnFailureListener { error ->
 
