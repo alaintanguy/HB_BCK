@@ -1,0 +1,36 @@
+[33me013695[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mrestore-session[m[33m)[m Demo#1 7/8/2026
+[33me34f4af[m M1-M2 converse 7/8/2026
+[33m40cc25c[m Checkpoint: July 6 before messaging repair
+[33m78c43c0[m[33m ([m[1;31morigin/feature/spinner[m[33m)[m Messaging debug checkpoint before listener audit
+[33md184cba[m[33m ([m[1;32mtest-working[m[33m)[m HealthBridge: Messaging, TTS and ACK workin
+[33m1227228[m Demo #1
+[33m4366786[m HealthBridge: Messaging, TTS and ACK working
+[33mf182a24[m TTS working
+[33m710a7a0[m Message sent and acknoledged
+[33mb36f5a8[m Low Battery Alert verified
+[33mb2c6ad7[m FB updates working
+[33m8881941[m GPS permission check and telemetry working
+[33m17a3ada[m Stable dual-device background telemetry operational
+[33m66b0fe8[m Stable dual-device background telemetry operational
+[33m223ca60[m Stable real GPS telemetry with altitude lean-up 06022026
+[33m0732cea[m Stable real GPS telemetry with altitude unclean 06022026
+[33me0b5f57[m Stable real GPS telemetry with altitude 05312026
+[33m61bbeec[m Working real GPS telemetry on Samsung and Motorola 05312026
+[33m0d25481[m[33m ([m[1;33mtag: [m[1;33mHB_TELEMETRY_STABLE[m[33m)[m 05252026 Stable telemetry loop with Firebase latest structure
+[33m5e8743d[m Recovered stable running baseline
+[33m7077f4e[m Recovered stable running baseline
+[33mcca3a06[m Recovered stable running baseline
+[33mcd88f09[m Recovered stable running baseline
+[33ma0227b4[m Recovered stable running baseline
+[33m22ef926[m HealthBridge Firebase + accessibility MVP
+[33mc2f6cfe[m Spinner selection and connect button working
+[33mb867c38[m Spinner selection and connect button working
+[33m66cde15[m Spinner selection and connect button working
+[33m1de4c8f[m Spinner selection and connect button working
+[33m3755dac[m Spinner selection and connect button working
+[33m4f62cc6[m Spinner selection and connect button working
+[33ma5b5644[m Spinner selection and connect button working
+[33m2364aea[m ...
+[33m99f31ec[m Spinner UI working
+[33m8c0764f[m Stable clean launch working
+[33m2628c77[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m first commit

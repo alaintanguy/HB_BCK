@@ -43,6 +43,7 @@ import android.widget.EditText
 import android.speech.RecognizerIntent
 import android.view.WindowManager
 import android.app.Activity
+import com.google.firebase.auth.FirebaseAuth
 
 // =====================================================
 // MAIN ACTIVITY
@@ -243,36 +244,77 @@ class MainActivity :
         mapFragment.getMapAsync(this)
 
         loadRole()
+       // authenticateFirebase()
 
     }
+    private fun authenticateFirebase() {
 
+        FirebaseAuth.getInstance()
+            .signInAnonymously()
+
+            .addOnSuccessListener {
+
+                Log.d(
+                    "HB",
+                    "FIREBASE AUTH SUCCESS"
+                )
+
+                loadRole()
+            }
+
+            .addOnFailureListener { e ->
+
+                Log.e(
+                    "HB",
+                    "FIREBASE AUTH FAILED",
+                    e
+                )
+
+                // Continue anyway while Firebase rules are open
+                loadRole()
+            }
+    }
     private fun loadRole() {
 
-        Log.d(
-            "HB",
-            "LOAD ROLE CALLED"
-        )
 
         FirebaseManager
             .memberReference(MEMBER_ID)
             .child("profile")
             .child("role")
-            .get()
-            .addOnSuccessListener { snapshot ->
 
-                val role =
-                    snapshot.getValue(String::class.java)
-                        ?: "caregiver"
+            .addValueEventListener(object : ValueEventListener {
 
-                isPublisher =
-                    role == "patient"
-                if (isPublisher) {
-                } else {
+                override fun onDataChange(snapshot: DataSnapshot) {
+
+                    Log.d(
+                        "HB",
+                        "ROLE VALUE = ${snapshot.value}"
+                    )
+
+                    val role =
+                        snapshot.getValue(String::class.java)
+                            ?: "caregiver"
+
+                    Log.d(
+                        "HB",
+                        "ROLE = $role"
+                    )
+
+                    isPublisher =
+                        (role == "patient")
+
+                    startAccordingToRole()
                 }
 
-                startAccordingToRole()
+                override fun onCancelled(error: DatabaseError) {
 
-            }
+                    Log.e(
+                        "HB",
+                        "ROLE LISTENER FAILED",
+                        error.toException()
+                    )
+                }
+            })
     }
 
     private fun displayMessage() {
@@ -518,17 +560,8 @@ class MainActivity :
         val messageText =
             messageEdit.text.toString().trim()
 
-        if (messageText.isEmpty()) {
+        if (messageText.isEmpty())
             return
-        }
-
-        // -------------------------------------------------
-        // Determine who receives the message
-        // -------------------------------------------------
-
-        //------------------------------------------------
-        // Determine recipient
-        //------------------------------------------------
 
         val target =
             if (MEMBER_ID == "M1")
@@ -536,58 +569,21 @@ class MainActivity :
             else
                 "M1"
 
-        //------------------------------------------------
-        // Build message
-        //------------------------------------------------
+        FirebaseManager.sendMessage(
 
-        val message = hashMapOf(
+            MEMBER_ID,
 
-            "from" to MEMBER_ID,
+            target,
 
-            "text" to messageText,
-
-            "timestamp" to
-                    com.google.firebase.database.ServerValue.TIMESTAMP,
-
-            "delivered" to false,
-
-            "reply_from" to "",
-
-            "reply_text" to "",
-
-            "reply_timestamp" to 0L
+            messageText
         )
 
-        //------------------------------------------------
-        // Send
-        //------------------------------------------------
+        Log.d(
+            "HB",
+            "MESSAGE REQUESTED"
+        )
 
-        FirebaseDatabase
-            .getInstance()
-            .getReference(
-                "groups/family_001/messages/$target/msg_001"
-            )
-            .setValue(message)
-
-            .addOnSuccessListener {
-
-                Log.d(
-                    "HB",
-                    "MESSAGE SENT TO $target"
-                )
-
-                messageEdit.setText("")
-
-            }
-
-            .addOnFailureListener { error ->
-
-                Log.e(
-                    "HB",
-                    "SEND FAILED",
-                    error
-                )
-            }
+        messageEdit.setText("")
     }
 
     // =====================================================
@@ -665,14 +661,14 @@ class MainActivity :
     private fun startAccordingToRole() {
         Log.d(
             "HB",
-            "LOAD ROLE CALLED"
+            "START ACCORDING TO ROLE MEMBER=$MEMBER_ID isPublisher=$isPublisher"
         )
 
         if (isPublisher) {
 
             Log.d(
                 "HB",
-                "STARTING TELEMETRY ENGINE"
+                "START ACCORDING TO ROLE MEMBER=M2 isPublisher=true"
             )
 
             if (!hasLocationPermission()) {
@@ -759,105 +755,50 @@ class MainActivity :
 
     private fun listenToMessages() {
 
-        FirebaseDatabase
-            .getInstance()
-            .getReference(
-                "groups/family_001/messages/$MEMBER_ID/msg_001"
-            )
-            .addValueEventListener(
+        Log.d(
+            "HB",
+            "MainActivity MEMBER_ID=$MEMBER_ID"
+        )
+        statusText.text = "LISTENER STARTED : $MEMBER_ID"
+        FirebaseManager.listenForMessages(
+            MEMBER_ID
+        ) { message ->
 
-                object : ValueEventListener {
+            currentMessage = message.text
 
-                    override fun onDataChange(
-                        snapshot: DataSnapshot
-                    ) {
+            runOnUiThread {
 
-                        if (!snapshot.exists()) {
-                            return
-                        }
+                val senderName =
+                    when (message.from) {
 
-                        //--------------------------------------------------
-                        // Ignore messages already delivered
-                        //--------------------------------------------------
+                        "M1" -> "Alain"
 
-                        val delivered =
-                            snapshot.child("delivered")
-                                .getValue(Boolean::class.java)
-                                ?: false
+                        "M2" -> "Mary"
 
-                        if (delivered) {
-                            return
-                        }
-
-                        //--------------------------------------------------
-                        // Read message
-                        //--------------------------------------------------
-
-                        val from =
-                            snapshot.child("from")
-                                .getValue(String::class.java)
-                                ?: ""
-
-                        val senderName =
-                            when (from) {
-                                "M1" -> "Alain"
-                                "M2" -> "Mary"
-                                else -> from
-                            }
-
-                        val message =
-                            snapshot.child("text")
-                                .getValue(String::class.java)
-                                ?: ""
-
-                        currentMessage = message
-                        currentMessageId = snapshot.key ?: ""
-
-                        //--------------------------------------------------
-                        // Display
-                        //--------------------------------------------------
-
-                        runOnUiThread {
-
-                            messageEdit.setText(
-                                "From: $senderName\n\n$message"
-                            )
-
-                            statusText.text =
-                                "Message from $senderName"
-                        }
-
-                        //--------------------------------------------------
-                        // Speak message
-                        //--------------------------------------------------
-
-                        textToSpeech.speak(
-                            message,
-                            TextToSpeech.QUEUE_FLUSH,
-                            null,
-                            "HB_MESSAGE"
-                        )
-
-                        //--------------------------------------------------
-                        // Mark as delivered
-                        //--------------------------------------------------
-
-                        snapshot.ref
-                            .child("delivered")
-                            .setValue(true)
+                        else -> message.from
                     }
 
-                    override fun onCancelled(
-                        error: DatabaseError
-                    ) {
+                messageEdit.setText(
+                    "From: $senderName\n\n${message.text}"
+                )
 
-                        Log.e(
-                            "HB",
-                            "MESSAGE LISTENER FAILED",
-                            error.toException()
-                        )
-                    }
-                }
-            )
+                statusText.text ="Message from $senderName"
+
+
+                Log.d(
+                    "HB",
+                    "TTS SPEAKING MESSAGE FOR MEMBER=$MEMBER_ID"
+                )
+
+                textToSpeech.speak(
+                    message.text,
+                    TextToSpeech.QUEUE_FLUSH,
+                    null,
+                    "HB_MESSAGE"
+                )
+            }
+
+            FirebaseManager.markMessagePlayed()
+        }
     }
 }
