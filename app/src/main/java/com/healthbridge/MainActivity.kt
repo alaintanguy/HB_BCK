@@ -73,7 +73,11 @@ class MainActivity :
 
     private var currentMessage = ""
 
+    private lateinit var speechManager: SpeechManager
+
     private var currentMessageId = ""
+
+    private lateinit var messageManager: MessageManager
 
     private lateinit var sendButton: Button
     private lateinit var speakButton: Button
@@ -97,7 +101,7 @@ class MainActivity :
     private lateinit var messageEdit: EditText
     private lateinit var ackStatus: TextView
 
-    private lateinit var speechManager: SpeechManager
+
 
     private var lastMessage = ""
 
@@ -181,6 +185,8 @@ class MainActivity :
         )
         speechManager = SpeechManager(this)
         speechManager.initialize()
+
+        messageManager = MessageManager(MEMBER_ID)
 
         statusText =
             findViewById(R.id.statusText)
@@ -560,19 +566,7 @@ class MainActivity :
             else
                 "M1"
 
-        FirebaseManager.sendMessage(
-
-            MEMBER_ID,
-
-            target,
-
-            messageText
-        )
-
-        Log.d(
-            "HB",
-            "MESSAGE REQUESTED"
-        )
+        messageManager.send(messageText)
 
         messageEdit.setText("")
     }
@@ -751,26 +745,25 @@ class MainActivity :
             "MainActivity MEMBER_ID=$MEMBER_ID"
         )
         statusText.text = "LISTENER STARTED : $MEMBER_ID"
-        FirebaseManager.listenForMessages(
-            MEMBER_ID
-        ) { message ->
 
-            currentMessage = message.text
+        messageManager.startListening { from, text ->
+
+            currentMessage = text
 
             runOnUiThread {
 
                 val senderName =
-                    when (message.from) {
+                    when (from) {
 
                         "M1" -> "Alain"
 
                         "M2" -> "Mary"
 
-                        else -> message.from
+                        else -> from
                     }
 
                 messageEdit.setText(
-                    "From: $senderName\n\n${message.text}"
+                    "From: $senderName\n\n${text}"
                 )
 
                 statusText.text = "Message from $senderName"
@@ -781,8 +774,8 @@ class MainActivity :
                     "TTS SPEAKING MESSAGE FOR MEMBER=$MEMBER_ID"
                 )
 
-                speechManager.speak(message.text)
-                FirebaseManager.markMessagePlayed()
+                speechManager.speak(text)
+
             }
         }
     }
