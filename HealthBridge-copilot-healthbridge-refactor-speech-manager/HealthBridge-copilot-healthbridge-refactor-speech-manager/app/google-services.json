@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "51486065058",
+    "project_id": "healthbridge-e2aac",
+    "storage_bucket": "healthbridge-e2aac.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:51486065058:android:3548ba49bf0c38434132fb",
+        "android_client_info": {
+          "package_name": "com.healthbridge"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDOhPixmDw_CXaWFIVidGOSxnPTf8Xg4xY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

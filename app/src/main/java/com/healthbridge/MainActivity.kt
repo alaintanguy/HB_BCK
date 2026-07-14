@@ -44,6 +44,7 @@ import android.speech.RecognizerIntent
 import android.view.WindowManager
 import android.app.Activity
 import com.google.firebase.auth.FirebaseAuth
+import com.healthbridge.SpeechManager
 
 // =====================================================
 // MAIN ACTIVITY
@@ -58,7 +59,7 @@ class MainActivity :
     // =====================================================
 
     companion object {
-        const val MEMBER_ID = "M2"   // M1=Motorola M2=samsung
+        const val MEMBER_ID = "M1"   // M1=Motorola M2=samsung
 
     }
 
@@ -96,7 +97,7 @@ class MainActivity :
     private lateinit var messageEdit: EditText
     private lateinit var ackStatus: TextView
 
-    private lateinit var textToSpeech: TextToSpeech
+    private lateinit var speechManager: SpeechManager
 
     private var lastMessage = ""
 
@@ -178,19 +179,8 @@ class MainActivity :
             "HB",
             "========================================"
         )
-        textToSpeech = TextToSpeech(this) { status ->
-
-            if (status == TextToSpeech.SUCCESS) {
-
-                textToSpeech.language = Locale.US
-
-                Log.d("HB", "TTS READY")
-
-            } else {
-
-                Log.e("HB", "TTS INITIALIZATION FAILED")
-            }
-        }
+        speechManager = SpeechManager(this)
+        speechManager.initialize()
 
         statusText =
             findViewById(R.id.statusText)
@@ -244,9 +234,10 @@ class MainActivity :
         mapFragment.getMapAsync(this)
 
         loadRole()
-       // authenticateFirebase()
+        // authenticateFirebase()
 
     }
+
     private fun authenticateFirebase() {
 
         FirebaseAuth.getInstance()
@@ -274,6 +265,7 @@ class MainActivity :
                 loadRole()
             }
     }
+
     private fun loadRole() {
 
 
@@ -545,8 +537,7 @@ class MainActivity :
 
     override fun onDestroy() {
 
-        textToSpeech.stop()
-        textToSpeech.shutdown()
+        speechManager.shutdown()
 
         super.onDestroy()
     }
@@ -782,7 +773,7 @@ class MainActivity :
                     "From: $senderName\n\n${message.text}"
                 )
 
-                statusText.text ="Message from $senderName"
+                statusText.text = "Message from $senderName"
 
 
                 Log.d(
@@ -790,15 +781,9 @@ class MainActivity :
                     "TTS SPEAKING MESSAGE FOR MEMBER=$MEMBER_ID"
                 )
 
-                textToSpeech.speak(
-                    message.text,
-                    TextToSpeech.QUEUE_FLUSH,
-                    null,
-                    "HB_MESSAGE"
-                )
+                speechManager.speak(message.text)
+                FirebaseManager.markMessagePlayed()
             }
-
-            FirebaseManager.markMessagePlayed()
         }
     }
 }

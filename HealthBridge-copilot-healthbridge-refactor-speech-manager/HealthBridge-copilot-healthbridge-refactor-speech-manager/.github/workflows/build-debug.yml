@@ -1,0 +1,39 @@
+name: Build Debug APKs
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      - name: Build APKs
+        run: ./gradlew assembleDebug
+
+      - name: Upload app APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug
+          path: app/build/outputs/apk/debug/*.apk
+
+      - name: Upload wear APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: wear-debug
+          path: wear/build/outputs/apk/debug/*.apk
