@@ -14,8 +14,14 @@ class MapManager(
     private val fragmentManager: FragmentManager
 ) : OnMapReadyCallback {
 
-    private lateinit var googleMap:
-            GoogleMap
+    companion object {
+        private const val DEFAULT_START_LATITUDE = 38.5816
+        private const val DEFAULT_START_LONGITUDE = -122.5825
+        private const val DEFAULT_START_ZOOM = 15f
+        private const val PRIMARY_MEMBER_ID = "M1"
+    }
+
+    private lateinit var googleMap: GoogleMap
 
     private val memberMarkers =
         mutableMapOf<String, Marker>()
@@ -42,15 +48,15 @@ class MapManager(
 
         val start =
             LatLng(
-                38.5816,
-                -122.5825
+                DEFAULT_START_LATITUDE,
+                DEFAULT_START_LONGITUDE
             )
 
         googleMap.moveCamera(
             CameraUpdateFactory
                 .newLatLngZoom(
                     start,
-                    15f
+                    DEFAULT_START_ZOOM
                 )
         )
 
@@ -107,7 +113,7 @@ class MapManager(
                         .title(location.memberName)
                         .icon(
                             BitmapDescriptorFactory.defaultMarker(
-                                if (location.memberId == "M1")
+                                if (location.memberId == PRIMARY_MEMBER_ID)
                                     BitmapDescriptorFactory.HUE_RED
                                 else
                                     BitmapDescriptorFactory.HUE_BLUE
