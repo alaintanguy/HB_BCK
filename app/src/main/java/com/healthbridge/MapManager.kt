@@ -27,7 +27,7 @@ class MapManager(
         mutableMapOf<String, Marker>()
 
     private val pendingLocations =
-        linkedMapOf<String, MemberLocation>()
+        mutableMapOf<String, MemberLocation>()
 
     fun initialize() {
 
