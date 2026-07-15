@@ -27,14 +27,6 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.OnMapReadyCallback
-import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.Marker
-import com.google.android.gms.maps.model.MarkerOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -48,8 +40,7 @@ import java.util.Locale
 // =====================================================
 
 class MainActivity :
-    AppCompatActivity(),
-    OnMapReadyCallback {
+    AppCompatActivity() {
 
     // =====================================================
     // CONFIGURATION
@@ -88,11 +79,7 @@ class MainActivity :
 
     private var isPublisher = true
 
-    private lateinit var googleMap:
-            GoogleMap
-
-    private val memberMarkers =
-        mutableMapOf<String, Marker>()
+    private lateinit var mapManager: MapManager
 
     private lateinit var statusText: TextView
     private lateinit var messageEdit: EditText
@@ -228,13 +215,10 @@ class MainActivity :
             acknowledgeMessage()
         }
 
-        val mapFragment =
-            supportFragmentManager
-                .findFragmentById(
-                    R.id.map
-                ) as SupportMapFragment
+        mapManager =
+            MapManager(supportFragmentManager)
 
-        mapFragment.getMapAsync(this)
+        mapManager.initialize()
 
         loadRole()
         // authenticateFirebase()
@@ -336,27 +320,6 @@ class MainActivity :
                         "\n\n[MORE]"
         }
 
-    }
-
-    override fun onMapReady(
-        map: GoogleMap
-    ) {
-
-        googleMap = map
-
-        val start =
-            LatLng(
-                38.5816,
-                -122.5825
-            )
-
-        googleMap.moveCamera(
-            CameraUpdateFactory
-                .newLatLngZoom(
-                    start,
-                    15f
-                )
-        )
     }
 
     private fun listenToMember(
@@ -465,46 +428,12 @@ class MainActivity :
                             else
                                 "OFFLINE"
 
-                        val position =
-                            LatLng(
+                        runOnUiThread {
+                            mapManager.updateMemberLocation(
+                                memberId,
+                                memberName,
                                 latitude,
                                 longitude
-                            )
-
-                        runOnUiThread {
-
-                            val marker = memberMarkers[memberId]
-
-                            if (marker == null) {
-
-                                val newMarker =
-                                    googleMap.addMarker(
-
-                                        MarkerOptions()
-                                            .position(position)
-                                            .title(memberName)
-                                            .icon(
-                                                BitmapDescriptorFactory.defaultMarker(
-                                                    if (memberId == "M1")
-                                                        BitmapDescriptorFactory.HUE_RED
-                                                    else
-                                                        BitmapDescriptorFactory.HUE_BLUE
-                                                )
-                                            )
-                                    )
-
-                                if (newMarker != null) {
-                                    memberMarkers[memberId] = newMarker
-                                }
-
-                            } else {
-
-                                marker.position = position
-                            }
-
-                            googleMap.animateCamera(
-                                CameraUpdateFactory
-                                    .newLatLng(position)
                             )
 
                             if (!isPublisher) {
