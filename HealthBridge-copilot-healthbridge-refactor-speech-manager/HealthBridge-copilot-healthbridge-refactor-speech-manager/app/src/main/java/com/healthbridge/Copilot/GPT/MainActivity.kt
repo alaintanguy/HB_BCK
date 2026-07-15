@@ -11,22 +11,10 @@
 
 package com.healthbridge
 
-import android.Manifest
-import android.app.Activity
-import android.content.Intent
-import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Bundle
-import android.provider.Settings
-import android.speech.RecognizerIntent
 import android.util.Log
-import android.view.WindowManager
-import android.widget.Button
-import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -35,13 +23,28 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
 import com.healthbridge.firebase.FirebaseManager
 import com.healthbridge.telemetry.TelemetryEngine
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.provider.Settings
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import com.google.firebase.database.FirebaseDatabase
+import android.speech.tts.TextToSpeech
 import java.util.Locale
+import android.widget.Button
+import android.widget.EditText
+import android.speech.RecognizerIntent
+import android.view.WindowManager
+import android.app.Activity
+import com.google.firebase.auth.FirebaseAuth
+import com.healthbridge.SpeechManager
 
 // =====================================================
 // MAIN ACTIVITY
@@ -72,7 +75,7 @@ class MainActivity :
 
     private lateinit var speechManager: SpeechManager
 
-
+    private var currentMessageId = ""
 
     private lateinit var messageManager: MessageManager
 
@@ -690,16 +693,49 @@ class MainActivity :
 
     private fun acknowledgeMessage() {
 
-        currentMessage = ""
+        if (currentMessageId.isBlank()) {
 
-        messageEdit.setText("")
+            Log.d(
+                "HB",
+                "NO MESSAGE TO ACKNOWLEDGE"
+            )
 
-        statusText.text = "No pending messages"
+            return
+        }
 
         Log.d(
             "HB",
-            "MESSAGE CLEARED"
+            "ACKNOWLEDGE PRESSED"
         )
+
+        FirebaseDatabase
+            .getInstance()
+            .getReference(
+                "groups/family_001/messages/$MEMBER_ID/$currentMessageId/acknowledged"
+            )
+            .setValue(true)
+
+            .addOnSuccessListener {
+
+                Log.d(
+                    "HB",
+                    "ACK SUCCESS"
+                )
+
+                currentMessage = ""
+                currentMessageId = ""
+                lastMessage = ""
+
+
+            }
+            .addOnFailureListener { error ->
+
+                Log.e(
+                    "HB",
+                    "ACK FAILED",
+                    error
+                )
+            }
     }
 
     private fun listenToMessages() {
