@@ -47,7 +47,7 @@ class MainActivity :
     // =====================================================
 
     companion object {
-        const val MEMBER_ID = "M1"   // M1=Motorola M2=samsung
+        const val MEMBER_ID = "M2"   // M1=Motorola M2=samsung
 
     }
 
