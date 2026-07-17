@@ -11,18 +11,12 @@
 
 package com.healthbridge
 
-import android.Manifest
 import android.app.Activity
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Bundle
-import android.provider.Settings
 import android.speech.RecognizerIntent
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -63,6 +57,8 @@ class MainActivity :
 
     private lateinit var messageManager: MessageManager
 
+    private lateinit var permissionManager: PermissionManager
+
     // =====================================================
     // TELEMETRY
     // =====================================================
@@ -76,45 +72,6 @@ class MainActivity :
 
 
 
-
-    // =====================================================
-    // PERMISSIONS
-    // =====================================================
-
-    private fun hasLocationPermission(): Boolean {
-
-        return ContextCompat.checkSelfPermission(
-            this,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-    }
-
-    private fun requestLocationPermission() {
-
-        ActivityCompat.requestPermissions(
-            this,
-            arrayOf(
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ),
-            100
-        )
-    }
-
-    private fun openAppSettings() {
-
-        val intent = Intent(
-            Settings.ACTION_APPLICATION_DETAILS_SETTINGS
-        )
-
-        intent.data = Uri.fromParts(
-            "package",
-            packageName,
-            null
-        )
-
-        startActivity(intent)
-    }
 
     // =====================================================
     // ACTIVITY LIFECYCLE
@@ -159,6 +116,8 @@ class MainActivity :
 
         speechManager = SpeechManager(this)
         speechManager.initialize()
+
+        permissionManager = PermissionManager(this)
 
         messageManager = MessageManager(MEMBER_ID)
 
@@ -505,9 +464,9 @@ class MainActivity :
                 "START ACCORDING TO ROLE MEMBER=M2 isPublisher=true"
             )
 
-            if (!hasLocationPermission()) {
+            if (!permissionManager.hasLocationPermission()) {
 
-                requestLocationPermission()
+                permissionManager.requestLocationPermission()
 
                 return
             }
