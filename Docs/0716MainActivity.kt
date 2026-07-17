@@ -76,6 +76,7 @@ class MainActivity :
 
 
 
+    private var lastMessage = ""
 
     // =====================================================
     // PERMISSIONS
@@ -243,7 +244,9 @@ class MainActivity :
             })
     }
 
-
+    private fun displayMessage() {
+        uiManager.displayMessage(currentMessage, fullMessageVisible)
+    }
 
     private fun listenToMember(
         memberId: String
