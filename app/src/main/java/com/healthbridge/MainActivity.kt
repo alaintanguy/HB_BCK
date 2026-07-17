@@ -456,7 +456,7 @@ class MainActivity :
 
                     Log.d(
                         "HB",
-                        "EDITTEXT NOW = $spokenText"
+                        "SPEECH INPUT NOW = $spokenText"
                     )
                 }
 
