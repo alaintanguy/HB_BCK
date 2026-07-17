@@ -6,6 +6,7 @@
 //
 // NOTE:
 // Phase 5A: UI responsibilities moved to UIManager.
+// Phase 5C: Role management moved to RoleManager.
 // Functionality intentionally unchanged.
 // ====================================================================
 
@@ -73,6 +74,12 @@ class MainActivity :
     private var isPublisher = true
 
     private lateinit var mapManager: MapManager
+
+    // =====================================================
+    // ROLE MANAGER
+    // =====================================================
+
+    private lateinit var roleManager: RoleManager
 
 
 
@@ -167,7 +174,11 @@ class MainActivity :
 
         mapManager.initialize()
 
-        loadRole()
+        roleManager = RoleManager(MEMBER_ID)
+        roleManager.loadRole { isPublisher ->
+            this.isPublisher = isPublisher
+            startAccordingToRole()
+        }
         // authenticateFirebase()
 
     }
@@ -184,7 +195,10 @@ class MainActivity :
                     "FIREBASE AUTH SUCCESS"
                 )
 
-                loadRole()
+                roleManager.loadRole { isPublisher ->
+                    this.isPublisher = isPublisher
+                    startAccordingToRole()
+                }
             }
 
             .addOnFailureListener { e ->
@@ -196,51 +210,11 @@ class MainActivity :
                 )
 
                 // Continue anyway while Firebase rules are open
-                loadRole()
-            }
-    }
-
-    private fun loadRole() {
-
-
-        FirebaseManager
-            .memberReference(MEMBER_ID)
-            .child("profile")
-            .child("role")
-
-            .addValueEventListener(object : ValueEventListener {
-
-                override fun onDataChange(snapshot: DataSnapshot) {
-
-                    Log.d(
-                        "HB",
-                        "ROLE VALUE = ${snapshot.value}"
-                    )
-
-                    val role =
-                        snapshot.getValue(String::class.java)
-                            ?: "caregiver"
-
-                    Log.d(
-                        "HB",
-                        "ROLE = $role"
-                    )
-
-                    isPublisher =
-                        (role == "patient")
-
+                roleManager.loadRole { isPublisher ->
+                    this.isPublisher = isPublisher
                     startAccordingToRole()
                 }
-
-                override fun onCancelled(error: DatabaseError) {
-
-                    Log.e(
-                        "HB",
-                        "ROLE LISTENER FAILED",
-                        error.toException()
-                    )
-                }
-            })
+            }
     }
 
 
@@ -392,6 +366,10 @@ class MainActivity :
     }
 
     override fun onDestroy() {
+
+        if (::roleManager.isInitialized) {
+            roleManager.cleanup()
+        }
 
         speechManager.shutdown()
 
