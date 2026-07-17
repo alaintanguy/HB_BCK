@@ -5,7 +5,7 @@
 // ====================================================================
 //
 // NOTE:
-// First cleanup pass.
+// Phase 5A: UI responsibilities moved to UIManager.
 // Functionality intentionally unchanged.
 // ====================================================================
 
@@ -20,10 +20,6 @@ import android.os.Bundle
 import android.provider.Settings
 import android.speech.RecognizerIntent
 import android.util.Log
-import android.view.WindowManager
-import android.widget.Button
-import android.widget.EditText
-import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -55,7 +51,7 @@ class MainActivity :
     // UI
     // =====================================================
 
-    private lateinit var ackButton: Button
+    private lateinit var uiManager: UIManager
 
     private var fullMessageVisible = false
 
@@ -67,9 +63,6 @@ class MainActivity :
 
     private lateinit var messageManager: MessageManager
 
-    private lateinit var sendButton: Button
-    private lateinit var speakButton: Button
-
     // =====================================================
     // TELEMETRY
     // =====================================================
@@ -80,10 +73,6 @@ class MainActivity :
     private var isPublisher = true
 
     private lateinit var mapManager: MapManager
-
-    private lateinit var statusText: TextView
-    private lateinit var messageEdit: EditText
-    private lateinit var ackStatus: TextView
 
 
 
@@ -138,12 +127,6 @@ class MainActivity :
 
         super.onCreate(savedInstanceState)
 
-        setContentView(R.layout.activity_main)
-
-        window.setSoftInputMode(
-            WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN
-        )
-
         Log.i(
             "HB",
             "========================================"
@@ -167,53 +150,18 @@ class MainActivity :
             "HB",
             "========================================"
         )
+
+        uiManager = UIManager(this)
+        uiManager.initialize(
+            onSpeak = { startSpeechRecognition() },
+            onSend  = { sendDemoMessage() },
+            onAck   = { acknowledgeMessage() }
+        )
+
         speechManager = SpeechManager(this)
         speechManager.initialize()
 
         messageManager = MessageManager(MEMBER_ID)
-
-        statusText =
-            findViewById(R.id.statusText)
-
-        statusText.text =
-            "No pending messages"
-
-        messageEdit =
-            findViewById(R.id.messageEdit)
-        ackStatus =
-            findViewById(R.id.ackStatus)
-
-        messageEdit.clearFocus()
-
-        ackButton = findViewById(R.id.ackButton)
-
-        sendButton = findViewById(R.id.sendButton)
-
-        speakButton = findViewById(R.id.speakButton)
-
-        speakButton.setOnClickListener {
-            statusText.text = "STARTING SPEECH"
-
-            startSpeechRecognition()
-        }
-
-        sendButton.setOnClickListener {
-            sendDemoMessage()
-
-        }
-
-        ackButton.setOnClickListener {
-
-            acknowledgeMessage()
-        }
-
-        statusText.bringToFront()
-
-        // statusText.text = "No message"
-        statusText.setOnClickListener {
-
-            acknowledgeMessage()
-        }
 
         mapManager =
             MapManager(supportFragmentManager)
@@ -297,29 +245,7 @@ class MainActivity :
     }
 
     private fun displayMessage() {
-
-        if (currentMessage.length <= 80) {
-
-            statusText.text =
-                currentMessage
-
-            return
-        }
-
-        if (fullMessageVisible) {
-
-            statusText.text =
-                currentMessage +
-                        "\n\n[LESS]"
-
-        } else {
-
-            statusText.text =
-                currentMessage.take(80) +
-                        "..." +
-                        "\n\n[MORE]"
-        }
-
+        uiManager.displayMessage(currentMessage, fullMessageVisible)
     }
 
     private fun listenToMember(
@@ -438,13 +364,14 @@ class MainActivity :
 
                             if (!isPublisher) {
 
-                                statusText.text =
+                                uiManager.showStatus(
                                     if (status == "OFFLINE")
                                         "$memberName | OFFLINE | LS: ${ageMinutes}m"
                                     else if (lowBattery)
                                         "$memberName | ONLINE | LOW BATTERY $battery% | LS: ${ageMinutes}m"
                                     else
                                         "$memberName | ONLINE | Bat: $battery% | LS: ${ageMinutes}m"
+                                )
                             }
                             Log.d(
                                 "HB",
@@ -480,8 +407,7 @@ class MainActivity :
 
     private fun sendDemoMessage() {
 
-        val messageText =
-            messageEdit.text.toString().trim()
+        val messageText = uiManager.getMessageText()
 
         if (messageText.isEmpty())
             return
@@ -494,7 +420,7 @@ class MainActivity :
 
         messageManager.send(messageText)
 
-        messageEdit.setText("")
+        uiManager.clearMessageInput()
     }
 
     // =====================================================
@@ -524,13 +450,13 @@ class MainActivity :
 
                     Log.d("HB", "SPEECH = $spokenText")
 
-                    messageEdit.setText(spokenText)
+                    uiManager.showMessageInput(spokenText)
 
-                    statusText.text = spokenText
+                    uiManager.showStatus(spokenText)
 
                     Log.d(
                         "HB",
-                        "EDITTEXT NOW = ${messageEdit.text}"
+                        "EDITTEXT NOW = $spokenText"
                     )
                 }
 
@@ -621,9 +547,7 @@ class MainActivity :
 
         currentMessage = ""
 
-        messageEdit.setText("")
-
-        statusText.text = "No pending messages"
+        uiManager.clearAck()
 
         Log.d(
             "HB",
@@ -637,7 +561,7 @@ class MainActivity :
             "HB",
             "MainActivity MEMBER_ID=$MEMBER_ID"
         )
-        statusText.text = "LISTENER STARTED : $MEMBER_ID"
+        uiManager.showStatus("LISTENER STARTED : $MEMBER_ID")
 
         messageManager.startListening { from, text ->
 
@@ -655,11 +579,11 @@ class MainActivity :
                         else -> from
                     }
 
-                messageEdit.setText(
+                uiManager.showMessageInput(
                     "From: $senderName\n\n${text}"
                 )
 
-                statusText.text = "Message from $senderName"
+                uiManager.showStatus("Message from $senderName")
 
 
                 Log.d(
