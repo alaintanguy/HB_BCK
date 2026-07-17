@@ -6,23 +6,19 @@
 //
 // NOTE:
 // Phase 5A: UI responsibilities moved to UIManager.
+// Phase 5B: Permission management moved to PermissionManager.
+// Phase 5C: Role management moved to RoleManager.
 // Functionality intentionally unchanged.
 // ====================================================================
 
 package com.healthbridge
 
-import android.Manifest
 import android.app.Activity
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Bundle
-import android.provider.Settings
 import android.speech.RecognizerIntent
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -74,47 +70,25 @@ class MainActivity :
 
     private lateinit var mapManager: MapManager
 
+    // =====================================================
+    // ROLE MANAGER
+    // =====================================================
+
+    private lateinit var roleManager: RoleManager
+
+    // =====================================================
+    // PERMISSION MANAGER
+    // =====================================================
+
+    private lateinit var permissionManager: PermissionManager
+
 
 
 
     // =====================================================
     // PERMISSIONS
     // =====================================================
-
-    private fun hasLocationPermission(): Boolean {
-
-        return ContextCompat.checkSelfPermission(
-            this,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-    }
-
-    private fun requestLocationPermission() {
-
-        ActivityCompat.requestPermissions(
-            this,
-            arrayOf(
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ),
-            100
-        )
-    }
-
-    private fun openAppSettings() {
-
-        val intent = Intent(
-            Settings.ACTION_APPLICATION_DETAILS_SETTINGS
-        )
-
-        intent.data = Uri.fromParts(
-            "package",
-            packageName,
-            null
-        )
-
-        startActivity(intent)
-    }
+    // Delegated to PermissionManager (Phase 5B)
 
     // =====================================================
     // ACTIVITY LIFECYCLE
@@ -167,7 +141,13 @@ class MainActivity :
 
         mapManager.initialize()
 
-        loadRole()
+        permissionManager = PermissionManager(this)
+
+        roleManager = RoleManager(MEMBER_ID)
+        roleManager.loadRole { isPublisher ->
+            this.isPublisher = isPublisher
+            startAccordingToRole()
+        }
         // authenticateFirebase()
 
     }
@@ -184,7 +164,10 @@ class MainActivity :
                     "FIREBASE AUTH SUCCESS"
                 )
 
-                loadRole()
+                roleManager.loadRole { isPublisher ->
+                    this.isPublisher = isPublisher
+                    startAccordingToRole()
+                }
             }
 
             .addOnFailureListener { e ->
@@ -196,51 +179,11 @@ class MainActivity :
                 )
 
                 // Continue anyway while Firebase rules are open
-                loadRole()
-            }
-    }
-
-    private fun loadRole() {
-
-
-        FirebaseManager
-            .memberReference(MEMBER_ID)
-            .child("profile")
-            .child("role")
-
-            .addValueEventListener(object : ValueEventListener {
-
-                override fun onDataChange(snapshot: DataSnapshot) {
-
-                    Log.d(
-                        "HB",
-                        "ROLE VALUE = ${snapshot.value}"
-                    )
-
-                    val role =
-                        snapshot.getValue(String::class.java)
-                            ?: "caregiver"
-
-                    Log.d(
-                        "HB",
-                        "ROLE = $role"
-                    )
-
-                    isPublisher =
-                        (role == "patient")
-
+                roleManager.loadRole { isPublisher ->
+                    this.isPublisher = isPublisher
                     startAccordingToRole()
                 }
-
-                override fun onCancelled(error: DatabaseError) {
-
-                    Log.e(
-                        "HB",
-                        "ROLE LISTENER FAILED",
-                        error.toException()
-                    )
-                }
-            })
+            }
     }
 
 
@@ -393,6 +336,10 @@ class MainActivity :
 
     override fun onDestroy() {
 
+        if (::roleManager.isInitialized) {
+            roleManager.cleanup()
+        }
+
         speechManager.shutdown()
 
         super.onDestroy()
@@ -505,9 +452,9 @@ class MainActivity :
                 "START ACCORDING TO ROLE MEMBER=M2 isPublisher=true"
             )
 
-            if (!hasLocationPermission()) {
+            if (!permissionManager.hasLocationPermission()) {
 
-                requestLocationPermission()
+                permissionManager.requestLocationPermission()
 
                 return
             }
