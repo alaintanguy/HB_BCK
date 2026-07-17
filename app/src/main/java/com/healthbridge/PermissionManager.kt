@@ -11,8 +11,7 @@ import androidx.core.content.ContextCompat
 
 class PermissionManager(private val activity: Activity) {
     companion object {
-        private const val LOCATION_PERMISSION_REQUEST_CODE = 100
-        private const val URI_SCHEME_PACKAGE = "package"
+        const val LOCATION_PERMISSION_REQUEST_CODE = 100
     }
 
     fun hasLocationPermission(): Boolean {
@@ -39,7 +38,7 @@ class PermissionManager(private val activity: Activity) {
         )
 
         intent.data = Uri.fromParts(
-            URI_SCHEME_PACKAGE,
+            "package",
             activity.packageName,
             null
         )
