@@ -39,7 +39,7 @@ class MainActivity :
     // =====================================================
 
     companion object {
-        const val MEMBER_ID = "M2"   // M1=Motorola M2=samsung
+        const val MEMBER_ID = "M1"   // M1=Motorola M2=samsung
 
     }
 
@@ -59,6 +59,7 @@ class MainActivity :
 
     private lateinit var messageManager: MessageManager
 
+   
     // =====================================================
     // TELEMETRY
     // =====================================================
@@ -86,11 +87,14 @@ class MainActivity :
 
 
     // =====================================================
+
     // PERMISSIONS
     // =====================================================
     // Delegated to PermissionManager (Phase 5B)
 
     // =====================================================
+
+
     // ACTIVITY LIFECYCLE
     // =====================================================
 
@@ -134,6 +138,7 @@ class MainActivity :
         speechManager = SpeechManager(this)
         speechManager.initialize()
 
+        
         messageManager = MessageManager(MEMBER_ID)
 
         mapManager =
