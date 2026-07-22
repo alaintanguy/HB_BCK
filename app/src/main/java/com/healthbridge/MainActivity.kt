@@ -366,6 +366,13 @@ class MainActivity :
             val myName =
                 if (MEMBER_ID == "M1") "Alain" else "Mary"
 
+            // FIX: send the message to Firebase so the remote device receives it.
+            // This call was missing, which caused outgoing messages to appear
+            // only locally and never reach the other member.
+            messageManager.send(messageText)
+
+            // Append the sent message to the local conversation immediately,
+            // without waiting for the Firebase round-trip.
             uiManager.appendConversation(
                 "From: $myName\n$messageText"
             )
@@ -404,9 +411,11 @@ class MainActivity :
 
                         Log.d("HB", "SPEECH = $spokenText")
 
-                        uiManager.showMessageInput(spokenText)
-
+                        // Enter compose mode first so the editor is
+                        // visible before showMessageInput sets its text.
                         uiManager.enterComposeMode()
+
+                        uiManager.showMessageInput(spokenText)
 
                         Log.d(
                             "HB",
