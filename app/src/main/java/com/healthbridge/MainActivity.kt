@@ -56,10 +56,9 @@ class MainActivity :
     private lateinit var speechManager: SpeechManager
 
 
-
     private lateinit var messageManager: MessageManager
 
-   
+
     // =====================================================
     // TELEMETRY
     // =====================================================
@@ -83,7 +82,7 @@ class MainActivity :
 
     private lateinit var permissionManager: PermissionManager
 
-
+    private var lastReceivedMessage = ""
 
 
     // =====================================================
@@ -131,14 +130,20 @@ class MainActivity :
         uiManager = UIManager(this)
         uiManager.initialize(
             onSpeak = { startSpeechRecognition() },
-            onSend  = { sendDemoMessage() },
-            onAck   = { acknowledgeMessage() }
+
+            onWrite = {
+                uiManager.enterComposeMode()
+            },
+
+            onSend = { sendDemoMessage() },
+
+            onAck = { acknowledgeMessage() }
         )
 
         speechManager = SpeechManager(this)
         speechManager.initialize()
 
-        
+
         messageManager = MessageManager(MEMBER_ID)
 
         mapManager =
@@ -190,319 +195,323 @@ class MainActivity :
                 }
             }
     }
+        private fun listenToMember(
+            memberId: String
+        ) {
+            Log.d(
+                "HB",
+                "LISTENER ADDED FOR $memberId"
+            )
 
+            FirebaseManager
+                .memberReference(memberId)
 
+                .addListenerForSingleValueEvent(
 
-    private fun listenToMember(
-        memberId: String
-    ) {
-        Log.d(
-            "HB",
-            "LISTENER ADDED FOR $memberId"
-        )
+                    object : ValueEventListener {
 
-        FirebaseManager
-            .memberReference(memberId)
+                        override fun onDataChange(
+                            snapshot: DataSnapshot
+                        ) {
 
-            .addListenerForSingleValueEvent(
+                            val latitude =
 
-                object : ValueEventListener {
+                                snapshot
+                                    .child("telemetry")
+                                    .child("location")
+                                    .child("lat")
+                                    .getValue(Double::class.java)
+                                    ?: return
 
-                    override fun onDataChange(
-                        snapshot: DataSnapshot
-                    ) {
+                            val longitude =
+                                snapshot
+                                    .child("telemetry")
+                                    .child("location")
+                                    .child("lng")
+                                    .getValue(Double::class.java)
+                                    ?: return
 
-                        val latitude =
-
-                            snapshot
-                                .child("telemetry")
-                                .child("location")
-                                .child("lat")
-                                .getValue(Double::class.java)
-                                ?: return
-
-                        val longitude =
-                            snapshot
-                                .child("telemetry")
-                                .child("location")
-                                .child("lng")
-                                .getValue(Double::class.java)
-                                ?: return
-
-                        Log.d(
-                            "HB",
-                            "$memberId MARKER: $latitude , $longitude"
-
-                        )
-
-                        val altitude =
-                            snapshot
-                                .child("telemetry")
-                                .child("location")
-                                .child("altitude")
-                                .getValue(Double::class.java)
-                                ?: 0.0
-
-                        val timestamp =
-                            snapshot
-                                .child("telemetry")
-                                .child("timestamp")
-                                .getValue(Long::class.java)
-                                ?: 0L
-
-                        val battery =
-                            snapshot
-                                .child("device")
-                                .child("phoneBattery")
-                                .getValue(Int::class.java)
-                                ?: 0
-
-                        val lowBattery =
-                            snapshot
-                                .child("alerts")
-                                .child("lowBattery")
-                                .getValue(Boolean::class.java)
-                                ?: false
-
-                        val batteryStatus =
-                            if (lowBattery)
-                                "LOW BATTERY"
-                            else
-                                "OK"
-
-                        Log.d(
-                            "HB",
-                            "FB LOCATION: $latitude , $longitude"
-                        )
-
-                        val memberName =
-                            snapshot
-                                .child("profile")
-                                .child("name")
-                                .getValue(String::class.java)
-                                ?: memberId
-
-                        val lastSeen =
-                            snapshot
-                                .child("device")
-                                .child("lastSeen")
-                                .getValue(Long::class.java)
-                                ?: 0L
-
-                        val ageMinutes =
-                            (System.currentTimeMillis() - lastSeen) /
-                                    60000
-
-                        val status =
-                            if (ageMinutes <= 2)
-                                "ONLINE"
-                            else
-                                "OFFLINE"
-
-                        runOnUiThread {
-                            mapManager.updateMemberLocation(
-                                memberId,
-                                memberName,
-                                latitude,
-                                longitude
-                            )
-
-                            if (!isPublisher) {
-
-                                uiManager.showStatus(
-                                    if (status == "OFFLINE")
-                                        "$memberName | OFFLINE | LS: ${ageMinutes}m"
-                                    else if (lowBattery)
-                                        "$memberName | ONLINE | LOW BATTERY $battery% | LS: ${ageMinutes}m"
-                                    else
-                                        "$memberName | ONLINE | Bat: $battery% | LS: ${ageMinutes}m"
-                                )
-                            }
                             Log.d(
                                 "HB",
-                                "MESSAGE SNAPSHOT = ${snapshot.value}"
+                                "$memberId MARKER: $latitude , $longitude"
+
+                            )
+
+                            val altitude =
+                                snapshot
+                                    .child("telemetry")
+                                    .child("location")
+                                    .child("altitude")
+                                    .getValue(Double::class.java)
+                                    ?: 0.0
+
+                            val timestamp =
+                                snapshot
+                                    .child("telemetry")
+                                    .child("timestamp")
+                                    .getValue(Long::class.java)
+                                    ?: 0L
+
+                            val battery =
+                                snapshot
+                                    .child("device")
+                                    .child("phoneBattery")
+                                    .getValue(Int::class.java)
+                                    ?: 0
+
+                            val lowBattery =
+                                snapshot
+                                    .child("alerts")
+                                    .child("lowBattery")
+                                    .getValue(Boolean::class.java)
+                                    ?: false
+
+                            val batteryStatus =
+                                if (lowBattery)
+                                    "LOW BATTERY"
+                                else
+                                    "OK"
+
+                            Log.d(
+                                "HB",
+                                "FB LOCATION: $latitude , $longitude"
+                            )
+
+                            val memberName =
+                                snapshot
+                                    .child("profile")
+                                    .child("name")
+                                    .getValue(String::class.java)
+                                    ?: memberId
+
+                            val lastSeen =
+                                snapshot
+                                    .child("device")
+                                    .child("lastSeen")
+                                    .getValue(Long::class.java)
+                                    ?: 0L
+
+                            val ageMinutes =
+                                (System.currentTimeMillis() - lastSeen) /
+                                        60000
+
+                            val status =
+                                if (ageMinutes <= 2)
+                                    "ONLINE"
+                                else
+                                    "OFFLINE"
+
+                            runOnUiThread {
+                                mapManager.updateMemberLocation(
+                                    memberId,
+                                    memberName,
+                                    latitude,
+                                    longitude
+                                )
+
+                                if (!isPublisher) {
+
+                                    uiManager.showStatus(
+                                        if (status == "OFFLINE")
+                                            "$memberName | OFFLINE | LS: ${ageMinutes}m"
+                                        else if (lowBattery)
+                                            "$memberName | ONLINE | LOW BATTERY $battery% | LS: ${ageMinutes}m"
+                                        else
+                                            "$memberName | ONLINE | Bat: $battery% | LS: ${ageMinutes}m"
+                                    )
+                                }
+                                Log.d(
+                                    "HB",
+                                    "MESSAGE SNAPSHOT = ${snapshot.value}"
+                                )
+                            }
+                        }
+
+                        override fun onCancelled(
+                            error: DatabaseError
+                        ) {
+
+                            Log.e(
+                                "HB",
+                                "FIREBASE READ FAILED",
+                                error.toException()
                             )
                         }
                     }
-
-                    override fun onCancelled(
-                        error: DatabaseError
-                    ) {
-
-                        Log.e(
-                            "HB",
-                            "FIREBASE READ FAILED",
-                            error.toException()
-                        )
-                    }
-                }
-            )
-    }
-
-    override fun onDestroy() {
-
-        if (::roleManager.isInitialized) {
-            roleManager.cleanup()
+                )
         }
 
-        speechManager.shutdown()
+        override fun onDestroy() {
 
-        super.onDestroy()
-    }
+            if (::roleManager.isInitialized) {
+                roleManager.cleanup()
+            }
+
+            speechManager.shutdown()
+
+            super.onDestroy()
+        }
 
 // =====================================================
 //  DEMO FUNCTIONS
 // =====================================================
 
-    private fun sendDemoMessage() {
+        private fun sendDemoMessage() {
 
-        val messageText = uiManager.getMessageText()
+            val messageText = uiManager.getMessageText()
 
-        if (messageText.isEmpty())
-            return
+            if (messageText.isEmpty())
+                return
 
-        val target =
-            if (MEMBER_ID == "M1")
-                "M2"
-            else
-                "M1"
+            val myName =
+                if (MEMBER_ID == "M1") "Alain" else "Mary"
 
-        messageManager.send(messageText)
+            uiManager.appendConversation(
+                "From: $myName\n$messageText"
+            )
 
-        uiManager.clearMessageInput()
-    }
+            Log.d("HB", "TEXT TO SEND = '$messageText'")
+            Log.d("HB", "LENGTH = ${messageText.length}")
 
-    // =====================================================
+            uiManager.clearMessageInput()
+            uiManager.exitComposeMode()
+        }
+
+        // =====================================================
 // SPEECH RECOGNITION
 // =====================================================
 
-    private val speechLauncher =
-        registerForActivityResult(
-            androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
-        ) { result ->
+        private val speechLauncher =
+            registerForActivityResult(
+                androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
+            ) { result ->
 
-            Log.d("HB", "RESULT CODE = ${result.resultCode}")
-            Log.d("HB", "RESULT DATA = ${result.data}")
+                Log.d("HB", "RESULT CODE = ${result.resultCode}")
+                Log.d("HB", "RESULT DATA = ${result.data}")
 
-            if (result.resultCode == Activity.RESULT_OK) {
+                if (result.resultCode == Activity.RESULT_OK) {
 
-                val matches =
-                    result.data?.getStringArrayListExtra(
-                        RecognizerIntent.EXTRA_RESULTS
-                    )
+                    val matches =
+                        result.data?.getStringArrayListExtra(
+                            RecognizerIntent.EXTRA_RESULTS
+                        )
 
-                Log.d("HB", "MATCHES = $matches")
+                    Log.d("HB", "MATCHES = $matches")
 
-                if (!matches.isNullOrEmpty()) {
+                    if (!matches.isNullOrEmpty()) {
 
-                    val spokenText = matches[0]
+                        val spokenText = matches[0]
 
-                    Log.d("HB", "SPEECH = $spokenText")
+                        Log.d("HB", "SPEECH = $spokenText")
 
-                    uiManager.showMessageInput(spokenText)
+                        uiManager.showMessageInput(spokenText)
 
-                    uiManager.showStatus(spokenText)
+                        uiManager.enterComposeMode()
+
+                        Log.d(
+                            "HB",
+                            "SPEECH INPUT NOW = $spokenText"
+                        )
+                    }
+
+                } else {
 
                     Log.d(
                         "HB",
-                        "SPEECH INPUT NOW = $spokenText"
+                        "SPEECH CANCELLED OR FAILED"
                     )
                 }
-
-            } else {
-
-                Log.d(
-                    "HB",
-                    "SPEECH CANCELLED OR FAILED"
-                )
             }
+
+        private fun startSpeechRecognition() {
+            val intent = Intent(
+                RecognizerIntent.ACTION_RECOGNIZE_SPEECH
+            )
+
+            intent.putExtra(
+                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+            )
+
+            intent.putExtra(
+                RecognizerIntent.EXTRA_LANGUAGE,
+                Locale.getDefault()
+            )
+
+            intent.putExtra(
+                RecognizerIntent.EXTRA_PROMPT,
+                "Speak your reminder"
+            )
+            speechLauncher.launch(intent)
         }
-
-    private fun startSpeechRecognition() {
-        val intent = Intent(
-            RecognizerIntent.ACTION_RECOGNIZE_SPEECH
-        )
-
-        intent.putExtra(
-            RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-            RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
-        )
-
-        intent.putExtra(
-            RecognizerIntent.EXTRA_LANGUAGE,
-            Locale.getDefault()
-        )
-
-        intent.putExtra(
-            RecognizerIntent.EXTRA_PROMPT,
-            "Speak your reminder"
-        )
-        speechLauncher.launch(intent)
-    }
 
 // =====================================================
 // ROLE MANAGEMENT
 // =====================================================
 
-    private fun startAccordingToRole() {
-        Log.d(
-            "HB",
-            "START ACCORDING TO ROLE MEMBER=$MEMBER_ID isPublisher=$isPublisher"
-        )
-
-        if (isPublisher) {
-
+        private fun startAccordingToRole() {
             Log.d(
                 "HB",
-                "START ACCORDING TO ROLE MEMBER=M2 isPublisher=true"
+                "START ACCORDING TO ROLE MEMBER=$MEMBER_ID isPublisher=$isPublisher"
             )
 
-            if (!permissionManager.hasLocationPermission()) {
+            if (isPublisher) {
 
-                permissionManager.requestLocationPermission()
-
-                return
-            }
-
-            telemetryEngine =
-                TelemetryEngine(
-                    this,
-                    MEMBER_ID
+                Log.d(
+                    "HB",
+                    "START ACCORDING TO ROLE MEMBER=M2 isPublisher=true"
                 )
 
-            telemetryEngine.start()
+                if (!permissionManager.hasLocationPermission()) {
 
-            // Show BOTH members on the map
-            listenToMember("M1")
-            listenToMember("M2")
+                    permissionManager.requestLocationPermission()
 
-            listenToMessages()
+                    return
+                }
 
-        } else {
+                telemetryEngine =
+                    TelemetryEngine(
+                        this,
+                        MEMBER_ID
+                    )
 
-            // Viewer also shows BOTH members
-            listenToMember("M1")
-            listenToMember("M2")
+                telemetryEngine.start()
 
-            listenToMessages()
+                // Show BOTH members on the map
+                listenToMember("M1")
+                listenToMember("M2")
+
+                listenToMessages()
+
+            } else {
+
+                // Viewer also shows BOTH members
+                listenToMember("M1")
+                listenToMember("M2")
+
+                listenToMessages()
+            }
         }
-    }
 
 // =====================================================
 // MESSAGING
 // =====================================================
 
-    private fun acknowledgeMessage() {
+        private fun acknowledgeMessage() {
 
-        currentMessage = ""
+            currentMessage = ""
 
-        uiManager.clearAck()
+            uiManager.clearAck()
 
-        Log.d(
-            "HB",
-            "MESSAGE CLEARED"
-        )
-    }
+            Log.d(
+                "HB",
+                "MESSAGE CLEARED"
+            )
+        }
+
+    // =====================================================
+// MESSAGING
+// =====================================================
 
     private fun listenToMessages() {
 
@@ -510,9 +519,16 @@ class MainActivity :
             "HB",
             "MainActivity MEMBER_ID=$MEMBER_ID"
         )
+
         uiManager.showStatus("LISTENER STARTED : $MEMBER_ID")
 
         messageManager.startListening { from, text ->
+
+            // Ignore duplicate Firebase callbacks
+            if (text == lastReceivedMessage)
+                return@startListening
+
+            lastReceivedMessage = text
 
             currentMessage = text
 
@@ -520,29 +536,23 @@ class MainActivity :
 
                 val senderName =
                     when (from) {
-
                         "M1" -> "Alain"
-
                         "M2" -> "Mary"
-
                         else -> from
                     }
 
-                uiManager.showMessageInput(
-                    "From: $senderName\n\n${text}"
-                )
+                val newEntry =
+                    "From: $senderName\n$text"
 
-                uiManager.showStatus("Message from $senderName")
+                uiManager.appendConversation(newEntry)
 
-
-                Log.d(
-                    "HB",
-                    "TTS SPEAKING MESSAGE FOR MEMBER=$MEMBER_ID"
-                )
+                
 
                 speechManager.speak(text)
-
             }
         }
     }
-}
+        }
+
+
+
