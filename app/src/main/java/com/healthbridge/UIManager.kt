@@ -1,252 +1,136 @@
-// ====================================================================
-// HealthBridge
-// UIManager.kt
-// Phase 5A – UI responsibilities extracted from MainActivity
-// Phase 5D – Two-mode UI: Conversation Mode / Compose Mode
-// ====================================================================
-//
-// Conversation Mode (initial state):
-//   Visible:  map, statusText, conversationScrollView, writeButton
-//   Hidden:   composeEdit, sendButton, speakButton, keyboard
-//
-// Compose Mode (entered via writeButton):
-//   Visible:  composeEdit (6 lines), sendButton, keyboard
-//   Hidden:   map, conversationScrollView, writeButton
-//   After send: clear compose editor → return to Conversation Mode
-//
-// Bug fixes applied in this revision:
-//   FIX-1: showMessageInput() previously overwrote the conversation
-//           history when the compose editor was not visible.
-//           It now ALWAYS writes to composeEdit only.
-//   FIX-2: enterComposeMode() / exitComposeMode() now correctly
-//           hide/show the map and the conversation scroll view so
-//           the two views never overlap each other.
-//   FIX-3: appendConversation() auto-scrolls to the bottom so the
-//           most recent message is always visible.
-// ====================================================================
-
 package com.healthbridge
 
-import android.app.Activity
+import android.content.Context
+import android.util.Log
 import android.view.View
-import android.view.WindowManager
+import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
+import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
-import android.content.Context
-import android.view.inputmethod.InputMethodManager
-import android.util.Log
+import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 // =====================================================
-// UI MANAGER
-// Owns: view binding, status/message/ACK display,
-//       button initialisation, UI mode switching.
-// Does NOT own: Firebase, speech, map, telemetry.
+// UI MANAGER — UI-only responsibilities
 // =====================================================
+class UIManager(private val activity: AppCompatActivity) {
 
-class UIManager(private val activity: Activity) {
+    private val TAG = "UIManager"
 
-    // =====================================================
-    // VIEWS
-    // =====================================================
+    // ── Conversation Mode views ───────────────────────
+    private lateinit var conversationModeContainer: View
+    private lateinit var conversationContainer: LinearLayout
+    private lateinit var conversationScroll: ScrollView
+    private lateinit var btnWrite: FloatingActionButton
+    private lateinit var btnMic: FloatingActionButton
 
+    // ── Compose Mode views ────────────────────────────
+    private lateinit var composeModeContainer: View
+    private lateinit var composeEditor: EditText
+    private lateinit var btnSend: Button
     private lateinit var statusText: TextView
 
-    // Conversation Mode views
-    private lateinit var mapView: View               // fragment container
-    private lateinit var conversationScrollView: ScrollView
-    private lateinit var messageView: TextView
 
-    // Compose Mode views
-    private lateinit var composeEdit: EditText
+    // Bind all views from the current content view
+    fun initialize() {
+        conversationModeContainer = activity.findViewById(R.id.conversationModeContainer)
+        conversationContainer     = activity.findViewById(R.id.conversationContainer)
+        conversationScroll        = activity.findViewById(R.id.conversationScroll)
+        btnWrite                  = activity.findViewById(R.id.btnWrite)
+        btnMic                    = activity.findViewById(R.id.btnMic)
 
-    // Buttons
-    private lateinit var writeButton: Button
-    private lateinit var sendButton: Button
-    private lateinit var speakButton: Button
-
-    // =====================================================
-    // INITIALISATION
-    // =====================================================
-
-    fun initialize(
-        onSpeak: () -> Unit,
-        onWrite: () -> Unit,
-        onSend: () -> Unit,
-        onAck: () -> Unit
-    ) {
-        activity.setContentView(R.layout.activity_main)
-
-        // Keep keyboard hidden until Compose Mode is entered explicitly.
-        activity.window.setSoftInputMode(
-            WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN
-        )
-
+        composeModeContainer      = activity.findViewById(R.id.composeModeContainer)
+        composeEditor             = activity.findViewById(R.id.composeEditor)
+        btnSend                   = activity.findViewById(R.id.btnSend)
         statusText = activity.findViewById(R.id.statusText)
-        statusText.text = "No pending messages"
 
-        // Conversation Mode views
-        mapView = activity.findViewById(R.id.map)
-        conversationScrollView = activity.findViewById(R.id.conversationScrollView)
-        messageView = activity.findViewById(R.id.messageView)
-
-        // Compose Mode view – hidden initially (Conversation Mode is default)
-        composeEdit = activity.findViewById(R.id.composeEdit)
-        composeEdit.visibility = View.GONE
-
-        // Buttons
-        writeButton = activity.findViewById(R.id.writeButton)
-        sendButton = activity.findViewById(R.id.sendButton)
-        speakButton = activity.findViewById(R.id.speakButton)
-
-        // speakButton is wired but stays hidden; Gboard mic is preferred
-        speakButton.setOnClickListener {
-            statusText.text = "STARTING SPEECH"
-            onSpeak()
-        }
-
-        writeButton.setOnClickListener { onWrite() }
-        sendButton.setOnClickListener { onSend() }
-
-        // Tapping status bar acts as ACK
-        statusText.bringToFront()
-        statusText.setOnClickListener { onAck() }
-
-        Log.d("HB", "UIManager initialised – Conversation Mode")
+        Log.d(TAG, "UIManager initialized")
     }
 
     // =====================================================
-    // STATUS DISPLAY
+    // MODE TRANSITIONS
     // =====================================================
 
+    // Show map + conversation; hide compose; hide keyboard
+    fun showConversationMode() {
+        conversationModeContainer.visibility = View.VISIBLE
+        composeModeContainer.visibility      = View.GONE
+        hideKeyboard()
+        Log.d(TAG, "Conversation mode active")
+    }
+
+    // Hide map + conversation; show compose editor; request focus + keyboard
+    fun showComposeMode() {
+        conversationModeContainer.visibility = View.GONE
+        composeModeContainer.visibility      = View.VISIBLE
+        composeEditor.requestFocus()
+        showKeyboard()
+        Log.d(TAG, "Compose mode active")
+    }
+
+    // =====================================================
+    // CONVERSATION AREA
+    // =====================================================
+
+    // Append a message at the bottom and auto-scroll to it
+    fun appendMessage(text: String) {
+        val tv = TextView(activity).apply {
+            this.text = text
+            textSize  = 14f
+            setTextColor(0xFFFFFFFF.toInt())
+            setPadding(8, 6, 8, 6)
+        }
+        conversationContainer.addView(tv)
+        // Auto-scroll to the latest message
+        conversationScroll.post {
+            conversationScroll.fullScroll(View.FOCUS_DOWN)
+        }
+        Log.d(TAG, "Message appended: $text")
+    }
+
+    // =====================================================
+    // COMPOSE AREA
+    // =====================================================
+
+    fun getComposeText(): String = composeEditor.text.toString().trim()
+
+    fun clearCompose() {
+        composeEditor.text.clear()
+    }
+
+    // =====================================================
+    // BUTTON WIRING
+    // =====================================================
+
+    fun setOnWriteClick(action: () -> Unit) {
+        btnWrite.setOnClickListener { action() }
+    }
+
+    fun setOnMicClick(action: () -> Unit) {
+        btnMic.setOnClickListener { action() }
+    }
+
+    fun setOnSendClick(action: () -> Unit) {
+        btnSend.setOnClickListener { action() }
+    }
+
+    // =====================================================
+    // KEYBOARD HELPERS
+    // =====================================================
+
+    private fun hideKeyboard() {
+        val imm = activity.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        val focus = activity.currentFocus ?: activity.window.decorView
+        imm.hideSoftInputFromWindow(focus.windowToken, 0)
+    }
+
+    private fun showKeyboard() {
+        val imm = activity.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.showSoftInput(composeEditor, InputMethodManager.SHOW_IMPLICIT)
+    }
     fun showStatus(text: String) {
         statusText.text = text
     }
-
-    // =====================================================
-    // MESSAGE DISPLAY
-    // =====================================================
-
-    /**
-     * FIX-1: Write speech/draft text to the compose editor ONLY.
-     * Previously this method could fall through to messageView.text = text,
-     * overwriting the entire conversation history.
-     */
-    fun showMessageInput(text: String) {
-        composeEdit.setText(text)
-        composeEdit.setSelection(composeEdit.text.length)
-    }
-
-    /**
-     * Append a new entry to the read-only conversation log and
-     * scroll to the bottom so it is immediately visible.
-     * FIX-3: auto-scroll added; isAttachedToWindow guard prevents
-     * posting a runnable on a detached view.
-     */
-    fun appendConversation(text: String) {
-        if (messageView.text.isBlank()) {
-            messageView.text = text
-        } else {
-            messageView.append("\n\n")
-            messageView.append(text)
-        }
-        // Scroll to the bottom after the layout pass completes.
-        // Both isAttachedToWindow checks guard against the view being
-        // detached between the outer check and when the runnable fires.
-        if (conversationScrollView.isAttachedToWindow) {
-            conversationScrollView.post {
-                if (conversationScrollView.isAttachedToWindow) {
-                    conversationScrollView.fullScroll(View.FOCUS_DOWN)
-                }
-            }
-        }
-    }
-
-    fun getMessageText(): String =
-        composeEdit.text.toString().trim()
-
-    fun clearMessageInput() {
-        composeEdit.setText("")
-    }
-
-    // =====================================================
-    // COMPOSE MODE
-    // FIX-2: map and conversation scroll view are now
-    //        explicitly hidden when entering Compose Mode
-    //        and restored when exiting.
-    // =====================================================
-
-    fun enterComposeMode() {
-        // Hide Conversation Mode views
-        mapView.visibility = View.GONE
-        conversationScrollView.visibility = View.GONE
-        writeButton.visibility = View.GONE
-
-        // Show Compose Mode views
-        composeEdit.visibility = View.VISIBLE
-        sendButton.visibility = View.VISIBLE
-
-        composeEdit.requestFocus()
-
-        val imm =
-            activity.getSystemService(Context.INPUT_METHOD_SERVICE)
-                    as InputMethodManager
-        imm.showSoftInput(composeEdit, InputMethodManager.SHOW_IMPLICIT)
-
-        Log.d("HB", "UIManager – Compose Mode entered")
-    }
-
-    fun exitComposeMode() {
-        // Clear compose editor and dismiss keyboard
-        composeEdit.setText("")
-        composeEdit.clearFocus()
-
-        val imm =
-            activity.getSystemService(Context.INPUT_METHOD_SERVICE)
-                    as InputMethodManager
-        imm.hideSoftInputFromWindow(composeEdit.windowToken, 0)
-
-        // Hide Compose Mode views
-        composeEdit.visibility = View.GONE
-        sendButton.visibility = View.GONE
-
-        // Restore Conversation Mode views
-        mapView.visibility = View.VISIBLE
-        conversationScrollView.visibility = View.VISIBLE
-        writeButton.visibility = View.VISIBLE
-
-        Log.d("HB", "UIManager – Conversation Mode restored")
-    }
-
-    // =====================================================
-    // ACK DISPLAY
-    // =====================================================
-
-    fun clearAck() {
-        statusText.text = "No pending messages"
-    }
-
-    // =====================================================
-    // UI HELPER – long-message display
-    // =====================================================
-
-    fun displayMessage(
-        currentMessage: String,
-        fullMessageVisible: Boolean
-    ) {
-        if (currentMessage.length <= 80) {
-            statusText.text = currentMessage
-            return
-        }
-
-        if (fullMessageVisible) {
-            statusText.text = currentMessage + "\n\n[LESS]"
-        } else {
-            statusText.text =
-                currentMessage.take(80) + "..." + "\n\n[MORE]"
-        }
-    }
-
 }
-
