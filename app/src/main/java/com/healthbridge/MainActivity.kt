@@ -16,7 +16,7 @@ import com.healthbridge.telemetry.BatteryCollector
 class MainActivity : AppCompatActivity() {
 
     companion object {
-        private const val MEMBER_ID = "M1"   // Change to "M2" for the Samsung
+        private const val MEMBER_ID = "M2"   // Change to "M2" for the Samsung
     }
 
 
