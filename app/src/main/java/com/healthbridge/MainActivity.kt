@@ -2,13 +2,7 @@ package com.healthbridge
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
-import com.healthbridge.telemetry.BatteryCollector
-
-
-
+import androidx.appcompat.app.AlertDialog
 
 // =====================================================
 // MAIN ACTIVITY — coordinator only
@@ -16,19 +10,17 @@ import com.healthbridge.telemetry.BatteryCollector
 class MainActivity : AppCompatActivity() {
 
     companion object {
-        private const val MEMBER_ID = "M2"   // Change to "M2" for the Samsung
+        const val MEMBER_ID = "M1"   // M1=Motorola M2=samsung
+
     }
 
+    private lateinit var mapManager: MapManager
+
+
+    private lateinit var speechManager: SpeechManager
+    private lateinit var uiManager: UIManager
 
     private lateinit var messageManager: MessageManager
-    private lateinit var mapManager: MapManager
-    private lateinit var uiManager: UIManager
-    private lateinit var speechManager: SpeechManager
-
-
-
-
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,37 +36,25 @@ class MainActivity : AppCompatActivity() {
 
         uiManager = UIManager(this)
         uiManager.initialize()
-        speechManager = SpeechManager(this)
-        speechManager.initialize()
-        speechManager = SpeechManager(this)
-        speechManager.initialize()
-
-        val battery = BatteryCollector(this).getBatteryLevel()
-
-        val currentTime =
-            SimpleDateFormat("HH:mm", Locale.getDefault())
-                .format(Date())
-        android.util.Log.d("HB", "BATTERY = $battery")
-
-       // uiManager.showStatus("🟢 ONLINE    🕒 $currentTime    🔋 $battery%")
-        uiManager.showStatus("XXXXXXXXXXXXXXXXXXXXXXXX")
-
 
         messageManager = MessageManager(MEMBER_ID)
 
+        speechManager = SpeechManager(this)
+        speechManager.initialize()
 
         messageManager.startListening { from, text ->
 
             runOnUiThread {
 
                 uiManager.appendMessage("$from: $text")
+
                 speechManager.speak(text)
 
+                android.util.Log.d(
+                    "HB",
+                    "MESSAGE RECEIVED: $text")
             }
         }
-
-
-        uiManager.showStatus("🟢 ONLINE    🕒 $currentTime    🔋 --%")
 
         android.util.Log.d("HB", "MANAGERS INITIALIZED")
 
@@ -84,7 +64,28 @@ class MainActivity : AppCompatActivity() {
 
         // Write → Compose Mode
         uiManager.setOnWriteClick {
-            uiManager.showComposeMode()
+
+            AlertDialog.Builder(this)
+                .setTitle("WRITE MODE")
+                .setItems(
+                    arrayOf(
+                        "Message To Patient",
+                        "SOAP Note"
+                    )
+                ) { _, which ->
+
+                    when (which) {
+
+                        0 -> {
+                            uiManager.showPatientComposeMode()
+                        }
+
+                        1 -> {
+                            uiManager.showSoapComposeMode()
+                        }
+                    }
+                }
+                .show()
         }
 
         // Microphone → speech recognition hook (preserved for SpeechManager integration)
@@ -99,18 +100,17 @@ class MainActivity : AppCompatActivity() {
 
             if (text.isNotBlank()) {
 
-                // Send to Firebase
                 messageManager.send(text)
 
-                // Show immediately in local conversation
                 uiManager.appendMessage("Me: $text")
 
                 uiManager.clearCompose()
+
+                android.util.Log.d("HB", "Message sent: $text")
             }
 
             uiManager.showConversationMode()
         }
-
         // =====================================================
         // START IN CONVERSATION MODE
         // =====================================================

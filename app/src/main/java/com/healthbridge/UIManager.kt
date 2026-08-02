@@ -17,6 +17,14 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 // =====================================================
 class UIManager(private val activity: AppCompatActivity) {
 
+
+
+
+
+
+
+
+
     private val TAG = "UIManager"
 
     // ── Conversation Mode views ───────────────────────
@@ -30,7 +38,14 @@ class UIManager(private val activity: AppCompatActivity) {
     private lateinit var composeModeContainer: View
     private lateinit var composeEditor: EditText
     private lateinit var btnSend: Button
-    private lateinit var statusText: TextView
+
+    fun showPatientComposeMode() {
+        soapMode = false
+
+        btnSend.text = "Send"
+
+        showComposeMode()
+    }
 
 
     // Bind all views from the current content view
@@ -44,7 +59,6 @@ class UIManager(private val activity: AppCompatActivity) {
         composeModeContainer      = activity.findViewById(R.id.composeModeContainer)
         composeEditor             = activity.findViewById(R.id.composeEditor)
         btnSend                   = activity.findViewById(R.id.btnSend)
-        statusText = activity.findViewById(R.id.statusText)
 
         Log.d(TAG, "UIManager initialized")
     }
@@ -63,11 +77,34 @@ class UIManager(private val activity: AppCompatActivity) {
 
     // Hide map + conversation; show compose editor; request focus + keyboard
     fun showComposeMode() {
+
         conversationModeContainer.visibility = View.GONE
-        composeModeContainer.visibility      = View.VISIBLE
+        composeModeContainer.visibility = View.VISIBLE
+
         composeEditor.requestFocus()
         showKeyboard()
+
         Log.d(TAG, "Compose mode active")
+    }
+
+    // =====================================================
+// COMPOSE MODES
+// =====================================================
+
+    private var soapMode = false
+
+
+
+    fun showSoapComposeMode() {
+
+        soapMode = true
+
+        // Change title
+        // composeTitle.text = "SOAP Note"
+
+        btnSend.text = "Save SOAP"
+
+        showComposeMode()
     }
 
     // =====================================================
@@ -129,8 +166,5 @@ class UIManager(private val activity: AppCompatActivity) {
     private fun showKeyboard() {
         val imm = activity.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         imm.showSoftInput(composeEditor, InputMethodManager.SHOW_IMPLICIT)
-    }
-    fun showStatus(text: String) {
-        statusText.text = text
     }
 }
