@@ -81,7 +81,11 @@ class MainActivity : AppCompatActivity() {
                         }
 
                         1 -> {
-                            uiManager.showSoapComposeMode()
+                            android.widget.Toast.makeText(
+                                this,
+                                "SOAP Mode - Coming Soon",
+                                android.widget.Toast.LENGTH_SHORT
+                            ).show()
                         }
                     }
                 }
@@ -89,10 +93,27 @@ class MainActivity : AppCompatActivity() {
         }
 
         // Microphone → speech recognition hook (preserved for SpeechManager integration)
-        uiManager.setOnMicClick {
-            android.util.Log.d("HB", "Mic button pressed — speech recognition hook")
+        uiManager.setOnCopyClick {
+            android.util.Log.d("HB", "Copy pressed")
         }
 
+        uiManager.setOnSaveClick {
+            android.util.Log.d("HB", "Save pressed")
+        }
+        uiManager.setOnSpeakClick {
+            android.util.Log.d("HB", "Speak button pressed")
+        }
+
+        uiManager.setOnSpeakClick {
+
+            android.util.Log.d(
+                "HB",
+                "Speak pressed"
+            )
+
+            // Tomorrow:
+            // speechManager.startListening(...)
+        }
         // Send → process message, clear editor, return to Conversation Mode
         uiManager.setOnSendClick {
 

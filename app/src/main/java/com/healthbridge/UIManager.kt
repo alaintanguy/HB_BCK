@@ -32,12 +32,15 @@ class UIManager(private val activity: AppCompatActivity) {
     private lateinit var conversationContainer: LinearLayout
     private lateinit var conversationScroll: ScrollView
     private lateinit var btnWrite: FloatingActionButton
-    private lateinit var btnMic: FloatingActionButton
-
+    private lateinit var btnCopy: FloatingActionButton
+    private lateinit var btnSave: FloatingActionButton
     // ── Compose Mode views ────────────────────────────
     private lateinit var composeModeContainer: View
     private lateinit var composeEditor: EditText
-    private lateinit var btnSend: Button
+    private lateinit var btnSpeak: FloatingActionButton
+    private lateinit var btnSpeak: FloatingActionButton
+    private lateinit var btnSpeak: FloatingActionButton
+    private lateinit var btnSend: FloatingActionButton
 
     fun showPatientComposeMode() {
         soapMode = false
@@ -53,16 +56,20 @@ class UIManager(private val activity: AppCompatActivity) {
         conversationModeContainer = activity.findViewById(R.id.conversationModeContainer)
         conversationContainer     = activity.findViewById(R.id.conversationContainer)
         conversationScroll        = activity.findViewById(R.id.conversationScroll)
-        btnWrite                  = activity.findViewById(R.id.btnWrite)
-        btnMic                    = activity.findViewById(R.id.btnMic)
-
+        btnWrite = activity.findViewById(R.id.btnWrite)
+        btnCopy = activity.findViewById(R.id.btnCopy)
+        btnSave = activity.findViewById(R.id.btnSave)
         composeModeContainer      = activity.findViewById(R.id.composeModeContainer)
         composeEditor             = activity.findViewById(R.id.composeEditor)
-        btnSend                   = activity.findViewById(R.id.btnSend)
+        btnSpeak = activity.findViewById(R.id.btnSpeak)
+        btnSpeak = activity.findViewById(R.id.btnSpeak)
+        btnSend  = activity.findViewById(R.id.btnSend)
 
         Log.d(TAG, "UIManager initialized")
     }
-
+    fun setOnSpeakClick(action: () -> Unit) {
+        btnSpeak.setOnClickListener { action() }
+    }
     // =====================================================
     // MODE TRANSITIONS
     // =====================================================
@@ -145,10 +152,16 @@ class UIManager(private val activity: AppCompatActivity) {
         btnWrite.setOnClickListener { action() }
     }
 
-    fun setOnMicClick(action: () -> Unit) {
-        btnMic.setOnClickListener { action() }
+    fun setOnCopyClick(action: () -> Unit) {
+        btnCopy.setOnClickListener { action() }
     }
 
+    fun setOnSaveClick(action: () -> Unit) {
+        btnSave.setOnClickListener { action() }
+    }
+    fun setOnSpeakClick(action: () -> Unit) {
+        btnSpeak.setOnClickListener { action() }
+    }
     fun setOnSendClick(action: () -> Unit) {
         btnSend.setOnClickListener { action() }
     }
