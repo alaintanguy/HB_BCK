@@ -4,7 +4,6 @@ import android.content.Context
 import android.util.Log
 import android.view.View
 import android.view.inputmethod.InputMethodManager
-import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ScrollView
@@ -16,14 +15,6 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 // UI MANAGER — UI-only responsibilities
 // =====================================================
 class UIManager(private val activity: AppCompatActivity) {
-
-
-
-
-
-
-
-
 
     private val TAG = "UIManager"
 
@@ -38,9 +29,9 @@ class UIManager(private val activity: AppCompatActivity) {
     private lateinit var composeModeContainer: View
     private lateinit var composeEditor: EditText
     private lateinit var btnSpeak: FloatingActionButton
-    private lateinit var btnSpeak: FloatingActionButton
-    private lateinit var btnSpeak: FloatingActionButton
     private lateinit var btnSend: FloatingActionButton
+
+    private var soapMode = false
 
     fun showPatientComposeMode() {
         soapMode = false
@@ -50,26 +41,26 @@ class UIManager(private val activity: AppCompatActivity) {
         showComposeMode()
     }
 
-
     // Bind all views from the current content view
     fun initialize() {
         conversationModeContainer = activity.findViewById(R.id.conversationModeContainer)
-        conversationContainer     = activity.findViewById(R.id.conversationContainer)
-        conversationScroll        = activity.findViewById(R.id.conversationScroll)
+        conversationContainer = activity.findViewById(R.id.conversationContainer)
+        conversationScroll = activity.findViewById(R.id.conversationScroll)
         btnWrite = activity.findViewById(R.id.btnWrite)
         btnCopy = activity.findViewById(R.id.btnCopy)
         btnSave = activity.findViewById(R.id.btnSave)
-        composeModeContainer      = activity.findViewById(R.id.composeModeContainer)
-        composeEditor             = activity.findViewById(R.id.composeEditor)
+        composeModeContainer = activity.findViewById(R.id.composeModeContainer)
+        composeEditor = activity.findViewById(R.id.composeEditor)
         btnSpeak = activity.findViewById(R.id.btnSpeak)
-        btnSpeak = activity.findViewById(R.id.btnSpeak)
-        btnSend  = activity.findViewById(R.id.btnSend)
+        btnSend = activity.findViewById(R.id.btnSend)
 
         Log.d(TAG, "UIManager initialized")
     }
+
     fun setOnSpeakClick(action: () -> Unit) {
         btnSpeak.setOnClickListener { action() }
     }
+
     // =====================================================
     // MODE TRANSITIONS
     // =====================================================
@@ -77,14 +68,13 @@ class UIManager(private val activity: AppCompatActivity) {
     // Show map + conversation; hide compose; hide keyboard
     fun showConversationMode() {
         conversationModeContainer.visibility = View.VISIBLE
-        composeModeContainer.visibility      = View.GONE
+        composeModeContainer.visibility = View.GONE
         hideKeyboard()
         Log.d(TAG, "Conversation mode active")
     }
 
     // Hide map + conversation; show compose editor; request focus + keyboard
     fun showComposeMode() {
-
         conversationModeContainer.visibility = View.GONE
         composeModeContainer.visibility = View.VISIBLE
 
@@ -95,15 +85,10 @@ class UIManager(private val activity: AppCompatActivity) {
     }
 
     // =====================================================
-// COMPOSE MODES
-// =====================================================
-
-    private var soapMode = false
-
-
+    // COMPOSE MODES
+    // =====================================================
 
     fun showSoapComposeMode() {
-
         soapMode = true
 
         // Change title
@@ -122,7 +107,7 @@ class UIManager(private val activity: AppCompatActivity) {
     fun appendMessage(text: String) {
         val tv = TextView(activity).apply {
             this.text = text
-            textSize  = 14f
+            textSize = 14f
             setTextColor(0xFFFFFFFF.toInt())
             setPadding(8, 6, 8, 6)
         }
@@ -159,9 +144,11 @@ class UIManager(private val activity: AppCompatActivity) {
     fun setOnSaveClick(action: () -> Unit) {
         btnSave.setOnClickListener { action() }
     }
+
     fun setOnSpeakClick(action: () -> Unit) {
         btnSpeak.setOnClickListener { action() }
     }
+
     fun setOnSendClick(action: () -> Unit) {
         btnSend.setOnClickListener { action() }
     }
