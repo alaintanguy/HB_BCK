@@ -1,115 +1,187 @@
 <?xml version="1.0" encoding="utf-8"?>
-
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:background="#000000">
 
-    <!-- ========================= -->
-    <!-- MAP -->
-    <!-- ========================= -->
-
-    <fragment
-        android:id="@+id/map"
-        android:name="com.google.android.gms.maps.SupportMapFragment"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"/>
-
-    <!-- ========================= -->
-    <!-- STATUS -->
-    <!-- ========================= -->
-
+    <!-- ========================
+         CONVERSATION MODE
+         ======================== -->
     <TextView
-        android:id="@+id/statusText"
-        android:layout_marginTop="0dp"
-        android:layout_width="match_parent"
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="#202020"
-        android:padding="6dp"
-        android:text="🟢 ONLINE    🕒 --:--    🔋 --%"
-        android:textAlignment="center"
-        android:textColor="#FFFF00"
-        android:textSize="12sp"
-        android:textStyle="bold"/>
-
-    <!-- ========================= -->
-    <!-- REMINDER -->
-    <!-- ========================= -->
-
-    <TextView
-        android:id="@+id/messageView"
-        android:layout_marginTop="10dp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:minLines="6"
-        android:maxLines="6"
-        android:background="#FFFFFF"
-        android:gravity="top|start"
-        android:textIsSelectable="true"
-        android:padding="12dp"
-        android:textColor="#000000"
-        android:textSize="22sp"/>
-
-    <EditText
-        android:id="@+id/composeEdit"
-        android:layout_width="match_parent"
-        android:layout_height="150dp"
-        android:background="#FFFFAA"
-        android:textColor="#000000"
-        android:minLines="6"
-        android:maxLines="6"
-        android:visibility="gone"/>
-
-    <!-- ========================= -->
-    <!-- ACTION BUTTONS -->
-    <!-- ========================= -->
+        android:text="&lt;!-- Circular Microphone button -->" />
 
     <LinearLayout
+        android:id="@+id/conversationModeContainer"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="horizontal"
-        android:paddingTop="12dp"
-        android:paddingBottom="0dp">
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-        <Button
-            android:id="@+id/speakButton"
-            android:layout_width="90dp"
-            android:layout_height="90dp"
-            android:layout_margin="12dp"
-            android:text="🎤"
-            android:textSize="34sp"/>
+        <!-- Google Map (top half) -->
+        <fragment
+            android:id="@+id/map"
+            android:name="com.google.android.gms.maps.SupportMapFragment"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
 
-        <Button
-            android:id="@+id/writeButton"
-            android:layout_width="90dp"
-            android:layout_height="90dp"
-            android:layout_margin="12dp"
-            android:text="✏️"
-            android:textSize="34sp"/>
+        <!-- Scrollable conversation history -->
+        <ScrollView
+            android:id="@+id/conversationScroll"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:fillViewport="true">
 
-        <Button
-            android:id="@+id/sendButton"
-            android:layout_width="90dp"
-            android:layout_height="90dp"
-            android:layout_margin="12dp"
-            android:text="📤"
-            android:textSize="34sp"/>
+            <LinearLayout
+                android:id="@+id/conversationContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="8dp" />
+        </ScrollView>
 
+        <!-- Bottom action row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:padding="12dp"
+            android:background="#1a1a1a">
 
+            <!-- Circular Write button -->
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/btnWrite"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="8dp"
+                android:contentDescription="Write"
+                app:srcCompat="@android:drawable/ic_menu_edit"
+                app:backgroundTint="#FFD700" />
 
-        <Button
-            android:id="@+id/ackButton"
-            android:layout_width="1dp"
-            android:layout_height="1dp"
-            android:visibility="gone"
-            android:text="ACK"/>
+            <!-- Circular Copy button -->
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/btnCopy"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="8dp"
+                android:contentDescription="Copy"
+                app:srcCompat="@android:drawable/ic_menu_upload"
+                app:backgroundTint="#7B1FA2" />
+
+            <!-- Circular Save button -->
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/btnSave"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="8dp"
+                android:contentDescription="Save"
+                app:srcCompat="@android:drawable/ic_menu_agenda"
+                app:backgroundTint="#757575" />
+
+            <!-- Save button placeholder (future) -->
+            <View
+                android:id="@+id/btnSavePlaceholder"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:layout_margin="8dp"
+                android:visibility="invisible" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- ========================
+         COMPOSE MODE
+         ======================== -->
+    <LinearLayout
+        android:id="@+id/composeModeContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:background="#000000"
+        android:visibility="gone">
+
+        <!-- Fixed 6-line compose editor -->
+        <EditText
+            android:id="@+id/composeEditor"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:lines="6"
+            android:maxLines="6"
+            android:minLines="6"
+            android:inputType="textMultiLine|textCapSentences"
+            android:gravity="top|start"
+            android:background="#1a1a1a"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#888888"
+            android:hint="Type your message..."
+            android:padding="12dp"
+            android:textSize="16sp" />
+
+        <!-- Send button -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <!-- Speak -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/btnSpeak"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="Speak"
+                    app:backgroundTint="#FF9800"
+                    app:srcCompat="@android:drawable/ic_btn_speak_now"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Speak"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12sp"
+                    android:layout_marginTop="4dp"/>
+            </LinearLayout>
+
+            <!-- Send -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/btnSend"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="Send"
+                    app:backgroundTint="#2196F3"
+                    app:srcCompat="@android:drawable/ic_menu_send"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Send"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12sp"
+                    android:layout_marginTop="4dp"/>
+            </LinearLayout>
+
+        </LinearLayout>
 
     </LinearLayout>
 
-
-
-</LinearLayout>
+</FrameLayout>

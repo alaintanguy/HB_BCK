@@ -1,217 +1,183 @@
-// ====================================================================
-// HealthBridge
-// UIManager.kt
-// Phase 5A – UI responsibilities extracted from MainActivity
-// ====================================================================
-
 package com.healthbridge
 
-import android.app.Activity
-import android.view.WindowManager
+import android.content.Context
+import android.util.Log
+import android.view.View
+import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
+import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.TextView
-import android.content.Context
-import android.view.inputmethod.InputMethodManager
-import android.util.Log
+import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 // =====================================================
-// UI MANAGER
-// Owns: view binding, status/message/ACK display,
-//       button initialisation, UI helper methods.
-// Does NOT own: Firebase, speech, map, telemetry.
+// UI MANAGER — UI-only responsibilities
+// =====================================================
+class UIManager(private val activity: AppCompatActivity) {
+
+
+
+
+
+
+
+
+
+    private val TAG = "UIManager"
+
+    // ── Conversation Mode views ───────────────────────
+    private lateinit var conversationModeContainer: View
+    private lateinit var conversationContainer: LinearLayout
+    private lateinit var conversationScroll: ScrollView
+    private lateinit var btnWrite: FloatingActionButton
+    private lateinit var btnCopy: FloatingActionButton
+    private lateinit var btnSave: FloatingActionButton
+    // ── Compose Mode views ────────────────────────────
+    private lateinit var composeModeContainer: View
+    private lateinit var composeEditor: EditText
+    private lateinit var btnSpeak: FloatingActionButton
+    private lateinit var btnSpeak: FloatingActionButton
+    private lateinit var btnSpeak: FloatingActionButton
+    private lateinit var btnSend: FloatingActionButton
+
+    fun showPatientComposeMode() {
+        soapMode = false
+
+        btnSend.text = "Send"
+
+        showComposeMode()
+    }
+
+
+    // Bind all views from the current content view
+    fun initialize() {
+        conversationModeContainer = activity.findViewById(R.id.conversationModeContainer)
+        conversationContainer     = activity.findViewById(R.id.conversationContainer)
+        conversationScroll        = activity.findViewById(R.id.conversationScroll)
+        btnWrite = activity.findViewById(R.id.btnWrite)
+        btnCopy = activity.findViewById(R.id.btnCopy)
+        btnSave = activity.findViewById(R.id.btnSave)
+        composeModeContainer      = activity.findViewById(R.id.composeModeContainer)
+        composeEditor             = activity.findViewById(R.id.composeEditor)
+        btnSpeak = activity.findViewById(R.id.btnSpeak)
+        btnSpeak = activity.findViewById(R.id.btnSpeak)
+        btnSend  = activity.findViewById(R.id.btnSend)
+
+        Log.d(TAG, "UIManager initialized")
+    }
+    fun setOnSpeakClick(action: () -> Unit) {
+        btnSpeak.setOnClickListener { action() }
+    }
+    // =====================================================
+    // MODE TRANSITIONS
+    // =====================================================
+
+    // Show map + conversation; hide compose; hide keyboard
+    fun showConversationMode() {
+        conversationModeContainer.visibility = View.VISIBLE
+        composeModeContainer.visibility      = View.GONE
+        hideKeyboard()
+        Log.d(TAG, "Conversation mode active")
+    }
+
+    // Hide map + conversation; show compose editor; request focus + keyboard
+    fun showComposeMode() {
+
+        conversationModeContainer.visibility = View.GONE
+        composeModeContainer.visibility = View.VISIBLE
+
+        composeEditor.requestFocus()
+        showKeyboard()
+
+        Log.d(TAG, "Compose mode active")
+    }
+
+    // =====================================================
+// COMPOSE MODES
 // =====================================================
 
-class UIManager(private val activity: Activity) {
+    private var soapMode = false
+
+
+
+    fun showSoapComposeMode() {
+
+        soapMode = true
+
+        // Change title
+        // composeTitle.text = "SOAP Note"
+
+        btnSend.text = "Save SOAP"
+
+        showComposeMode()
+    }
 
     // =====================================================
-    // VIEWS
+    // CONVERSATION AREA
     // =====================================================
 
-
-    private lateinit var messageView: TextView
-    private lateinit var composeEdit: EditText
-
-
-
-
-    private lateinit var statusText: TextView
-   // private lateinit var messageView: TextView
-  //  private lateinit var ackStatus: TextView
-  //  private lateinit var ackButton: Button
-    private lateinit var sendButton: Button
-    private lateinit var speakButton: Button
-
-
-    private lateinit var writeButton: Button
-
-    // =====================================================
-    // INITIALISATION
-    // =====================================================
-
-    fun initialize(
-        onSpeak: () -> Unit,
-        onWrite: () -> Unit,
-        onSend: () -> Unit,
-        onAck: () -> Unit
-    ) {
-        activity.setContentView(R.layout.activity_main)
-
-        activity.window.setSoftInputMode(
-            WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN
-        )
-
-        statusText = activity.findViewById(R.id.statusText)
-        statusText.text = "No pending messages"
-
-        val mv = activity.findViewById<android.view.View>(R.id.messageView)
-        Log.d("HB", "messageView class = ${mv.javaClass.name}")
-
-        val ce = activity.findViewById<android.view.View>(R.id.composeEdit)
-        Log.d("HB", "composeEdit class = ${ce.javaClass.name}")
-
-        messageView = mv as TextView
-        composeEdit = ce as EditText
-        composeEdit.visibility = android.view.View.GONE
-      //  messageEdit.clearFocus()
-        // Start in READ mode
-     //   messageEdit.isFocusable = false
-     //   messageEdit.isFocusableInTouchMode = false
-     //   messageEdit.isCursorVisible = false
-
-    //    ackStatus = activity.findViewById(R.id.ackStatus)
-
-        writeButton = activity.findViewById(R.id.writeButton)
-        sendButton = activity.findViewById(R.id.sendButton)
-        speakButton = activity.findViewById(R.id.speakButton)
-
-        speakButton.setOnClickListener {
-            statusText.text = "STARTING SPEECH"
-            onSpeak()
+    // Append a message at the bottom and auto-scroll to it
+    fun appendMessage(text: String) {
+        val tv = TextView(activity).apply {
+            this.text = text
+            textSize  = 14f
+            setTextColor(0xFFFFFFFF.toInt())
+            setPadding(8, 6, 8, 6)
         }
-
-        writeButton.setOnClickListener {
-            onWrite()
+        conversationContainer.addView(tv)
+        // Auto-scroll to the latest message
+        conversationScroll.post {
+            conversationScroll.fullScroll(View.FOCUS_DOWN)
         }
-
-        sendButton.setOnClickListener { onSend() }
-
-       // ackButton.setOnClickListener { onAck() }
-
-        statusText.bringToFront()
-        statusText.setOnClickListener { onAck() }
-    }
-
-
-    // =====================================================
-    // STATUS DISPLAY
-    // =====================================================
-
-    fun showStatus(text: String) {
-        statusText.text = text
+        Log.d(TAG, "Message appended: $text")
     }
 
     // =====================================================
-    // MESSAGE DISPLAY
+    // COMPOSE AREA
     // =====================================================
 
-    fun showMessageInput(text: String) {
+    fun getComposeText(): String = composeEditor.text.toString().trim()
 
-        if (composeEdit.visibility == android.view.View.VISIBLE) {
-            composeEdit.setText(text)
-            composeEdit.setSelection(composeEdit.text.length)
-        } else {
-            messageView.text = text
-        }
-    }
-
-    fun appendConversation(text: String) {
-
-        if (messageView.text.isBlank()) {
-            messageView.text = text
-        } else {
-            messageView.append("\n\n")
-            messageView.append(text)
-        }
-    }
-
-    fun getMessageText(): String =
-        composeEdit.text.toString().trim()
-
-    fun clearMessageInput() {
-        composeEdit.setText("")
+    fun clearCompose() {
+        composeEditor.text.clear()
     }
 
     // =====================================================
-// COMPOSE MODE
-// =====================================================
+    // BUTTON WIRING
+    // =====================================================
 
-    fun enterComposeMode() {
-
-        messageView.visibility = android.view.View.GONE
-        composeEdit.visibility = android.view.View.VISIBLE
-
-        composeEdit.requestFocus()
-
-        val imm =
-            activity.getSystemService(Context.INPUT_METHOD_SERVICE)
-                    as InputMethodManager
-
-        imm.showSoftInput(
-            composeEdit,
-            InputMethodManager.SHOW_IMPLICIT
-        )
+    fun setOnWriteClick(action: () -> Unit) {
+        btnWrite.setOnClickListener { action() }
     }
-    fun exitComposeMode() {
 
-        composeEdit.setText("")
-        composeEdit.clearFocus()
+    fun setOnCopyClick(action: () -> Unit) {
+        btnCopy.setOnClickListener { action() }
+    }
 
-        val imm =
-            activity.getSystemService(Context.INPUT_METHOD_SERVICE)
-                    as InputMethodManager
-
-        imm.hideSoftInputFromWindow(
-            composeEdit.windowToken,
-            0
-        )
-
-        composeEdit.visibility = android.view.View.GONE
-        messageView.visibility = android.view.View.VISIBLE
+    fun setOnSaveClick(action: () -> Unit) {
+        btnSave.setOnClickListener { action() }
+    }
+    fun setOnSpeakClick(action: () -> Unit) {
+        btnSpeak.setOnClickListener { action() }
+    }
+    fun setOnSendClick(action: () -> Unit) {
+        btnSend.setOnClickListener { action() }
     }
 
     // =====================================================
-    // ACK DISPLAY
+    // KEYBOARD HELPERS
     // =====================================================
 
-    fun clearAck() {
- //       messageEdit.setText("")
-        statusText.text = "No pending messages"
+    private fun hideKeyboard() {
+        val imm = activity.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        val focus = activity.currentFocus ?: activity.window.decorView
+        imm.hideSoftInputFromWindow(focus.windowToken, 0)
     }
 
-    // =====================================================
-    // UI HELPER – long-message display
-    // =====================================================
-
-    fun displayMessage(
-        currentMessage: String,
-        fullMessageVisible: Boolean
-    ) {
-        if (currentMessage.length <= 80) {
-            statusText.text = currentMessage
-            return
-        }
-
-        if (fullMessageVisible) {
-            statusText.text =
-                currentMessage + "\n\n[LESS]"
-        } else {
-            statusText.text =
-                currentMessage.take(80) +
-                        "..." +
-                        "\n\n[MORE]"
-        }
+    private fun showKeyboard() {
+        val imm = activity.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.showSoftInput(composeEditor, InputMethodManager.SHOW_IMPLICIT)
     }
-
 }
-

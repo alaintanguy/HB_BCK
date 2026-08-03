@@ -1,0 +1,254 @@
+HealthBridge – Conversation & Compose UI Modernization Working Branch
+
+A GitHub Copilot branch has already been created for this work.
+
+Please work only on the existing Copilot branch.
+
+Do not modify the stable fix/messaging-pipeline branch.
+
+The objective is to produce a pull request from the Copilot branch back into fix/messaging-pipeline after the work has 
+been completed and tested.
+
+HealthBridge Vision
+
+HealthBridge is evolving into an AI-assisted caregiver platform, not a messaging application.
+
+The long-term goal is to help caregivers such as:
+
+Travel Nurses
+Home Health Agencies
+Hospice Organizations
+Concierge Medical Practices
+Hospital-at-Home Programs
+
+manage multiple patients safely and efficiently.
+
+The AI will eventually become the caregiver's primary assistant by:
+
+continuously analysing patient status,
+identifying patients needing immediate attention,
+summarising patient history,
+suggesting priorities,
+reducing caregiver workload.
+
+The work requested here is only one step toward that architecture.
+
+Future Architecture (Do Not Implement)
+
+The future application will have three major levels.
+
+Level 1 – AI Patient Dashboard
+
+This will become the application's Home screen.
+
+It will display all current patients ordered by AI priority, not by message arrival.
+
+Each patient card will eventually display:
+
+Patient name
+AI priority
+Priority colour
+Last contact
+Outstanding tasks
+Recent alerts
+AI summary
+
+Do not implement this screen yet.
+
+Level 2 – Patient Workspace
+
+Selecting a patient opens that patient's workspace.
+
+The workspace will eventually contain:
+
+Conversation
+Compose
+SOAP Notes
+Measurements
+Medication
+Alerts
+Map
+AI Summary
+
+This pull request implements only the Conversation and Compose portions of this workspace.
+
+Level 3 – AI Assistant
+
+Future versions will analyse:
+
+Conversations
+SOAP notes
+Measurements
+Medication
+Alerts
+Activity
+
+to recommend caregiver actions.
+
+This is outside the scope of this work.
+
+Current Objective
+
+Modernise the Conversation and Compose user interface while preserving all existing application functionality.
+
+Conversation and Compose should be implemented as reusable components of the future Patient Workspace.
+
+Avoid architectural decisions that assume only one patient exists.
+
+Existing Architecture
+
+Keep the current architecture.
+
+MainActivity remains the application coordinator.
+
+UIManager owns the user interface.
+
+Do not convert the application to Jetpack Compose.
+
+Keep the existing XML layout architecture.
+
+Existing Logic
+
+Do not modify unless absolutely necessary:
+
+FirebaseManager
+MessageManager
+SpeechManager
+TelemetryEngine
+NetworkMonitor
+RoleManager
+MapManager
+GPS logic
+Firebase database structure
+Message pipeline
+Speech pipeline
+
+Messaging currently works correctly.
+
+Preserve all existing functionality.
+
+Conversation Screen
+
+The current Conversation presentation was an experimental SMS-style layout.
+
+Do not preserve this design.
+
+Replace it completely with a cleaner, more maintainable Conversation interface that better fits the future Patient Workspace.
+
+Requirements:
+
+maximise conversation area
+smooth scrolling
+append messages only
+never overwrite previous messages
+automatic scrolling
+clean modern appearance
+no SMS bubble design unless clearly justified
+
+Conversation history should be designed so it can later become part of the patient's permanent record.
+
+Compose Screen
+
+Compose should use a modern Android Material text editor.
+
+Use:
+
+TextInputLayout
+TextInputEditText
+
+where appropriate.
+
+Improve:
+
+multiline editing
+keyboard behaviour
+accessibility
+voice dictation
+focus handling
+
+Preserve draft while switching between Conversation and Compose.
+
+Conversation ⇄ Compose transitions should feel instantaneous.
+
+Avoid Activity changes.
+
+Prefer showing and hiding UI panels within the same Activity.
+
+Buttons
+
+Replace standard buttons with Material FloatingActionButtons where appropriate.
+
+Conversation:
+
+Write
+Microphone
+Copy
+Export
+
+Compose:
+
+Send
+Return
+Delete Draft
+Microphone
+Conversation Persistence
+
+Conversation should survive:
+
+Activity restart
+Application restart
+
+If practical, preserve unfinished drafts as well.
+
+Theme
+
+Keep the existing HealthBridge appearance.
+
+Black background
+Yellow status text
+Existing message colours where appropriate
+
+Do not redesign the application's visual identity.
+
+Refactoring
+
+Simplify UIManager where possible.
+
+Move duplicated UI code into reusable helper functions.
+
+Leave MainActivity as coordinator.
+
+Working Method
+
+Before making code changes:
+
+Review the current implementation.
+Briefly explain your proposed UI approach.
+Then begin implementation.
+
+After each significant modification:
+
+Build the project.
+Fix all compile errors.
+Continue only when the project builds successfully.
+
+Do not leave the project in a partially working state.
+
+Deliverables
+
+Provide a pull request that:
+
+compiles successfully
+preserves existing messaging
+preserves existing speech recognition
+preserves existing Firebase behaviour
+modernises Conversation and Compose
+modifies only necessary files
+includes comments explaining major changes
+
+Final Note
+
+I have intentionally not specified every visual detail.
+
+Please apply current Android Material Design best practices to create a clean, professional user interface suitable 
+for a medical application while remaining compatible with the future AI Patient Dashboard architecture.
