@@ -4,7 +4,6 @@ import android.content.Context
 import android.util.Log
 import android.view.View
 import android.view.inputmethod.InputMethodManager
-import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ScrollView
@@ -17,14 +16,6 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 // =====================================================
 class UIManager(private val activity: AppCompatActivity) {
 
-
-
-
-
-
-
-
-
     private val TAG = "UIManager"
 
     // ── Conversation Mode views ───────────────────────
@@ -34,42 +25,33 @@ class UIManager(private val activity: AppCompatActivity) {
     private lateinit var btnWrite: FloatingActionButton
     private lateinit var btnCopy: FloatingActionButton
     private lateinit var btnSave: FloatingActionButton
+
     // ── Compose Mode views ────────────────────────────
     private lateinit var composeModeContainer: View
     private lateinit var composeEditor: EditText
     private lateinit var btnSpeak: FloatingActionButton
-    private lateinit var btnSpeak: FloatingActionButton
-    private lateinit var btnSpeak: FloatingActionButton
     private lateinit var btnSend: FloatingActionButton
 
-    fun showPatientComposeMode() {
-        soapMode = false
-
-        btnSend.text = "Send"
-
-        showComposeMode()
-    }
-
+    private var soapMode = false
 
     // Bind all views from the current content view
     fun initialize() {
         conversationModeContainer = activity.findViewById(R.id.conversationModeContainer)
-        conversationContainer     = activity.findViewById(R.id.conversationContainer)
-        conversationScroll        = activity.findViewById(R.id.conversationScroll)
+        conversationContainer = activity.findViewById(R.id.conversationContainer)
+        conversationScroll = activity.findViewById(R.id.conversationScroll)
+
         btnWrite = activity.findViewById(R.id.btnWrite)
         btnCopy = activity.findViewById(R.id.btnCopy)
         btnSave = activity.findViewById(R.id.btnSave)
-        composeModeContainer      = activity.findViewById(R.id.composeModeContainer)
-        composeEditor             = activity.findViewById(R.id.composeEditor)
+
+        composeModeContainer = activity.findViewById(R.id.composeModeContainer)
+        composeEditor = activity.findViewById(R.id.composeEditor)
         btnSpeak = activity.findViewById(R.id.btnSpeak)
-        btnSpeak = activity.findViewById(R.id.btnSpeak)
-        btnSend  = activity.findViewById(R.id.btnSend)
+        btnSend = activity.findViewById(R.id.btnSend)
 
         Log.d(TAG, "UIManager initialized")
     }
-    fun setOnSpeakClick(action: () -> Unit) {
-        btnSpeak.setOnClickListener { action() }
-    }
+
     // =====================================================
     // MODE TRANSITIONS
     // =====================================================
@@ -77,14 +59,13 @@ class UIManager(private val activity: AppCompatActivity) {
     // Show map + conversation; hide compose; hide keyboard
     fun showConversationMode() {
         conversationModeContainer.visibility = View.VISIBLE
-        composeModeContainer.visibility      = View.GONE
+        composeModeContainer.visibility = View.GONE
         hideKeyboard()
         Log.d(TAG, "Conversation mode active")
     }
 
     // Hide map + conversation; show compose editor; request focus + keyboard
     fun showComposeMode() {
-
         conversationModeContainer.visibility = View.GONE
         composeModeContainer.visibility = View.VISIBLE
 
@@ -94,23 +75,17 @@ class UIManager(private val activity: AppCompatActivity) {
         Log.d(TAG, "Compose mode active")
     }
 
-    // =====================================================
-// COMPOSE MODES
-// =====================================================
-
-    private var soapMode = false
-
-
+    fun showPatientComposeMode() {
+        soapMode = false
+        // FAB has no text property; use contentDescription for semantic mode label
+        btnSend.contentDescription = "Send"
+        showComposeMode()
+    }
 
     fun showSoapComposeMode() {
-
         soapMode = true
-
-        // Change title
-        // composeTitle.text = "SOAP Note"
-
-        btnSend.text = "Save SOAP"
-
+        // FAB has no text property; use contentDescription for semantic mode label
+        btnSend.contentDescription = "Save SOAP"
         showComposeMode()
     }
 
@@ -122,16 +97,44 @@ class UIManager(private val activity: AppCompatActivity) {
     fun appendMessage(text: String) {
         val tv = TextView(activity).apply {
             this.text = text
-            textSize  = 14f
+            textSize = 14f
             setTextColor(0xFFFFFFFF.toInt())
             setPadding(8, 6, 8, 6)
         }
         conversationContainer.addView(tv)
+
         // Auto-scroll to the latest message
         conversationScroll.post {
             conversationScroll.fullScroll(View.FOCUS_DOWN)
         }
+
         Log.d(TAG, "Message appended: $text")
+    }
+
+//Added fun to GH
+
+
+    fun appendToCompose(text: String) {
+        val current = composeEditor.text.toString()
+
+        val updated =
+            if (current.isBlank())
+                text
+            else
+                "$current $text"
+
+        composeEditor.setText(updated)
+        composeEditor.setSelection(composeEditor.text.length)
+    }
+
+    fun getConversationText(): String {
+        return buildString {
+            for (index in 0 until conversationContainer.childCount) {
+                val child = conversationContainer.getChildAt(index) as? TextView ?: continue
+                if (isNotEmpty()) append('\n')
+                append(child.text)
+            }
+        }
     }
 
     // =====================================================
@@ -159,9 +162,11 @@ class UIManager(private val activity: AppCompatActivity) {
     fun setOnSaveClick(action: () -> Unit) {
         btnSave.setOnClickListener { action() }
     }
+
     fun setOnSpeakClick(action: () -> Unit) {
         btnSpeak.setOnClickListener { action() }
     }
+
     fun setOnSendClick(action: () -> Unit) {
         btnSend.setOnClickListener { action() }
     }

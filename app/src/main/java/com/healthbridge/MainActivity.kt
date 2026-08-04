@@ -1,8 +1,18 @@
 package com.healthbridge
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+
 
 // =====================================================
 // MAIN ACTIVITY — coordinator only
@@ -10,8 +20,8 @@ import androidx.appcompat.app.AlertDialog
 class MainActivity : AppCompatActivity() {
 
     companion object {
-        const val MEMBER_ID = "M1"   // M1=Motorola M2=samsung
-
+        const val MEMBER_ID = "M1"
+        private const val REQUEST_CODE_RECORD_AUDIO = 200
     }
 
     private lateinit var mapManager: MapManager
@@ -94,25 +104,109 @@ class MainActivity : AppCompatActivity() {
 
         // Microphone → speech recognition hook (preserved for SpeechManager integration)
         uiManager.setOnCopyClick {
-            android.util.Log.d("HB", "Copy pressed")
+
+            val conversation = uiManager.getConversationText()
+
+            val clipboard =
+                getSystemService(CLIPBOARD_SERVICE) as android.content.ClipboardManager
+
+            val clip =
+                android.content.ClipData.newPlainText(
+                    "HealthBridge Conversation",
+                    conversation
+                )
+
+            clipboard.setPrimaryClip(clip)
+
+            Toast.makeText(
+                this,
+                "Conversation copied.",
+                Toast.LENGTH_SHORT
+            ).show()
+
+            android.util.Log.d("HB", "Conversation copied")
         }
 
         uiManager.setOnSaveClick {
-            android.util.Log.d("HB", "Save pressed")
+
+            val conversation = uiManager.getConversationText()
+
+            try {
+
+                val documents =
+                    android.os.Environment.getExternalStoragePublicDirectory(
+                        android.os.Environment.DIRECTORY_DOCUMENTS
+                    )
+
+                val hbFolder =
+                    File(documents, "HealthBridge")
+
+                if (!hbFolder.exists()) {
+                    hbFolder.mkdirs()
+                }
+
+                val timestamp =
+                    SimpleDateFormat(
+                        "yyyy-MM-dd_HH-mm-ss",
+                        Locale.US
+                    ).format(Date())
+
+                val file =
+                    File(
+                        hbFolder,
+                        "Conversation_$timestamp.txt"
+                    )
+
+                file.writeText(
+                    conversation,
+                    Charsets.UTF_8
+                )
+
+                Toast.makeText(
+                    this,
+                    "Conversation saved.",
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                android.util.Log.d(
+                    "HB",
+                    "Conversation saved: ${file.absolutePath}"
+                )
+
+            } catch (e: Exception) {
+
+                android.util.Log.e(
+                    "HB",
+                    "Save failed",
+                    e
+                )
+
+                Toast.makeText(
+                    this,
+                    "Save failed.",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
         }
         uiManager.setOnSpeakClick {
+
             android.util.Log.d("HB", "Speak button pressed")
-        }
 
-        uiManager.setOnSpeakClick {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.RECORD_AUDIO
+                ) == PackageManager.PERMISSION_GRANTED) {
 
-            android.util.Log.d(
-                "HB",
-                "Speak pressed"
-            )
+                startSpeechRecognition()
 
-            // Tomorrow:
-            // speechManager.startListening(...)
+            } else {
+
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(Manifest.permission.RECORD_AUDIO),
+                    REQUEST_CODE_RECORD_AUDIO
+                )
+            }
         }
         // Send → process message, clear editor, return to Conversation Mode
         uiManager.setOnSendClick {
@@ -143,4 +237,64 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
         speechManager.shutdown()
     }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(
+            requestCode,
+            permissions,
+            grantResults
+        )
+
+        if (requestCode == REQUEST_CODE_RECORD_AUDIO) {
+
+            if (grantResults.isNotEmpty() &&
+                grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                startSpeechRecognition()
+
+            } else {
+
+                Toast.makeText(
+                    this,
+                    "Microphone permission required.",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+    }
+    private fun startSpeechRecognition() {
+
+        speechManager.startListening(
+
+            onResult = { text ->
+
+                if (text.isNotBlank()) {
+
+                    runOnUiThread {
+
+                        uiManager.appendToCompose(text)
+
+                    }
+                }
+            },
+
+            onError = { msg ->
+
+                runOnUiThread {
+
+                    Toast.makeText(
+                        this,
+                        msg,
+                        Toast.LENGTH_SHORT
+                    ).show()
+
+                }
+            }
+        )
+    }
+
 }
