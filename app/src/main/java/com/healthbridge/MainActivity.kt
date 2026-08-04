@@ -1,8 +1,13 @@
 package com.healthbridge
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AlertDialog
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 // =====================================================
 // MAIN ACTIVITY — coordinator only
@@ -98,20 +103,22 @@ class MainActivity : AppCompatActivity() {
         }
 
         uiManager.setOnSaveClick {
-            android.util.Log.d("HB", "Save pressed")
+            val text = uiManager.getConversationText()
+            try {
+                val dir = File(getExternalFilesDir(null), "HealthBridge")
+                if (!dir.exists()) dir.mkdirs()
+                val timestamp = SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US).format(Date())
+                val file = File(dir, "Conversation_$timestamp.txt")
+                file.writeText(text, Charsets.UTF_8)
+                android.util.Log.d("HB", "Conversation saved to ${file.absolutePath}")
+                Toast.makeText(this, "Conversation saved.", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                android.util.Log.e("HB", "Save failed", e)
+                Toast.makeText(this, "Save failed: ${e.message}", Toast.LENGTH_LONG).show()
+            }
         }
         uiManager.setOnSpeakClick {
-            android.util.Log.d("HB", "Speak button pressed")
-        }
-
-        uiManager.setOnSpeakClick {
-
-            android.util.Log.d(
-                "HB",
-                "Speak pressed"
-            )
-
-            // Tomorrow:
+            android.util.Log.d("HB", "Speak pressed")
             // speechManager.startListening(...)
         }
         // Send → process message, clear editor, return to Conversation Mode

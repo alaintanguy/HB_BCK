@@ -4,7 +4,6 @@ import android.content.Context
 import android.util.Log
 import android.view.View
 import android.view.inputmethod.InputMethodManager
-import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ScrollView
@@ -38,15 +37,10 @@ class UIManager(private val activity: AppCompatActivity) {
     private lateinit var composeModeContainer: View
     private lateinit var composeEditor: EditText
     private lateinit var btnSpeak: FloatingActionButton
-    private lateinit var btnSpeak: FloatingActionButton
-    private lateinit var btnSpeak: FloatingActionButton
     private lateinit var btnSend: FloatingActionButton
 
     fun showPatientComposeMode() {
         soapMode = false
-
-        btnSend.text = "Send"
-
         showComposeMode()
     }
 
@@ -62,13 +56,9 @@ class UIManager(private val activity: AppCompatActivity) {
         composeModeContainer      = activity.findViewById(R.id.composeModeContainer)
         composeEditor             = activity.findViewById(R.id.composeEditor)
         btnSpeak = activity.findViewById(R.id.btnSpeak)
-        btnSpeak = activity.findViewById(R.id.btnSpeak)
         btnSend  = activity.findViewById(R.id.btnSend)
 
         Log.d(TAG, "UIManager initialized")
-    }
-    fun setOnSpeakClick(action: () -> Unit) {
-        btnSpeak.setOnClickListener { action() }
     }
     // =====================================================
     // MODE TRANSITIONS
@@ -106,11 +96,6 @@ class UIManager(private val activity: AppCompatActivity) {
 
         soapMode = true
 
-        // Change title
-        // composeTitle.text = "SOAP Note"
-
-        btnSend.text = "Save SOAP"
-
         showComposeMode()
     }
 
@@ -132,6 +117,18 @@ class UIManager(private val activity: AppCompatActivity) {
             conversationScroll.fullScroll(View.FOCUS_DOWN)
         }
         Log.d(TAG, "Message appended: $text")
+    }
+
+    // Return the full conversation as plain text
+    fun getConversationText(): String {
+        val sb = StringBuilder()
+        for (i in 0 until conversationContainer.childCount) {
+            val child = conversationContainer.getChildAt(i)
+            if (child is TextView) {
+                sb.appendLine(child.text)
+            }
+        }
+        return sb.toString()
     }
 
     // =====================================================
