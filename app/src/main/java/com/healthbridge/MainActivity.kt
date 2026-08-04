@@ -91,11 +91,7 @@ class MainActivity : AppCompatActivity() {
                         }
 
                         1 -> {
-                            android.widget.Toast.makeText(
-                                this,
-                                "SOAP Mode - Coming Soon",
-                                android.widget.Toast.LENGTH_SHORT
-                            ).show()
+                            uiManager.showSoapComposeMode()
                         }
                     }
                 }
@@ -211,20 +207,83 @@ class MainActivity : AppCompatActivity() {
         // Send → process message, clear editor, return to Conversation Mode
         uiManager.setOnSendClick {
 
-            val text = uiManager.getComposeText()
+            if (uiManager.isSoapMode()) {
 
-            if (text.isNotBlank()) {
+                val note = uiManager.getComposeText()
 
-                messageManager.send(text)
+                if (note.isNotBlank()) {
 
-                uiManager.appendMessage("Me: $text")
+                    try {
+
+                        val documents =
+                            android.os.Environment.getExternalStoragePublicDirectory(
+                                android.os.Environment.DIRECTORY_DOCUMENTS
+                            )
+
+                        val soapFolder =
+                            File(documents, "HealthBridge/SOAP")
+
+                        if (!soapFolder.exists()) {
+                            soapFolder.mkdirs()
+                        }
+
+                        val timestamp =
+                            SimpleDateFormat(
+                                "yyyy-MM-dd_HH-mm-ss",
+                                Locale.US
+                            ).format(Date())
+
+                        val file =
+                            File(
+                                soapFolder,
+                                "SOAP_$timestamp.txt"
+                            )
+
+                        file.writeText(note, Charsets.UTF_8)
+
+                        Toast.makeText(
+                            this,
+                            "SOAP Note Saved",
+                            Toast.LENGTH_SHORT
+                        ).show()
+
+                        android.util.Log.d(
+                            "HB",
+                            "SOAP Note saved: ${file.absolutePath}"
+                        )
+
+                    } catch (e: Exception) {
+
+                        android.util.Log.e("HB", "SOAP save failed", e)
+
+                        Toast.makeText(
+                            this,
+                            "Save failed.",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
 
                 uiManager.clearCompose()
+                uiManager.showConversationMode()
 
-                android.util.Log.d("HB", "Message sent: $text")
+            } else {
+
+                val text = uiManager.getComposeText()
+
+                if (text.isNotBlank()) {
+
+                    messageManager.send(text)
+
+                    uiManager.appendMessage("Me: $text")
+
+                    uiManager.clearCompose()
+
+                    android.util.Log.d("HB", "Message sent: $text")
+                }
+
+                uiManager.showConversationMode()
             }
-
-            uiManager.showConversationMode()
         }
         // =====================================================
         // START IN CONVERSATION MODE

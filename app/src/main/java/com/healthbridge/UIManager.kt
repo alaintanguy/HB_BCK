@@ -31,6 +31,7 @@ class UIManager(private val activity: AppCompatActivity) {
     private lateinit var composeEditor: EditText
     private lateinit var btnSpeak: FloatingActionButton
     private lateinit var btnSend: FloatingActionButton
+    private lateinit var btnSendLabel: TextView
 
     private var soapMode = false
 
@@ -48,6 +49,7 @@ class UIManager(private val activity: AppCompatActivity) {
         composeEditor = activity.findViewById(R.id.composeEditor)
         btnSpeak = activity.findViewById(R.id.btnSpeak)
         btnSend = activity.findViewById(R.id.btnSend)
+        btnSendLabel = activity.findViewById(R.id.btnSendLabel)
 
         Log.d(TAG, "UIManager initialized")
     }
@@ -77,17 +79,25 @@ class UIManager(private val activity: AppCompatActivity) {
 
     fun showPatientComposeMode() {
         soapMode = false
-        // FAB has no text property; use contentDescription for semantic mode label
         btnSend.contentDescription = "Send"
+        btnSendLabel.text = "Send"
+        clearCompose()
         showComposeMode()
     }
 
     fun showSoapComposeMode() {
         soapMode = true
-        // FAB has no text property; use contentDescription for semantic mode label
         btnSend.contentDescription = "Save SOAP"
+        btnSendLabel.text = "Save SOAP"
+        // Insert SOAP template and position cursor after "S:"
+        val template = "S:\nO:\nA:\nP:"
+        composeEditor.setText(template)
+        // Position cursor right after "S:" (index 2)
+        composeEditor.setSelection(2)
         showComposeMode()
     }
+
+    fun isSoapMode(): Boolean = soapMode
 
     // =====================================================
     // CONVERSATION AREA
@@ -115,16 +125,10 @@ class UIManager(private val activity: AppCompatActivity) {
 
 
     fun appendToCompose(text: String) {
-        val current = composeEditor.text.toString()
-
-        val updated =
-            if (current.isBlank())
-                text
-            else
-                "$current $text"
-
-        composeEditor.setText(updated)
-        composeEditor.setSelection(composeEditor.text.length)
+        val start = composeEditor.selectionStart.coerceAtLeast(0)
+        val end = composeEditor.selectionEnd.coerceAtLeast(start)
+        composeEditor.text.replace(start, end, text)
+        composeEditor.setSelection(start + text.length)
     }
 
     fun getConversationText(): String {
