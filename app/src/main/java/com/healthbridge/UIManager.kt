@@ -134,6 +134,18 @@ class UIManager(private val activity: AppCompatActivity) {
         Log.d(TAG, "Message appended: $text")
     }
 
+    fun getConversationText(): String {
+        return buildString {
+            for (index in 0 until conversationContainer.childCount) {
+                val child = conversationContainer.getChildAt(index) as? TextView ?: continue
+                if (isNotEmpty()) {
+                    append('\n')
+                }
+                append(child.text)
+            }
+        }
+    }
+
     // =====================================================
     // COMPOSE AREA
     // =====================================================

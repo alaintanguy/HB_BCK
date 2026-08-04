@@ -1,6 +1,10 @@
 package com.healthbridge
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.os.Bundle
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AlertDialog
 
@@ -94,7 +98,12 @@ class MainActivity : AppCompatActivity() {
 
         // Microphone → speech recognition hook (preserved for SpeechManager integration)
         uiManager.setOnCopyClick {
-            android.util.Log.d("HB", "Copy pressed")
+            val conversationText = uiManager.getConversationText()
+            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            val clip = ClipData.newPlainText("Conversation", conversationText)
+            clipboard.setPrimaryClip(clip)
+            Toast.makeText(this, "Conversation copied.", Toast.LENGTH_SHORT).show()
+            android.util.Log.d("HB", "Conversation copied")
         }
 
         uiManager.setOnSaveClick {
