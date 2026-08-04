@@ -38,15 +38,10 @@ class UIManager(private val activity: AppCompatActivity) {
     private lateinit var composeModeContainer: View
     private lateinit var composeEditor: EditText
     private lateinit var btnSpeak: FloatingActionButton
-    private lateinit var btnSpeak: FloatingActionButton
-    private lateinit var btnSpeak: FloatingActionButton
     private lateinit var btnSend: FloatingActionButton
 
     fun showPatientComposeMode() {
         soapMode = false
-
-        btnSend.text = "Send"
-
         showComposeMode()
     }
 
@@ -62,13 +57,9 @@ class UIManager(private val activity: AppCompatActivity) {
         composeModeContainer      = activity.findViewById(R.id.composeModeContainer)
         composeEditor             = activity.findViewById(R.id.composeEditor)
         btnSpeak = activity.findViewById(R.id.btnSpeak)
-        btnSpeak = activity.findViewById(R.id.btnSpeak)
         btnSend  = activity.findViewById(R.id.btnSend)
 
         Log.d(TAG, "UIManager initialized")
-    }
-    fun setOnSpeakClick(action: () -> Unit) {
-        btnSpeak.setOnClickListener { action() }
     }
     // =====================================================
     // MODE TRANSITIONS
@@ -105,11 +96,6 @@ class UIManager(private val activity: AppCompatActivity) {
     fun showSoapComposeMode() {
 
         soapMode = true
-
-        // Change title
-        // composeTitle.text = "SOAP Note"
-
-        btnSend.text = "Save SOAP"
 
         showComposeMode()
     }

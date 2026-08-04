@@ -101,10 +101,6 @@ class MainActivity : AppCompatActivity() {
             android.util.Log.d("HB", "Save pressed")
         }
         uiManager.setOnSpeakClick {
-            android.util.Log.d("HB", "Speak button pressed")
-        }
-
-        uiManager.setOnSpeakClick {
 
             android.util.Log.d(
                 "HB",
