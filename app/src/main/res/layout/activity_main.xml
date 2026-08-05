@@ -53,43 +53,86 @@
             android:padding="12dp"
             android:background="#1a1a1a">
 
-            <!-- Circular Write button -->
-            <com.google.android.material.floatingactionbutton.FloatingActionButton
-                android:id="@+id/btnWrite"
-                android:layout_width="wrap_content"
+            <!-- Patient button with label -->
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_margin="8dp"
-                android:contentDescription="Write"
-                app:srcCompat="@android:drawable/ic_menu_edit"
-                app:backgroundTint="#FFD700" />
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical">
 
-            <!-- Circular Copy button -->
-            <com.google.android.material.floatingactionbutton.FloatingActionButton
-                android:id="@+id/btnCopy"
-                android:layout_width="wrap_content"
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/btnWrite"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="Write"
+                    app:srcCompat="@android:drawable/ic_menu_edit"
+                    app:backgroundTint="#FFD700" />
+
+                <TextView
+                    android:id="@+id/labelWrite"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Patient"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12sp"
+                    android:layout_marginTop="4dp"
+                    android:gravity="center" />
+            </LinearLayout>
+
+            <!-- Copy button with label -->
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_margin="8dp"
-                android:contentDescription="Copy"
-                app:srcCompat="@android:drawable/ic_menu_upload"
-                app:backgroundTint="#7B1FA2" />
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical">
 
-            <!-- Circular Save button -->
-            <com.google.android.material.floatingactionbutton.FloatingActionButton
-                android:id="@+id/btnSave"
-                android:layout_width="wrap_content"
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/btnCopy"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="Copy"
+                    app:srcCompat="@android:drawable/ic_menu_upload"
+                    app:backgroundTint="#7B1FA2" />
+
+                <TextView
+                    android:id="@+id/labelCopy"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Copy"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12sp"
+                    android:layout_marginTop="4dp"
+                    android:gravity="center" />
+            </LinearLayout>
+
+            <!-- Save button with label -->
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_margin="8dp"
-                android:contentDescription="Save"
-                app:srcCompat="@android:drawable/ic_menu_agenda"
-                app:backgroundTint="#757575" />
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical">
 
-            <!-- Save button placeholder (future) -->
-            <View
-                android:id="@+id/btnSavePlaceholder"
-                android:layout_width="56dp"
-                android:layout_height="56dp"
-                android:layout_margin="8dp"
-                android:visibility="invisible" />
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/btnSave"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="Save"
+                    app:srcCompat="@android:drawable/ic_menu_agenda"
+                    app:backgroundTint="#757575" />
+
+                <TextView
+                    android:id="@+id/labelSave"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Save"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12sp"
+                    android:layout_marginTop="4dp"
+                    android:gravity="center" />
+            </LinearLayout>
         </LinearLayout>
     </LinearLayout>
 
@@ -147,9 +190,36 @@
                     app:srcCompat="@android:drawable/ic_btn_speak_now"/>
 
                 <TextView
+                    android:id="@+id/labelSpeak"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Speak"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12sp"
+                    android:layout_marginTop="4dp"/>
+            </LinearLayout>
+
+            <!-- Talk -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/btnTalk"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="Talk"
+                    app:backgroundTint="#4CAF50"
+                    app:srcCompat="@android:drawable/ic_menu_myplaces"/>
+
+                <TextView
+                    android:id="@+id/labelTalk"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Talk"
                     android:textColor="#FFFFFF"
                     android:textSize="12sp"
                     android:layout_marginTop="4dp"/>
@@ -172,6 +242,7 @@
                     app:srcCompat="@android:drawable/ic_menu_send"/>
 
                 <TextView
+                    android:id="@+id/labelSend"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Send"

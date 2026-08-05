@@ -25,12 +25,17 @@ class UIManager(private val activity: AppCompatActivity) {
     private lateinit var btnWrite: FloatingActionButton
     private lateinit var btnCopy: FloatingActionButton
     private lateinit var btnSave: FloatingActionButton
+    private lateinit var labelWrite: android.widget.TextView
+    private lateinit var labelCopy: android.widget.TextView
+    private lateinit var labelSave: android.widget.TextView
 
     // ── Compose Mode views ────────────────────────────
     private lateinit var composeModeContainer: View
     private lateinit var composeEditor: EditText
     private lateinit var btnSpeak: FloatingActionButton
+    private lateinit var btnTalk: FloatingActionButton
     private lateinit var btnSend: FloatingActionButton
+    private lateinit var labelSend: android.widget.TextView
 
     private var soapMode = false
 
@@ -43,11 +48,16 @@ class UIManager(private val activity: AppCompatActivity) {
         btnWrite = activity.findViewById(R.id.btnWrite)
         btnCopy = activity.findViewById(R.id.btnCopy)
         btnSave = activity.findViewById(R.id.btnSave)
+        labelWrite = activity.findViewById(R.id.labelWrite)
+        labelCopy = activity.findViewById(R.id.labelCopy)
+        labelSave = activity.findViewById(R.id.labelSave)
 
         composeModeContainer = activity.findViewById(R.id.composeModeContainer)
         composeEditor = activity.findViewById(R.id.composeEditor)
         btnSpeak = activity.findViewById(R.id.btnSpeak)
+        btnTalk = activity.findViewById(R.id.btnTalk)
         btnSend = activity.findViewById(R.id.btnSend)
+        labelSend = activity.findViewById(R.id.labelSend)
 
         Log.d(TAG, "UIManager initialized")
     }
@@ -77,15 +87,15 @@ class UIManager(private val activity: AppCompatActivity) {
 
     fun showPatientComposeMode() {
         soapMode = false
-        // FAB has no text property; use contentDescription for semantic mode label
         btnSend.contentDescription = "Send"
+        labelSend.text = "Send"
         showComposeMode()
     }
 
     fun showSoapComposeMode() {
         soapMode = true
-        // FAB has no text property; use contentDescription for semantic mode label
         btnSend.contentDescription = "Save SOAP"
+        labelSend.text = "Save SOAP"
         showComposeMode()
     }
 
@@ -165,6 +175,10 @@ class UIManager(private val activity: AppCompatActivity) {
 
     fun setOnSpeakClick(action: () -> Unit) {
         btnSpeak.setOnClickListener { action() }
+    }
+
+    fun setOnTalkClick(action: () -> Unit) {
+        btnTalk.setOnClickListener { action() }
     }
 
     fun setOnSendClick(action: () -> Unit) {

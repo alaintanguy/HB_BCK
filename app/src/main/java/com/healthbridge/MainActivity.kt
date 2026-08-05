@@ -208,6 +208,10 @@ class MainActivity : AppCompatActivity() {
                 )
             }
         }
+        // Talk → return to Conversation Mode without sending or clearing editor
+        uiManager.setOnTalkClick {
+            uiManager.showConversationMode()
+        }
         // Send → process message, clear editor, return to Conversation Mode
         uiManager.setOnSendClick {
 
