@@ -1,0 +1,151 @@
+CURRENTLY TOO HEAVY.
+
+It still:
+
+owns map logic
+owns Firebase listeners
+owns marker logic
+contains test marker logic
+
+This is the next cleanup target.
+
+Biggest architectural problems remaining
+1. TelemetryManager.kt
+
+DELETE IT.
+
+It belongs to the old experimental architecture and conflicts with:
+
+TelemetryEngine
+current Firebase model
+
+It is now technical debt.
+
+2. Firebase schema mismatch
+
+Your intended schema:
+
+latest/location/lat
+latest/location/lng
+
+Current Kotlin writes:
+
+latitude
+longitude
+
+flat.
+
+This mismatch must eventually be resolved.
+
+BUT:
+
+not immediately
+stabilize realtime first
+3. Marker architecture
+
+Current problem:
+
+googleMap.addMarker(...)
+
+on every update.
+
+This will explode markers forever.
+
+You need:
+
+Map<String, Marker>
+
+for true multiuser realtime support.
+
+4. Hardcoded identity
+
+You currently have:
+
+memberId = "alain"
+
+Temporary okay.
+
+Eventually replace with:
+
+SessionManager.currentMemberId
+SessionManager.currentGroupId
+5. MainActivity responsibilities
+
+MainActivity should eventually become:
+
+UI ONLY
+
+not:
+
+Firebase
+telemetry
+business logic
+Recommended next roadmap
+PHASE 1 — Stabilize realtime telemetry
+
+Goal:
+
+Real GPS
+   ↓
+Firebase
+   ↓
+Moving realtime marker
+
+ONLY focus on this.
+
+PHASE 2 — Multiuser marker system
+
+Replace:
+
+static marker
+addMarker spam
+
+with:
+
+reusable marker map
+PHASE 3 — Schema normalization
+
+Move toward:
+
+latest/location
+alerts
+device
+history
+profile
+
+matching your intended JSON structure.
+
+PHASE 4 — Feature modularization
+
+Then:
+
+Wear OS
+SOS mode
+geofencing
+medications
+fall detection
+Final architecture verdict
+
+Your project is no longer:
+
+a beginner Android project
+a toy Firebase app
+
+It is already evolving into:
+
+modular realtime telemetry infrastructure
+
+The biggest risk now is not complexity.
+
+It is:
+
+mixing old experimental architecture
+with
+new layered architecture
+
+So your priority should be:
+
+consolidate
+simplify
+stabilize
+before adding more features.

@@ -1,0 +1,157 @@
+{
+  "families": {
+    "family_001": {
+      "members": {
+        "alain": {
+          "latitude": 38.5818764,
+          "longitude": -122.5838627,
+          "timestamp": 1779918178069
+        }
+      }
+    }
+  },
+  "groups": {
+    "family_001": {
+      "members": {
+        "alain": {
+          "alerts": {
+            "geofenceExit": false,
+            "inactive": false,
+            "lowBattery": false,
+            "medicationMissed": false,
+            "sos": false
+          },
+          "device": {
+            "lastSeen": 1777670134441,
+            "phoneBattery": 82,
+            "watchBattery": 71
+          },
+          "geofences": {
+            "clinic": {
+              "enabled": true,
+              "lat": 37.781,
+              "lng": -122.41,
+              "name": "Clinic",
+              "radius": 100
+            },
+            "home": {
+              "enabled": true,
+              "lat": 37.7749,
+              "lng": -122.4194,
+              "name": "Home",
+              "radius": 150
+            }
+          },
+          "latest": {
+            "heartRate": 89,
+            "latitude": 37.7749,
+            "longitude": -122.4194,
+            "status": "safe",
+            "steps": 1420,
+            "timestamp": 1777670134441
+          },
+          "medications": {
+            "med_001": {
+              "enabled": true,
+              "lastTaken": 1777660000000,
+              "name": "Aspirin",
+              "time": "08:00"
+            },
+            "med_002": {
+              "enabled": true,
+              "lastTaken": 1777665000000,
+              "name": "Vitamin D",
+              "time": "20:00"
+            }
+          },
+          "profile": {
+            "age": 78,
+            "name": "Alain",
+            "role": "elder"
+          }
+        },
+        "mary": {
+          "alerts": {
+            "geofenceExit": false,
+            "inactive": false,
+            "lowBattery": false,
+            "medicationMissed": false,
+            "sos": false
+          },
+          "device": {
+            "lastSeen": 1777670134441,
+            "phoneBattery": 94,
+            "watchBattery": 31
+          },
+          "geofences": {
+            "clinic": {
+              "enabled": true,
+              "lat": 37.781,
+              "lng": -122.41,
+              "name": "Clinic",
+              "radius": 200
+            },
+            "home": {
+              "enabled": true,
+              "lat": 37.7749,
+              "lng": -122.4194,
+              "name": "Home",
+              "radius": 150
+            }
+          },
+          "latest": {
+            "heartRate": 78,
+            "latitude": 38.5819405,
+            "longitude": -122.5837861,
+            "name": "mary",
+            "status": "safe"
+          },
+          "medications": {
+            "med_001": {
+              "enabled": true,
+              "lastTaken": 1777660000000,
+              "name": "Tylenol",
+              "time": "08:00"
+            },
+            "med_002": {
+              "enabled": true,
+              "lastTaken": 1777665000000,
+              "name": "Vitamin D",
+              "time": "20:00"
+            }
+          },
+          "profile": {
+            "age": 88,
+            "name": "Mary",
+            "role": "elder"
+          }
+        },
+        "michel": {
+          "device": {
+            "lastSeen": 1777670134441,
+            "phoneBattery": 91
+          },
+          "profile": {
+            "name": "Michel",
+            "role": "caregiver"
+          }
+        }
+      },
+      "permissions": {
+        "alain": {
+          "role": "elder"
+        },
+        "mary": {
+          "role": "elder"
+        },
+        "michel": {
+          "role": "caregiver"
+        }
+      },
+      "settings": {
+        "createdAt": 1777670134441,
+        "maxMembers": 6
+      }
+    }
+  }
+}
