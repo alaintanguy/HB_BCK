@@ -30,7 +30,9 @@ class UIManager(private val activity: AppCompatActivity) {
     private lateinit var composeModeContainer: View
     private lateinit var composeEditor: EditText
     private lateinit var btnSpeak: FloatingActionButton
+    private lateinit var btnTalk: FloatingActionButton
     private lateinit var btnSend: FloatingActionButton
+    private lateinit var sendLabel: TextView
 
     private var soapMode = false
 
@@ -47,7 +49,9 @@ class UIManager(private val activity: AppCompatActivity) {
         composeModeContainer = activity.findViewById(R.id.composeModeContainer)
         composeEditor = activity.findViewById(R.id.composeEditor)
         btnSpeak = activity.findViewById(R.id.btnSpeak)
+        btnTalk = activity.findViewById(R.id.btnTalk)
         btnSend = activity.findViewById(R.id.btnSend)
+        sendLabel = activity.findViewById(R.id.sendLabel)
 
         Log.d(TAG, "UIManager initialized")
     }
@@ -79,6 +83,7 @@ class UIManager(private val activity: AppCompatActivity) {
         soapMode = false
         // FAB has no text property; use contentDescription for semantic mode label
         btnSend.contentDescription = "Send"
+        sendLabel.text = "Send"
         showComposeMode()
     }
 
@@ -86,6 +91,7 @@ class UIManager(private val activity: AppCompatActivity) {
         soapMode = true
         // FAB has no text property; use contentDescription for semantic mode label
         btnSend.contentDescription = "Save SOAP"
+        sendLabel.text = "Save SOAP"
         showComposeMode()
     }
 
@@ -165,6 +171,10 @@ class UIManager(private val activity: AppCompatActivity) {
 
     fun setOnSpeakClick(action: () -> Unit) {
         btnSpeak.setOnClickListener { action() }
+    }
+
+    fun setOnTalkClick(action: () -> Unit) {
+        btnTalk.setOnClickListener { action() }
     }
 
     fun setOnSendClick(action: () -> Unit) {

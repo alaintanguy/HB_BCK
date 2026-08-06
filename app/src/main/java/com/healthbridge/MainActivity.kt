@@ -208,6 +208,13 @@ class MainActivity : AppCompatActivity() {
                 )
             }
         }
+        // Talk → return to Conversation mode only (no send, no clear)
+        uiManager.setOnTalkClick {
+
+            android.util.Log.d("HB", "Talk button pressed — returning to Conversation mode")
+
+            uiManager.showConversationMode()
+        }
         // Send → process message, clear editor, return to Conversation Mode
         uiManager.setOnSendClick {
 
