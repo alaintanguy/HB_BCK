@@ -1,0 +1,167 @@
+{
+"groups": {
+"family_001": {
+"members": {
+    "M1": {
+
+      "alerts": {
+        "lowBattery": false
+      },
+
+      "device": {
+        "phoneBattery": 100,
+        "lastSeen": 1781202792083,
+        "phoneBrand": "Motorola",
+        "phoneModel": "G Play",
+        "phoneYear": "2025",
+		"charging" : true,
+        "status": "online"
+      },
+
+      "settings": {
+        "lowBatteryThreshold": 20,
+        "offlineThresholdMinutes": 3
+      },
+
+      "geofences": {
+        "home": {
+          "enabled": true,
+          "lat": 37.7749,
+          "lng": -122.4194,
+          "name": "Home",
+          "radius": 150
+        }
+      },
+
+      "medications": {
+        "med_001": {
+          "enabled": true,
+          "name": "Tylenol",
+          "time": "08:00"
+        }
+      },
+
+      "profile": {
+        "age": 46,
+        "gender": "male",
+        "name": "alain",
+        "role": "caregiver"
+      },
+
+      "telemetry": {
+        "location": {
+          "accuracy": 13.69,
+          "altitude": 81.1,
+          "lat": 38.5819781,
+          "lng": -122.5838381,
+          "speed": 0
+        },
+
+        "readable": {
+          "date": "2026-06-07",
+          "time": "12:37:43"
+        },
+
+        "timestamp": 1780861063778,
+
+        "watch": {
+          "battery": 31,
+          "heartRate": 78,
+          "spo2": 98,
+          "steps": 2450
+        }
+      }
+    },
+
+    "M2": {
+
+      "alerts": {
+        "lowBattery": false
+      },
+
+      "device": {
+        "phoneBattery": 100,
+        "lastSeen": 1781898928818,
+        "phoneBrand": "Samsung",
+        "phoneModel": "Tab A11",
+        "phoneYear": "2024",
+		"charging" : true,		
+        "status": "online"
+      },
+
+      "settings": {
+        "lowBatteryThreshold": 20,
+        "offlineThresholdMinutes": 3
+      },
+
+      "geofences": {
+        "home": {
+          "enabled": true,
+          "lat": 37.7749,
+          "lng": -122.4194,
+          "name": "Home",
+          "radius": 150
+        }
+      },
+
+      "medications": {
+        "med_001": {
+          "enabled": true,
+          "name": "Tylenol",
+          "time": "08:00"
+        }
+      },
+
+      "profile": {
+        "age": 36,
+        "gender": "female",
+        "name": "mary",
+        "role": "patient"
+      },
+
+      "telemetry": {
+        "location": {
+          "accuracy": 13.69,
+          "altitude": 81.2,
+          "lat": 38.5819663,
+          "lng": -122.5837818,
+          "speed": 0
+        },
+
+        "readable": {
+          "date": "2026-06-19",
+          "time": "12:55:48"
+        },
+
+        "timestamp": 1781898948478,
+
+        "watch": {
+          "battery": 31,
+          "heartRate": 78,
+          "spo2": 98,
+          "steps": 2450
+        }
+      }
+    }
+},
+"events":{
+},
+"messages": {
+"M2":{
+	"msg_001": {
+      "text": "Please charge your phone",
+      "timestamp": 1782000000000,
+	  "acknowledged": false
+    },
+    "msg_002": {
+      "text": "Take your medication",
+      "timestamp": 1782001000000,
+	  "acknowledged": false
+    }
+}	
+}
+}
+}
+}
+
+

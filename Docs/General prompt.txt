@@ -1,0 +1,149 @@
+Repository: alaintanguy/HB_BCK
+
+Working Branch: copilot/fix-healthbridge-messaging-pipeline
+All HealthBridge Version 0.6 milestones will be implemented on this branch.
+Implement ONLY Milestone #3 – Speech Recognition.
+Do not implement future milestones.
+Do not redesign unrelated functionality.
+
+------------------------------------------------------------
+
+Before making any changes:
+
+Read the following project documents:
+
+- Docs/HB_Development_Plan.md
+- Docs/HB_Design_Principles.md
+- Docs/HB_Architecture.md (if present)
+- Docs/HB_Decision_Log.md (if present)
+
+These documents define the HealthBridge architecture and product vision.
+
+------------------------------------------------------------
+
+HealthBridge Development Contract
+
+You may modify any files required to complete this milestone.
+
+However, you MUST:
+
+1. Preserve all functionality from previously completed milestones.
+
+2. Preserve all approved architectural decisions.
+
+3. Preserve all approved design principles.
+
+4. Preserve previous design work already implemented by the project team.
+
+5. Do not redesign unrelated parts of the application.
+
+6. Do not simplify the application by removing functionality.
+
+7. If a conflict exists between this milestone and an existing design principle, STOP and explain the conflict before making architectural changes.
+
+------------------------------------------------------------
+
+Implement ONLY
+
+Milestone #3 — Speech Recognition
+
+Objective
+
+Restore Android Speech Recognition using the current HealthBridge architecture.
+
+Required workflow
+
+Conversation Mode
+
+↓
+
+Write
+
+↓
+
+Compose Mode
+
+↓
+
+Speak
+
+↓
+
+Android Speech Recognition
+
+↓
+
+Recognized text inserted into Compose Editor
+
+↓
+
+User edits text if desired
+
+↓
+
+Send
+
+↓
+
+MessageManager sends message
+
+↓
+
+Conversation Mode
+
+Requirements
+
+• Preserve the existing Conversation and Compose UI.
+
+• Preserve Firebase messaging.
+
+• Preserve Text-To-Speech.
+
+• Preserve MessageManager.
+
+• Preserve UIManager architecture.
+
+• Preserve MainActivity coordinator architecture.
+
+• Reuse previous working speech-recognition implementation if available instead of creating a completely new design.
+
+• Modify only files required for this milestone.
+
+• Build until there are no compile errors.
+
+• Test on both M1 and M2 workflows.
+
+------------------------------------------------------------
+
+Deliverables
+
+1. Successful build.
+
+2. Working speech recognition.
+
+3. Summary of modified files.
+
+4. Regression testing summary.
+
+5. Architecture Compliance Report.
+
+------------------------------------------------------------
+
+Architecture Compliance Report
+
+✓ Previous milestones preserved
+
+✓ Previous design work preserved
+
+✓ Design principles preserved
+
+✓ Architecture preserved
+
+✓ Build successful
+
+✓ Regression tests passed
+
+✓ Ready for review
+
+The goal is to evolve HealthBridge, not to redesign it. Existing working code and previously approved design 
+decisions have priority over introducing new architectures.
