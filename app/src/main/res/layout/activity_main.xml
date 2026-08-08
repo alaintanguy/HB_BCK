@@ -5,14 +5,9 @@
     android:layout_height="match_parent"
     android:background="#000000">
 
-    <!-- ========================
+    <!-- ======================================================
          CONVERSATION MODE
-         ======================== -->
-    <TextView
-        android:id="@+id/textView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="&lt;!-- Circular Microphone button -->" />
+         ====================================================== -->
 
     <LinearLayout
         android:id="@+id/conversationModeContainer"
@@ -20,7 +15,7 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <!-- Google Map (top half) -->
+        <!-- Google Map -->
         <fragment
             android:id="@+id/map"
             android:name="com.google.android.gms.maps.SupportMapFragment"
@@ -28,7 +23,26 @@
             android:layout_height="0dp"
             android:layout_weight="1" />
 
-        <!-- Scrollable conversation history -->
+        <!-- ==================================================
+             STATUS LINE
+             ================================================== -->
+
+        <TextView
+            android:id="@+id/textStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#202020"
+            android:padding="6dp"
+            android:text="Ready"
+            android:textColor="#FFD700"
+            android:textStyle="bold"
+            android:textSize="14sp"
+            android:gravity="center_vertical"/>
+
+        <!-- ==================================================
+             CONVERSATION HISTORY
+             ================================================== -->
+
         <ScrollView
             android:id="@+id/conversationScroll"
             android:layout_width="match_parent"
@@ -41,11 +55,16 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="8dp" />
+                android:padding="8dp">
+            </LinearLayout>
         </ScrollView>
 
-        <!-- Bottom action row -->
+        <!-- ==================================================
+             CONVERSATION ACTION BUTTONS
+             ================================================== -->
+
         <LinearLayout
+            android:id="@+id/conversationButtonBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
@@ -53,84 +72,136 @@
             android:padding="12dp"
             android:background="#1a1a1a">
 
-            <!-- Circular Write button -->
-            <com.google.android.material.floatingactionbutton.FloatingActionButton
-                android:id="@+id/btnWrite"
+            <!-- ================= Patient ================= -->
+
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_margin="8dp"
-                android:contentDescription="Write"
-                app:srcCompat="@android:drawable/ic_menu_edit"
-                app:backgroundTint="#FFD700" />
+                android:layout_marginHorizontal="8dp"
+                android:gravity="center"
+                android:orientation="vertical">
 
-            <!-- Circular Copy button -->
-            <com.google.android.material.floatingactionbutton.FloatingActionButton
-                android:id="@+id/btnCopy"
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/btnWrite"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="Patient"
+                    app:backgroundTint="#FFD700"
+                    app:srcCompat="@android:drawable/ic_menu_edit" />
+
+                <TextView
+                    android:id="@+id/patientLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Patient"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12sp"/>
+            </LinearLayout>
+
+            <!-- ================= Copy ================= -->
+
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_margin="8dp"
-                android:contentDescription="Copy"
-                app:srcCompat="@android:drawable/ic_menu_upload"
-                app:backgroundTint="#7B1FA2" />
+                android:layout_marginHorizontal="8dp"
+                android:gravity="center"
+                android:orientation="vertical">
 
-            <!-- Circular Save button -->
-            <com.google.android.material.floatingactionbutton.FloatingActionButton
-                android:id="@+id/btnSave"
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/btnCopy"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="Copy"
+                    app:backgroundTint="#7B1FA2"
+                    app:srcCompat="@android:drawable/ic_menu_upload"/>
+
+                <TextView
+                    android:id="@+id/copyLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Copy"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12sp"/>
+            </LinearLayout>
+
+            <!-- ================= Save ================= -->
+
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_margin="8dp"
-                android:contentDescription="Save"
-                app:srcCompat="@android:drawable/ic_menu_agenda"
-                app:backgroundTint="#757575" />
+                android:layout_marginHorizontal="8dp"
+                android:gravity="center"
+                android:orientation="vertical">
 
-            <!-- Save button placeholder (future) -->
-            <View
-                android:id="@+id/btnSavePlaceholder"
-                android:layout_width="56dp"
-                android:layout_height="56dp"
-                android:layout_margin="8dp"
-                android:visibility="invisible" />
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/btnSave"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="Save"
+                    app:backgroundTint="#757575"
+                    app:srcCompat="@android:drawable/ic_menu_agenda"/>
+
+                <TextView
+                    android:id="@+id/saveLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Save"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12sp"/>
+
+            </LinearLayout>
+
         </LinearLayout>
+
     </LinearLayout>
 
-    <!-- ========================
+    <!-- ======================================================
          COMPOSE MODE
-         ======================== -->
+         ====================================================== -->
+
     <LinearLayout
         android:id="@+id/composeModeContainer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:padding="16dp"
         android:background="#000000"
+        android:padding="16dp"
         android:visibility="gone">
 
-        <!-- Fixed 6-line compose editor -->
+        <!-- Compose editor -->
+
         <EditText
             android:id="@+id/composeEditor"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:lines="10"
-            android:maxLines="10"
-            android:minLines="10"
-            android:inputType="textMultiLine|textCapSentences"
+            android:layout_height="220dp"
             android:gravity="top|start"
-            android:background="#1a1a1a"
+            android:background="#1A1A1A"
+            android:padding="12dp"
+            android:hint="Type or speak your message..."
             android:textColor="#FFFFFF"
             android:textColorHint="#888888"
-            android:hint="Type your message..."
-            android:padding="12dp"
-            android:textSize="16sp" />
+            android:textSize="16sp"
+            android:inputType="textMultiLine|textCapSentences"
+            android:minLines="10"
+            android:maxLines="10"
+            android:lines="10"/>
+        <!-- ==================================================
+ COMPOSE ACTION BUTTONS
+ ================================================== -->
 
-        <!-- Send button -->
         <LinearLayout
+            android:id="@+id/composeButtonBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="135dp"
             android:gravity="center"
             android:orientation="horizontal">
 
-            <!-- Speak -->
+            <!-- ================= Speak ================= -->
+
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -147,15 +218,45 @@
                     app:srcCompat="@android:drawable/ic_btn_speak_now"/>
 
                 <TextView
+                    android:id="@+id/speakLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
                     android:text="Speak"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
-                    android:layout_marginTop="4dp"/>
+                    android:textSize="12sp"/>
+
+            </LinearLayout>
+            <!-- ================= Back ================= -->
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/btnBack"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="Back to Conversation"
+                    app:backgroundTint="#757575"
+                    app:srcCompat="@android:drawable/ic_menu_revert"/>
+
+                <TextView
+                    android:id="@+id/backLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Back"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12sp"/>
+
             </LinearLayout>
 
-            <!-- Send -->
+            <!-- ================= Send ================= -->
+
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -172,16 +273,17 @@
                     app:srcCompat="@android:drawable/ic_menu_send"/>
 
                 <TextView
+                    android:id="@+id/sendLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
                     android:text="Send"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
-                    android:layout_marginTop="4dp"/>
+                    android:textSize="12sp"/>
+
             </LinearLayout>
 
         </LinearLayout>
-
     </LinearLayout>
 
 </FrameLayout>

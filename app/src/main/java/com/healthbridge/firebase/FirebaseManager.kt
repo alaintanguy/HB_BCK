@@ -349,5 +349,38 @@ object FirebaseManager {
             .setValue(isLow)
     }
 
-}
 
+    // =====================================================
+    // LOCATION LISTENER
+    // =====================================================
+    fun listenToMemberLocation(
+        memberId: String,
+        onLocation: (Double, Double) -> Unit
+    ) {
+        memberReference(memberId)
+            .child("telemetry")
+            .child("location")
+            .addValueEventListener(
+                object : ValueEventListener {
+                    override fun onDataChange(snapshot: DataSnapshot) {
+                        val lat = snapshot.child("lat").getValue(Double::class.java)
+                        val lng = snapshot.child("lng").getValue(Double::class.java)
+
+                        if (lat != null && lng != null) {
+                            Log.d("HB", "LOCATION RECEIVED: $memberId $lat,$lng")
+                            onLocation(lat, lng)
+                        }
+                    }
+
+                    override fun onCancelled(error: DatabaseError) {
+                        Log.e(
+                            "HB",
+                            "LOCATION LISTENER FAILED: $memberId",
+                            error.toException()
+                        )
+                    }
+                }
+            )
+    }
+
+}

@@ -22,50 +22,148 @@ class UIManager(private val activity: AppCompatActivity) {
     private lateinit var conversationModeContainer: View
     private lateinit var conversationContainer: LinearLayout
     private lateinit var conversationScroll: ScrollView
+
+    private lateinit var mapView: View
+
     private lateinit var btnWrite: FloatingActionButton
     private lateinit var btnCopy: FloatingActionButton
     private lateinit var btnSave: FloatingActionButton
+
+    private lateinit var patientLabel: TextView
+    private lateinit var copyLabel: TextView
+    private lateinit var saveLabel: TextView
 
     // ── Compose Mode views ────────────────────────────
     private lateinit var composeModeContainer: View
     private lateinit var composeEditor: EditText
     private lateinit var btnSpeak: FloatingActionButton
+    private lateinit var btnBack: FloatingActionButton
+   // private lateinit var btnSend: FloatingActionButton
+
     private lateinit var btnSend: FloatingActionButton
+    private lateinit var sendLabel: TextView
 
     private var soapMode = false
 
-    // Bind all views from the current content view
+    // =====================================================
+    // INITIALIZATION
+    // =====================================================
+
     fun initialize() {
-        conversationModeContainer = activity.findViewById(R.id.conversationModeContainer)
-        conversationContainer = activity.findViewById(R.id.conversationContainer)
-        conversationScroll = activity.findViewById(R.id.conversationScroll)
 
-        btnWrite = activity.findViewById(R.id.btnWrite)
-        btnCopy = activity.findViewById(R.id.btnCopy)
-        btnSave = activity.findViewById(R.id.btnSave)
+        conversationModeContainer =
+            activity.findViewById(R.id.conversationModeContainer)
 
-        composeModeContainer = activity.findViewById(R.id.composeModeContainer)
-        composeEditor = activity.findViewById(R.id.composeEditor)
-        btnSpeak = activity.findViewById(R.id.btnSpeak)
-        btnSend = activity.findViewById(R.id.btnSend)
+        conversationContainer =
+            activity.findViewById(R.id.conversationContainer)
+
+        conversationScroll =
+            activity.findViewById(R.id.conversationScroll)
+
+        mapView =
+            activity.findViewById(R.id.map)
+
+        btnWrite =
+            activity.findViewById(R.id.btnWrite)
+
+        btnCopy =
+            activity.findViewById(R.id.btnCopy)
+
+        btnSave =
+            activity.findViewById(R.id.btnSave)
+
+        patientLabel =
+            activity.findViewById(R.id.patientLabel)
+
+        copyLabel =
+            activity.findViewById(R.id.copyLabel)
+
+        saveLabel =
+            activity.findViewById(R.id.saveLabel)
+
+        composeModeContainer =
+            activity.findViewById(R.id.composeModeContainer)
+
+        composeEditor =
+            activity.findViewById(R.id.composeEditor)
+
+        btnSpeak =
+            activity.findViewById(R.id.btnSpeak)
+
+        btnBack =
+            activity.findViewById(R.id.btnBack)
+
+        btnSend =
+            activity.findViewById(R.id.btnSend)
+
+        sendLabel =
+            activity.findViewById(R.id.sendLabel)
 
         Log.d(TAG, "UIManager initialized")
+    }
+
+    // =====================================================
+    // DEVICE / ROLE DISPLAY
+    // =====================================================
+
+    fun configureForMember(memberId: String) {
+
+        if (memberId == "M1") {
+
+            // ---------------------------------------------
+            // M1 = CAREGIVER
+            // ---------------------------------------------
+
+            mapView.visibility = View.VISIBLE
+
+            btnCopy.visibility = View.VISIBLE
+            btnSave.visibility = View.VISIBLE
+
+            copyLabel.visibility = View.VISIBLE
+            saveLabel.visibility = View.VISIBLE
+
+            patientLabel.text = "Patient"
+            btnWrite.contentDescription = "Patient"
+
+            Log.d(TAG, "Configured UI for M1 caregiver")
+
+        } else {
+
+            // ---------------------------------------------
+            // M2 = PATIENT
+            // ---------------------------------------------
+
+            mapView.visibility = View.GONE
+
+            btnCopy.visibility = View.GONE
+            btnSave.visibility = View.GONE
+
+            copyLabel.visibility = View.GONE
+            saveLabel.visibility = View.GONE
+
+            patientLabel.text = "Write"
+            btnWrite.contentDescription = "Write"
+
+            Log.d(TAG, "Configured UI for M2 patient")
+        }
     }
 
     // =====================================================
     // MODE TRANSITIONS
     // =====================================================
 
-    // Show map + conversation; hide compose; hide keyboard
     fun showConversationMode() {
+
         conversationModeContainer.visibility = View.VISIBLE
         composeModeContainer.visibility = View.GONE
+
         hideKeyboard()
+
         Log.d(TAG, "Conversation mode active")
     }
 
-    // Hide map + conversation; show compose editor; request focus + keyboard
     fun showComposeMode() {
+
         conversationModeContainer.visibility = View.GONE
         composeModeContainer.visibility = View.VISIBLE
 
@@ -76,34 +174,109 @@ class UIManager(private val activity: AppCompatActivity) {
     }
 
     fun showPatientComposeMode() {
+
         soapMode = false
-        // FAB has no text property; use contentDescription for semantic mode label
+
         btnSend.contentDescription = "Send"
+        sendLabel.text = "Send"
+
+        clearCompose()
+
+        composeEditor.setSelection(0)
+
         showComposeMode()
     }
 
     fun showSoapComposeMode() {
+
         soapMode = true
-        // FAB has no text property; use contentDescription for semantic mode label
+
         btnSend.contentDescription = "Save SOAP"
+        sendLabel.text = "Save SOAP"
+
+        val template = "S:\nO:\nA:\nP:"
+
+        composeEditor.setText(template)
+
+        composeEditor.setSelection(2)
+
         showComposeMode()
     }
+
+    fun isSoapMode(): Boolean = soapMode
 
     // =====================================================
     // CONVERSATION AREA
     // =====================================================
 
-    // Append a message at the bottom and auto-scroll to it
     fun appendMessage(text: String) {
-        val tv = TextView(activity).apply {
-            this.text = text
-            textSize = 14f
-            setTextColor(0xFFFFFFFF.toInt())
-            setPadding(8, 6, 8, 6)
-        }
-        conversationContainer.addView(tv)
 
-        // Auto-scroll to the latest message
+        val timestamp = java.text.SimpleDateFormat(
+            "M/d  h:mm a",
+            java.util.Locale.US
+        ).format(java.util.Date())
+
+        val senderName = when {
+            text.startsWith("M1:") -> "Alain"
+            text.startsWith("M2:") -> "Mary"
+            else -> ""
+        }
+
+        val messageText = when {
+            text.startsWith("M1:") -> text.removePrefix("M1:").trim()
+            text.startsWith("M2:") -> text.removePrefix("M2:").trim()
+            else -> text
+        }
+
+        // Header row: Name + date/time + line filling remaining width
+        val headerRow = LinearLayout(activity).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = android.view.Gravity.CENTER_VERTICAL
+            setPadding(8, 10, 8, 2)
+        }
+
+        val headerText = TextView(activity).apply {
+            this.text = "$senderName  $timestamp"
+            textSize = 11f
+            setTextColor(0xFFFFD700.toInt())
+            maxLines = 1
+        }
+
+        val separator = View(activity).apply {
+            setBackgroundColor(0xFFFFD700.toInt())
+        }
+
+        headerRow.addView(
+            headerText,
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        )
+
+        headerRow.addView(
+            separator,
+            LinearLayout.LayoutParams(
+                0,
+                2,
+                1f
+            ).apply {
+                marginStart = 8
+            }
+        )
+
+        conversationContainer.addView(headerRow)
+
+        // Message itself: WHITE and larger
+        val messageView = TextView(activity).apply {
+            this.text = messageText
+            textSize = 16f
+            setTextColor(0xFFFFFFFF.toInt())
+            setPadding(8, 2, 8, 10)
+        }
+
+        conversationContainer.addView(messageView)
+
         conversationScroll.post {
             conversationScroll.fullScroll(View.FOCUS_DOWN)
         }
@@ -111,27 +284,39 @@ class UIManager(private val activity: AppCompatActivity) {
         Log.d(TAG, "Message appended: $text")
     }
 
-//Added fun to GH
-
-
     fun appendToCompose(text: String) {
-        val current = composeEditor.text.toString()
 
-        val updated =
-            if (current.isBlank())
-                text
-            else
-                "$current $text"
+        val start =
+            composeEditor.selectionStart.coerceAtLeast(0)
 
-        composeEditor.setText(updated)
-        composeEditor.setSelection(composeEditor.text.length)
+        val end =
+            composeEditor.selectionEnd.coerceAtLeast(start)
+
+        composeEditor.text.replace(
+            start,
+            end,
+            text
+        )
+
+        composeEditor.setSelection(
+            start + text.length
+        )
     }
 
     fun getConversationText(): String {
+
         return buildString {
+
             for (index in 0 until conversationContainer.childCount) {
-                val child = conversationContainer.getChildAt(index) as? TextView ?: continue
-                if (isNotEmpty()) append('\n')
+
+                val child =
+                    conversationContainer.getChildAt(index) as? TextView
+                        ?: continue
+
+                if (isNotEmpty()) {
+                    append('\n')
+                }
+
                 append(child.text)
             }
         }
@@ -141,9 +326,11 @@ class UIManager(private val activity: AppCompatActivity) {
     // COMPOSE AREA
     // =====================================================
 
-    fun getComposeText(): String = composeEditor.text.toString().trim()
+    fun getComposeText(): String =
+        composeEditor.text.toString().trim()
 
     fun clearCompose() {
+
         composeEditor.text.clear()
     }
 
@@ -152,23 +339,43 @@ class UIManager(private val activity: AppCompatActivity) {
     // =====================================================
 
     fun setOnWriteClick(action: () -> Unit) {
-        btnWrite.setOnClickListener { action() }
+
+        btnWrite.setOnClickListener {
+            action()
+        }
     }
 
     fun setOnCopyClick(action: () -> Unit) {
-        btnCopy.setOnClickListener { action() }
+
+        btnCopy.setOnClickListener {
+            action()
+        }
     }
 
     fun setOnSaveClick(action: () -> Unit) {
-        btnSave.setOnClickListener { action() }
-    }
 
+        btnSave.setOnClickListener {
+            action()
+        }
+    }
+    fun setOnBackClick(action: () -> Unit) {
+
+        btnBack.setOnClickListener {
+            action()
+        }
+    }
     fun setOnSpeakClick(action: () -> Unit) {
-        btnSpeak.setOnClickListener { action() }
+
+        btnSpeak.setOnClickListener {
+            action()
+        }
     }
 
     fun setOnSendClick(action: () -> Unit) {
-        btnSend.setOnClickListener { action() }
+
+        btnSend.setOnClickListener {
+            action()
+        }
     }
 
     // =====================================================
@@ -176,13 +383,32 @@ class UIManager(private val activity: AppCompatActivity) {
     // =====================================================
 
     private fun hideKeyboard() {
-        val imm = activity.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-        val focus = activity.currentFocus ?: activity.window.decorView
-        imm.hideSoftInputFromWindow(focus.windowToken, 0)
+
+        val imm =
+            activity.getSystemService(
+                Context.INPUT_METHOD_SERVICE
+            ) as InputMethodManager
+
+        val focus =
+            activity.currentFocus
+                ?: activity.window.decorView
+
+        imm.hideSoftInputFromWindow(
+            focus.windowToken,
+            0
+        )
     }
 
     private fun showKeyboard() {
-        val imm = activity.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-        imm.showSoftInput(composeEditor, InputMethodManager.SHOW_IMPLICIT)
+
+        val imm =
+            activity.getSystemService(
+                Context.INPUT_METHOD_SERVICE
+            ) as InputMethodManager
+
+        imm.showSoftInput(
+            composeEditor,
+            InputMethodManager.SHOW_IMPLICIT
+        )
     }
 }
