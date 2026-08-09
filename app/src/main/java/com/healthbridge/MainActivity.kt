@@ -38,6 +38,15 @@ class MainActivity : AppCompatActivity() {
     private var lastComposeMode = CaregiverComposeMode.NONE
     private var noteRecording = false
 
+    // NOTE dictation uses the same live partial/final strategy as patient dictation,
+    // but it never contains a spoken SEND command and never sends to Firebase.
+    private var noteDictationBaseText = ""
+    private var noteDictationCommittedText = ""
+
+    // True only after Back leaves an unfinished caregiver draft.
+    // The next Write resumes that draft directly; otherwise Write shows the mode chooser.
+    private var resumeComposeAfterBack = false
+
     // Patient-message voice dictation stays active across recognition phrases.
     // Saying "SEND TO MARY" sends the accumulated message.
     private var patientDictationActive = false
@@ -123,35 +132,38 @@ class MainActivity : AppCompatActivity() {
 
             if (MEMBER_ID == "M1") {
 
-                when (lastComposeMode) {
-                    CaregiverComposeMode.PATIENT ->
-                        uiManager.showPatientComposeMode()
+                if (resumeComposeAfterBack &&
+                    uiManager.getComposeText().isNotBlank() &&
+                    lastComposeMode != CaregiverComposeMode.NONE) {
 
-                    CaregiverComposeMode.NOTE ->
-                        uiManager.showSoapComposeMode()
+                    resumeComposeAfterBack = false
 
-                    CaregiverComposeMode.NONE -> {
-                        AlertDialog.Builder(this)
-                            .setTitle("WRITE MODE")
-                            .setItems(
-                                arrayOf(
-                                    "Message To Patient",
-                                    "SOAP Note"
-                                )
-                            ) { _, which ->
-                                when (which) {
-                                    0 -> {
-                                        lastComposeMode = CaregiverComposeMode.PATIENT
-                                        uiManager.showPatientComposeMode()
-                                    }
-                                    1 -> {
-                                        lastComposeMode = CaregiverComposeMode.NOTE
-                                        uiManager.showSoapComposeMode()
-                                    }
-                                }
-                            }
-                            .show()
+                    when (lastComposeMode) {
+                        CaregiverComposeMode.PATIENT ->
+                            uiManager.showPatientComposeMode()
+
+                        CaregiverComposeMode.NOTE ->
+                            uiManager.showSoapComposeMode()
+
+                        CaregiverComposeMode.NONE -> Unit
                     }
+
+                } else {
+
+                    resumeComposeAfterBack = false
+
+                    AlertDialog.Builder(this)
+                        .setTitle("MESSAGE")
+                        .setMessage("Choose what you want to write")
+                        .setPositiveButton("TO MARY") { _, _ ->
+                            lastComposeMode = CaregiverComposeMode.PATIENT
+                            uiManager.showPatientComposeMode()
+                        }
+                        .setNegativeButton("NOTE TO ME") { _, _ ->
+                            lastComposeMode = CaregiverComposeMode.NOTE
+                            uiManager.showSoapComposeMode()
+                        }
+                        .show()
                 }
 
             } else {
@@ -256,11 +268,9 @@ class MainActivity : AppCompatActivity() {
 
                 if (uiManager.isSoapMode()) {
                     if (!noteRecording) {
-                        noteRecording = true
-                        uiManager.showRecordingState(true)
-                        startSpeechRecognition(5000L, true)
+                        startNoteDictation()
                     } else {
-                        speechManager.stopListening()
+                        stopNoteDictation()
                     }
                 } else {
                     startPatientDictation()
@@ -285,14 +295,55 @@ class MainActivity : AppCompatActivity() {
             }
 
             patientDictationActive = false
+            noteRecording = false
             continuousSpeechManager.stopListening()
+            speechManager.stopListening()
             uiManager.showRecordingState(false)
+
+            if (MEMBER_ID == "M1") {
+                resumeComposeAfterBack =
+                    uiManager.getComposeText().isNotBlank() &&
+                            lastComposeMode != CaregiverComposeMode.NONE
+            }
+
             uiManager.showConversationMode()
         }
+        // CLEAR → stop dictation, confirm, erase current compose text,
+        // and stay in the same compose mode.
+        uiManager.setOnClearComposeClick {
+
+            AlertDialog.Builder(this)
+                .setTitle("ERASE CURRENT TEXT?")
+                .setMessage("This will erase the current message or note.")
+                .setNegativeButton("Cancel", null)
+                .setPositiveButton("ERASE") { _, _ ->
+
+                    patientDictationActive = false
+                    noteRecording = false
+                    continuousSpeechManager.stopListening()
+                    speechManager.stopListening()
+
+                    patientDictationBaseText = ""
+                    patientDictationCommittedText = ""
+                    noteDictationBaseText = ""
+                    noteDictationCommittedText = ""
+
+                    uiManager.clearCompose()
+                    uiManager.showRecordingState(false)
+
+                    android.util.Log.d("HB", "Compose text cleared")
+                }
+                .show()
+        }
+
         // Send → process message, clear editor, return to Conversation Mode
         uiManager.setOnSendClick {
 
-            if (uiManager.isSoapMode()) {
+            val savingNote =
+                MEMBER_ID == "M1" &&
+                        lastComposeMode == CaregiverComposeMode.NOTE
+
+            if (savingNote) {
 
                 saveSoapNoteAndReturn()
 
@@ -310,6 +361,8 @@ class MainActivity : AppCompatActivity() {
                     uiManager.appendMessage("$MEMBER_ID: $text")
 
                     uiManager.clearCompose()
+                    lastComposeMode = CaregiverComposeMode.NONE
+                    resumeComposeAfterBack = false
                     uiManager.showRecordingState(false)
                     speechManager.speak("Message sent")
 
@@ -327,6 +380,10 @@ class MainActivity : AppCompatActivity() {
         android.util.Log.d("HB", "ONCREATE COMPLETE")
     }
     private fun saveSoapNoteAndReturn() {
+
+        noteRecording = false
+        continuousSpeechManager.stopListening()
+        uiManager.showRecordingState(false)
 
         val note = uiManager.getComposeText()
 
@@ -374,6 +431,8 @@ class MainActivity : AppCompatActivity() {
 
             uiManager.clearCompose()
             noteRecording = false
+            lastComposeMode = CaregiverComposeMode.NONE
+            resumeComposeAfterBack = false
             uiManager.showRecordingState(false)
             uiManager.showConversationMode()
 
@@ -419,9 +478,7 @@ class MainActivity : AppCompatActivity() {
                 grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 
                 if (uiManager.isSoapMode()) {
-                    noteRecording = true
-                    uiManager.showRecordingState(true)
-                    startSpeechRecognition(5000L, true)
+                    startNoteDictation()
                 } else {
                     startPatientDictation()
                 }
@@ -477,7 +534,97 @@ class MainActivity : AppCompatActivity() {
             }
         )
     }
+// =====================================================
+// NOTE TO ME / SOAP — VOSK CONTINUOUS
+// =====================================================
 
+    private fun startNoteDictation() {
+
+        if (noteRecording) return
+
+        noteRecording = true
+        noteDictationBaseText = uiManager.getComposeText().trim()
+        noteDictationCommittedText = ""
+        uiManager.showRecordingState(true)
+
+        speechManager.speakThen("Ready to record") {
+
+            if (!noteRecording) return@speakThen
+
+            continuousSpeechManager.startListening(
+
+                onText = { text ->
+                    runOnUiThread {
+                        if (noteRecording) {
+                            handleNoteVoskText(text, true)
+                        }
+                    }
+                },
+
+                onPartial = { partial ->
+                    runOnUiThread {
+                        if (noteRecording) {
+                            handleNoteVoskText(partial, false)
+                        }
+                    }
+                },
+
+                onError = { msg ->
+                    runOnUiThread {
+                        android.util.Log.e("HB", "NOTE VOSK: $msg")
+                        noteRecording = false
+                        uiManager.showRecordingState(false)
+                        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+                    }
+                }
+            )
+        }
+    }
+
+    private fun handleNoteVoskText(
+        recognized: String,
+        isFinalChunk: Boolean
+    ) {
+        if (!noteRecording) return
+
+        val incoming = recognized.trim()
+        if (incoming.isBlank()) return
+
+        val liveNewSpeech =
+            listOf(noteDictationCommittedText.trim(), incoming)
+                .filter { it.isNotBlank() }
+                .joinToString(" ")
+                .trim()
+
+        val liveEditorText =
+            listOf(noteDictationBaseText, liveNewSpeech)
+                .filter { it.isNotBlank() }
+                .joinToString(" ")
+                .trim()
+
+        uiManager.clearCompose()
+        uiManager.appendToCompose(liveEditorText)
+
+        if (isFinalChunk) {
+            noteDictationCommittedText = liveNewSpeech
+        }
+    }
+
+    private fun stopNoteDictation() {
+
+        if (!noteRecording) return
+
+        noteRecording = false
+        continuousSpeechManager.stopListening()
+        noteDictationBaseText = uiManager.getComposeText().trim()
+        noteDictationCommittedText = ""
+        uiManager.showRecordingState(false)
+
+        android.util.Log.d(
+            "HB",
+            "NOTE VOSK recording stopped"
+        )
+    }
     // =====================================================
     // PATIENT MESSAGE DICTATION — VOSK CONTINUOUS
     // =====================================================
@@ -538,7 +685,10 @@ class MainActivity : AppCompatActivity() {
                 .trim()
 
         val commandRegex =
-            Regex("""(?i)\bsend\s+(?:this\s+)?to\s+mary\b[.!?,;:]*""")
+            Regex(
+                """(?i)\b(?:send|sent)\s+(?:this\s+)?(?:to\s+)?(?:mary|marry|marie)\b[.!?,;:]*"""
+            )
+
         val commandMatch = commandRegex.find(liveNewSpeech)
 
         if (commandMatch != null) {

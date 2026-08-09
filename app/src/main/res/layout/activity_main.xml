@@ -197,6 +197,22 @@
             android:minLines="10"
             android:maxLines="10"
             android:lines="10"/>
+
+        <!-- Small destructive action: clear current compose text -->
+        <Button
+            android:id="@+id/btnClearCompose"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:layout_gravity="end"
+            android:layout_marginTop="6dp"
+            android:minWidth="72dp"
+            android:text="CLEAR"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#B71C1C"
+            android:contentDescription="Clear current text"/>
+
         <!-- ==================================================
  COMPOSE ACTION BUTTONS
  ================================================== -->
@@ -205,7 +221,7 @@
             android:id="@+id/composeButtonBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="135dp"
+            android:layout_marginTop="89dp"
             android:gravity="center"
             android:orientation="horizontal">
 

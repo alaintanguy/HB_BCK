@@ -107,18 +107,23 @@ class ContinuousSpeechManager(
     }
 
     fun stopListening() {
-        if (!listening) return
 
-        try {
-            speechService?.stop()
-        } catch (e: Exception) {
-            Log.e(TAG, "Error stopping Vosk", e)
-        }
+        val service = speechService
 
+        // Mark stopped immediately so a new Talk can start.
         speechService = null
         listening = false
 
-        Log.d(TAG, "Vosk listening stopped")
+        if (service != null) {
+            try {
+                service.stop()
+                service.shutdown()
+            } catch (e: Exception) {
+                Log.e(TAG, "Error stopping Vosk", e)
+            }
+        }
+
+        Log.d(TAG, "Vosk listening fully stopped")
     }
 
     fun isListening(): Boolean = listening
@@ -198,7 +203,6 @@ class ContinuousSpeechManager(
             ""
         }
     }
-
     fun shutdown() {
         stopListening()
 

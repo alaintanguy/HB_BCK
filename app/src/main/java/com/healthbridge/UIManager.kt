@@ -5,6 +5,7 @@ import android.util.Log
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
+import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
@@ -44,6 +45,7 @@ class UIManager(private val activity: AppCompatActivity) {
 
     private lateinit var btnSend: FloatingActionButton
     private lateinit var sendLabel: TextView
+    private lateinit var btnClearCompose: Button
 
     private var soapMode = false
 
@@ -101,6 +103,9 @@ class UIManager(private val activity: AppCompatActivity) {
 
         sendLabel =
             activity.findViewById(R.id.sendLabel)
+
+        btnClearCompose =
+            activity.findViewById(R.id.btnClearCompose)
 
         Log.d(TAG, "UIManager initialized")
     }
@@ -170,8 +175,10 @@ class UIManager(private val activity: AppCompatActivity) {
         conversationModeContainer.visibility = View.GONE
         composeModeContainer.visibility = View.VISIBLE
 
-        composeEditor.requestFocus()
-        showKeyboard()
+        // Voice-first compose: do not open the keyboard automatically.
+        // The normal EditText behavior will open it only when the user taps the editor.
+        composeEditor.clearFocus()
+        hideKeyboard()
 
         Log.d(TAG, "Compose mode active")
     }
@@ -204,14 +211,11 @@ class UIManager(private val activity: AppCompatActivity) {
             android.graphics.Typeface.BOLD
         )
 
-        btnSend.contentDescription = "Save SOAP"
-        sendLabel.text = "Save SOAP"
+        btnSend.contentDescription = "Save Note"
+        sendLabel.text = "Save Note"
 
-        val template = "S:\nO:\nA:\nP:"
-
-        composeEditor.setText(template)
-
-        composeEditor.setSelection(2)
+        // Preserve an unfinished note when returning from Conversation.
+        composeEditor.setSelection(composeEditor.text.length)
 
         showComposeMode()
     }
@@ -292,8 +296,6 @@ class UIManager(private val activity: AppCompatActivity) {
             }
         )
 
-        conversationContainer.addView(headerRow)
-
         // Message itself: WHITE and larger
         val messageView = TextView(activity).apply {
             this.text = messageText
@@ -302,12 +304,13 @@ class UIManager(private val activity: AppCompatActivity) {
             setPadding(8, 2, 8, 10)
         }
 
-        conversationContainer.addView(messageView)
+// NEWEST MESSAGE ALWAYS AT TOP
+        conversationContainer.addView(headerRow, 0)
+        conversationContainer.addView(messageView, 1)
 
         conversationScroll.post {
-            conversationScroll.fullScroll(View.FOCUS_DOWN)
+            conversationScroll.fullScroll(View.FOCUS_UP)
         }
-
         Log.d(TAG, "Message appended: $text")
     }
 
@@ -401,6 +404,13 @@ class UIManager(private val activity: AppCompatActivity) {
     fun setOnSendClick(action: () -> Unit) {
 
         btnSend.setOnClickListener {
+            action()
+        }
+    }
+
+    fun setOnClearComposeClick(action: () -> Unit) {
+
+        btnClearCompose.setOnClickListener {
             action()
         }
     }
