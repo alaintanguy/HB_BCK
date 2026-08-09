@@ -7,6 +7,7 @@ import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import android.speech.tts.TextToSpeech
+import android.speech.tts.UtteranceProgressListener
 import android.util.Log
 import java.util.Locale
 
@@ -51,6 +52,25 @@ class SpeechManager(private val context: Context) : TextToSpeech.OnInitListener 
         if (ready) speakNow(text) else pending.add(text)
     }
 
+    fun speakThen(text: String, onDone: () -> Unit) {
+        if (!ready) {
+            onDone()
+            return
+        }
+        val id = "HB_PROMPT_${System.currentTimeMillis()}"
+        tts?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+            override fun onStart(utteranceId: String?) {}
+            override fun onDone(utteranceId: String?) {
+                if (utteranceId == id) android.os.Handler(context.mainLooper).post { onDone() }
+            }
+            @Deprecated("Deprecated in Java")
+            override fun onError(utteranceId: String?) {
+                if (utteranceId == id) android.os.Handler(context.mainLooper).post { onDone() }
+            }
+        })
+        tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, id)
+    }
+
     private fun speakNow(text: String) {
         tts?.speak(
             text,
@@ -65,7 +85,12 @@ class SpeechManager(private val context: Context) : TextToSpeech.OnInitListener 
      * Start Android speech recognition. Calls onResult with recognized text,
      * or onError with an error message if recognition fails.
      */
-    fun startListening(onResult: (String) -> Unit, onError: (String) -> Unit) {
+    fun startListening(
+        silenceMillis: Long = 5000L,
+        onResult: (String) -> Unit,
+        onError: (String) -> Unit,
+        onPartialResult: (String) -> Unit = {}
+    ) {
         if (!SpeechRecognizer.isRecognitionAvailable(context)) {
             Log.e(TAG, "Speech recognition not available")
             onError("Speech recognition not available on this device")
@@ -97,7 +122,17 @@ class SpeechManager(private val context: Context) : TextToSpeech.OnInitListener 
                 Log.d(TAG, "Speech result: $text")
                 onResult(text)
             }
-            override fun onPartialResults(partialResults: Bundle?) {}
+            override fun onPartialResults(partialResults: Bundle?) {
+                val matches =
+                    partialResults?.getStringArrayList(
+                        SpeechRecognizer.RESULTS_RECOGNITION
+                    )
+                val text = matches?.firstOrNull() ?: ""
+                if (text.isNotBlank()) {
+                    Log.d(TAG, "Speech partial: $text")
+                    onPartialResult(text)
+                }
+            }
             override fun onEvent(eventType: Int, params: Bundle?) {}
         })
 
@@ -105,9 +140,23 @@ class SpeechManager(private val context: Context) : TextToSpeech.OnInitListener 
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
             putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
             putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
+            putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
+            putExtra(
+                RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS,
+                silenceMillis
+            )
+            putExtra(
+                RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS,
+                silenceMillis
+            )
         }
         speechRecognizer?.startListening(intent)
         Log.d(TAG, "Speech recognition started")
+    }
+
+    fun stopListening() {
+        speechRecognizer?.stopListening()
+        Log.d(TAG, "Speech recognition stop requested")
     }
 
     fun shutdown() {

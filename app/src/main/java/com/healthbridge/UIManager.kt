@@ -36,9 +36,11 @@ class UIManager(private val activity: AppCompatActivity) {
     // ── Compose Mode views ────────────────────────────
     private lateinit var composeModeContainer: View
     private lateinit var composeEditor: EditText
+
+    private lateinit var composeTitle: TextView
     private lateinit var btnSpeak: FloatingActionButton
     private lateinit var btnBack: FloatingActionButton
-   // private lateinit var btnSend: FloatingActionButton
+    // private lateinit var btnSend: FloatingActionButton
 
     private lateinit var btnSend: FloatingActionButton
     private lateinit var sendLabel: TextView
@@ -86,7 +88,8 @@ class UIManager(private val activity: AppCompatActivity) {
 
         composeEditor =
             activity.findViewById(R.id.composeEditor)
-
+        composeTitle =
+            activity.findViewById(R.id.composeTitle)
         btnSpeak =
             activity.findViewById(R.id.btnSpeak)
 
@@ -176,13 +179,17 @@ class UIManager(private val activity: AppCompatActivity) {
     fun showPatientComposeMode() {
 
         soapMode = false
-
+        composeTitle.text = "MESSAGE TO MARY"
+        composeTitle.setTextColor(0xFFF44336.toInt())
+        composeTitle.setTypeface(
+            composeTitle.typeface,
+            android.graphics.Typeface.BOLD
+        )
         btnSend.contentDescription = "Send"
         sendLabel.text = "Send"
 
-        clearCompose()
-
-        composeEditor.setSelection(0)
+        // Preserve an unfinished patient message when returning from Conversation.
+        composeEditor.setSelection(composeEditor.text.length)
 
         showComposeMode()
     }
@@ -190,6 +197,12 @@ class UIManager(private val activity: AppCompatActivity) {
     fun showSoapComposeMode() {
 
         soapMode = true
+        composeTitle.text = "NOTE TO ME"
+        composeTitle.setTextColor(0xFF2196F3.toInt())
+        composeTitle.setTypeface(
+            composeTitle.typeface,
+            android.graphics.Typeface.BOLD
+        )
 
         btnSend.contentDescription = "Save SOAP"
         sendLabel.text = "Save SOAP"
@@ -204,6 +217,20 @@ class UIManager(private val activity: AppCompatActivity) {
     }
 
     fun isSoapMode(): Boolean = soapMode
+
+    fun showRecordingState(recording: Boolean) {
+        if (recording) {
+            composeTitle.text = "RECORDING..."
+            composeTitle.setTextColor(0xFFF44336.toInt())
+        } else if (soapMode) {
+            composeTitle.text = "NOTE TO ME"
+            composeTitle.setTextColor(0xFF2196F3.toInt())
+        } else {
+            composeTitle.text = "MESSAGE TO MARY"
+            composeTitle.setTextColor(0xFFF44336.toInt())
+        }
+    }
+
 
     // =====================================================
     // CONVERSATION AREA

@@ -170,7 +170,16 @@
         android:background="#000000"
         android:padding="16dp"
         android:visibility="gone">
-
+        <TextView
+            android:id="@+id/composeTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="MESSAGE"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:paddingBottom="10dp"
+            android:textColor="#FF0000"/>
         <!-- Compose editor -->
 
         <EditText
