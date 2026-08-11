@@ -154,8 +154,110 @@
 
             </LinearLayout>
 
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1"/>
+
+            <!-- ================= Alert (M2 only, right edge) ================= -->
+            <LinearLayout
+                android:id="@+id/alertButtonGroup"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="8dp"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:visibility="gone">
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/btnAlert"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="Alert"
+                    app:backgroundTint="#D32F2F"
+                    app:srcCompat="@android:drawable/ic_dialog_alert" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="ALERT"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12sp"
+                    android:textStyle="bold"/>
+            </LinearLayout>
+
         </LinearLayout>
 
+    </LinearLayout>
+
+    <!-- Patient/caregiver emergency status overlay -->
+    <LinearLayout
+        android:id="@+id/emergencyStatusOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:clickable="false"
+        android:focusable="false"
+        android:visibility="gone">
+
+        <FrameLayout
+            android:layout_width="296dp"
+            android:layout_height="156dp"
+            android:background="#D32F2F"
+            android:padding="6dp">
+
+            <Button
+                android:id="@+id/btnEmergencyStatus"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="ALERT SENT"
+                android:textColor="#FFFFFF"
+                android:textSize="28sp"
+                android:textStyle="bold"
+                android:backgroundTint="#D32F2F"/>
+        </FrameLayout>
+    </LinearLayout>
+
+    <!-- ======================================================
+         ALERT CONFIRMATION MODE
+         ====================================================== -->
+    <LinearLayout
+        android:id="@+id/alertModeContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="24dp"
+        android:background="#000000"
+        android:visibility="gone">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="DO YOU NEED HELP?"
+            android:textColor="#FFFFFF"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:layout_marginBottom="36dp"/>
+        <Button
+            android:id="@+id/btnRealAlert"
+            android:layout_width="match_parent"
+            android:layout_height="110dp"
+            android:text="REAL ALERT"
+            android:textColor="#FFFFFF"
+            android:textSize="26sp"
+            android:textStyle="bold"
+            android:backgroundTint="#D32F2F"/>
+        <Button
+            android:id="@+id/btnAlertMistake"
+            android:layout_width="match_parent"
+            android:layout_height="110dp"
+            android:layout_marginTop="28dp"
+            android:text="MISTAKE"
+            android:textColor="#FFFFFF"
+            android:textSize="26sp"
+            android:textStyle="bold"
+            android:backgroundTint="#2E7D32"/>
     </LinearLayout>
 
     <!-- ======================================================
@@ -255,6 +357,7 @@
             <!-- ================= Back ================= -->
 
             <LinearLayout
+                android:id="@+id/backButtonGroup"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"

@@ -33,6 +33,26 @@ class UIManager(private val activity: AppCompatActivity) {
     private lateinit var patientLabel: TextView
     private lateinit var copyLabel: TextView
     private lateinit var saveLabel: TextView
+    private lateinit var alertButtonGroup: View
+    private lateinit var btnAlert: FloatingActionButton
+    private lateinit var alertModeContainer: View
+    private lateinit var btnRealAlert: Button
+    private lateinit var btnAlertMistake: Button
+    private lateinit var emergencyStatusOverlay: View
+    private lateinit var btnEmergencyStatus: Button
+    private var alertFlashAnimator: android.animation.ObjectAnimator? = null
+    private val alertHandler = android.os.Handler(android.os.Looper.getMainLooper())
+    private var caregiverAlertSounding = false
+    private val alertTone by lazy {
+        android.media.ToneGenerator(android.media.AudioManager.STREAM_NOTIFICATION, 70)
+    }
+    private val caregiverBeep = object : Runnable {
+        override fun run() {
+            if (!caregiverAlertSounding) return
+            alertTone.startTone(android.media.ToneGenerator.TONE_PROP_BEEP, 140)
+            alertHandler.postDelayed(this, 1200L)
+        }
+    }
 
     // ── Compose Mode views ────────────────────────────
     private lateinit var composeModeContainer: View
@@ -41,6 +61,8 @@ class UIManager(private val activity: AppCompatActivity) {
     private lateinit var composeTitle: TextView
     private lateinit var btnSpeak: FloatingActionButton
     private lateinit var btnBack: FloatingActionButton
+    private lateinit var backButtonGroup: View
+    private lateinit var composeButtonBar: LinearLayout
     // private lateinit var btnSend: FloatingActionButton
 
     private lateinit var btnSend: FloatingActionButton
@@ -48,6 +70,7 @@ class UIManager(private val activity: AppCompatActivity) {
     private lateinit var btnClearCompose: Button
 
     private var soapMode = false
+    private var configuredMemberId: String = ""
 
     // =====================================================
     // INITIALIZATION
@@ -85,6 +108,14 @@ class UIManager(private val activity: AppCompatActivity) {
         saveLabel =
             activity.findViewById(R.id.saveLabel)
 
+        alertButtonGroup = activity.findViewById(R.id.alertButtonGroup)
+        btnAlert = activity.findViewById(R.id.btnAlert)
+        alertModeContainer = activity.findViewById(R.id.alertModeContainer)
+        btnRealAlert = activity.findViewById(R.id.btnRealAlert)
+        btnAlertMistake = activity.findViewById(R.id.btnAlertMistake)
+        emergencyStatusOverlay = activity.findViewById(R.id.emergencyStatusOverlay)
+        btnEmergencyStatus = activity.findViewById(R.id.btnEmergencyStatus)
+
         composeModeContainer =
             activity.findViewById(R.id.composeModeContainer)
 
@@ -97,6 +128,10 @@ class UIManager(private val activity: AppCompatActivity) {
 
         btnBack =
             activity.findViewById(R.id.btnBack)
+        backButtonGroup =
+            activity.findViewById(R.id.backButtonGroup)
+        composeButtonBar =
+            activity.findViewById(R.id.composeButtonBar)
 
         btnSend =
             activity.findViewById(R.id.btnSend)
@@ -116,6 +151,8 @@ class UIManager(private val activity: AppCompatActivity) {
 
     fun configureForMember(memberId: String) {
 
+        configuredMemberId = memberId
+
         if (memberId == "M1") {
 
             // ---------------------------------------------
@@ -132,6 +169,7 @@ class UIManager(private val activity: AppCompatActivity) {
 
             patientLabel.text = "Patient"
             btnWrite.contentDescription = "Patient"
+            alertButtonGroup.visibility = View.GONE
 
             Log.d(TAG, "Configured UI for M1 caregiver")
 
@@ -151,6 +189,7 @@ class UIManager(private val activity: AppCompatActivity) {
 
             patientLabel.text = "Write"
             btnWrite.contentDescription = "Write"
+            alertButtonGroup.visibility = View.VISIBLE
 
             Log.d(TAG, "Configured UI for M2 patient")
         }
@@ -164,6 +203,7 @@ class UIManager(private val activity: AppCompatActivity) {
 
         conversationModeContainer.visibility = View.VISIBLE
         composeModeContainer.visibility = View.GONE
+        alertModeContainer.visibility = View.GONE
 
         hideKeyboard()
 
@@ -173,6 +213,7 @@ class UIManager(private val activity: AppCompatActivity) {
     fun showComposeMode() {
 
         conversationModeContainer.visibility = View.GONE
+        alertModeContainer.visibility = View.GONE
         composeModeContainer.visibility = View.VISIBLE
 
         // Voice-first compose: do not open the keyboard automatically.
@@ -186,7 +227,8 @@ class UIManager(private val activity: AppCompatActivity) {
     fun showPatientComposeMode() {
 
         soapMode = false
-        composeTitle.text = "MESSAGE TO MARY"
+        composeTitle.text =
+            if (configuredMemberId == "M1") "MESSAGE TO MARY" else "MESSAGE"
         composeTitle.setTextColor(0xFFF44336.toInt())
         composeTitle.setTypeface(
             composeTitle.typeface,
@@ -194,6 +236,21 @@ class UIManager(private val activity: AppCompatActivity) {
         )
         btnSend.contentDescription = "Send"
         sendLabel.text = "Send"
+
+        // Compose controls are role-specific.
+        // Hide the WHOLE Back group on M2, including its "Back" label.
+        if (configuredMemberId == "M1") {
+            backButtonGroup.visibility = View.VISIBLE
+            // Raise M1 compose controls by about half a 56dp FAB diameter
+            // so they remain fully visible above the keyboard.
+            composeButtonBar.translationY =
+                -28f * activity.resources.displayMetrics.density
+        } else {
+            // M2 has only Speak + Send.
+            // Hide the complete Back group but keep the original vertical position.
+            backButtonGroup.visibility = View.GONE
+            composeButtonBar.translationY = 0f
+        }
 
         // Preserve an unfinished patient message when returning from Conversation.
         composeEditor.setSelection(composeEditor.text.length)
@@ -213,6 +270,9 @@ class UIManager(private val activity: AppCompatActivity) {
 
         btnSend.contentDescription = "Save Note"
         sendLabel.text = "Save Note"
+        backButtonGroup.visibility = View.VISIBLE
+        composeButtonBar.translationY =
+            -28f * activity.resources.displayMetrics.density
 
         // Preserve an unfinished note when returning from Conversation.
         composeEditor.setSelection(composeEditor.text.length)
@@ -364,15 +424,107 @@ class UIManager(private val activity: AppCompatActivity) {
         composeEditor.text.clear()
     }
 
+    fun showAlertConfirmationMode() {
+        conversationModeContainer.visibility = View.GONE
+        composeModeContainer.visibility = View.GONE
+        alertModeContainer.visibility = View.VISIBLE
+        hideKeyboard()
+    }
+
+    fun showAlertSent() {
+        stopCaregiverAlertEffects()
+        emergencyStatusOverlay.visibility = View.VISIBLE
+        btnEmergencyStatus.isClickable = false
+        btnEmergencyStatus.text = "ALERT SENT"
+        btnEmergencyStatus.setTextColor(0xFFFFFFFF.toInt())
+        btnEmergencyStatus.backgroundTintList =
+            android.content.res.ColorStateList.valueOf(0xFFD32F2F.toInt())
+        alertFlashAnimator?.cancel()
+        alertFlashAnimator = android.animation.ObjectAnimator.ofFloat(
+            btnEmergencyStatus, View.ALPHA, 1f, 0.30f
+        ).apply {
+            duration = 650L
+            repeatMode = android.animation.ValueAnimator.REVERSE
+            repeatCount = android.animation.ValueAnimator.INFINITE
+            start()
+        }
+    }
+
+    fun showAlertReceived() {
+        stopCaregiverAlertEffects()
+        alertFlashAnimator?.cancel()
+        btnEmergencyStatus.alpha = 1f
+        emergencyStatusOverlay.visibility = View.VISIBLE
+        btnEmergencyStatus.isClickable = true
+        btnEmergencyStatus.text = "MESSAGE RECEIVED\nTAP TO CLOSE"
+        btnEmergencyStatus.setTextColor(0xFF000000.toInt())
+        btnEmergencyStatus.backgroundTintList =
+            android.content.res.ColorStateList.valueOf(0xFFFFFFFF.toInt())
+    }
+
+    fun showCaregiverAlert(source: String) {
+        emergencyStatusOverlay.visibility = View.VISIBLE
+        btnEmergencyStatus.isClickable = true
+        btnEmergencyStatus.text = "MARY — ALERT\nTAP TO ACK"
+        btnEmergencyStatus.setTextColor(0xFF000000.toInt())
+        btnEmergencyStatus.backgroundTintList =
+            android.content.res.ColorStateList.valueOf(0xFFFFFFFF.toInt())
+        // Keep the warning surface WHITE at all times.
+        // Pulse size slightly instead of fading opacity over the black screen.
+        alertFlashAnimator?.cancel()
+        btnEmergencyStatus.alpha = 1f
+        alertFlashAnimator = android.animation.ObjectAnimator.ofFloat(
+            btnEmergencyStatus, View.SCALE_X, 1f, 0.96f
+        ).apply {
+            duration = 450L
+            repeatMode = android.animation.ValueAnimator.REVERSE
+            repeatCount = android.animation.ValueAnimator.INFINITE
+            start()
+        }
+        if (!caregiverAlertSounding) {
+            caregiverAlertSounding = true
+            alertHandler.post(caregiverBeep)
+        }
+    }
+
+    private fun stopCaregiverAlertEffects() {
+        caregiverAlertSounding = false
+        alertHandler.removeCallbacks(caregiverBeep)
+    }
+
+    fun hideEmergencyStatus() {
+        stopCaregiverAlertEffects()
+        alertFlashAnimator?.cancel()
+        btnEmergencyStatus.alpha = 1f
+        btnEmergencyStatus.scaleX = 1f
+        btnEmergencyStatus.scaleY = 1f
+        btnEmergencyStatus.isClickable = true
+        emergencyStatusOverlay.visibility = View.GONE
+    }
+
+    fun setOnEmergencyStatusClick(action: () -> Unit) {
+        btnEmergencyStatus.setOnClickListener { action() }
+        emergencyStatusOverlay.setOnClickListener { action() }
+    }
+
     // =====================================================
     // BUTTON WIRING
     // =====================================================
 
     fun setOnWriteClick(action: () -> Unit) {
+        btnWrite.setOnClickListener { action() }
+    }
 
-        btnWrite.setOnClickListener {
-            action()
-        }
+    fun setOnAlertClick(action: () -> Unit) {
+        btnAlert.setOnClickListener { action() }
+    }
+
+    fun setOnRealAlertClick(action: () -> Unit) {
+        btnRealAlert.setOnClickListener { action() }
+    }
+
+    fun setOnAlertMistakeClick(action: () -> Unit) {
+        btnAlertMistake.setOnClickListener { action() }
     }
 
     fun setOnCopyClick(action: () -> Unit) {

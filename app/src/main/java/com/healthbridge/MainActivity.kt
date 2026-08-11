@@ -21,7 +21,7 @@ import java.util.Locale
 class MainActivity : AppCompatActivity() {
 
     companion object {
-        const val MEMBER_ID = "M1" //M1= Samsung for Caregiver M2= Moto for Patient
+        const val MEMBER_ID = "M2" //M1= Samsung for Caregiver M2= Moto for Patient
         private const val REQUEST_CODE_RECORD_AUDIO = 200
     }
 
@@ -46,6 +46,10 @@ class MainActivity : AppCompatActivity() {
     // True only after Back leaves an unfinished caregiver draft.
     // The next Write resumes that draft directly; otherwise Write shows the mode chooser.
     private var resumeComposeAfterBack = false
+
+    // M2: prevents Firebase active=false at app startup from being
+    // mistaken for a newly acknowledged alert.
+    private var m2EmergencyWasActive = false
 
     // Patient-message voice dictation stays active across recognition phrases.
     // Saying "SEND TO MARY" sends the accumulated message.
@@ -167,7 +171,72 @@ class MainActivity : AppCompatActivity() {
                 }
 
             } else {
+                // M2 must always remain in patient compose mode.
+                resumeComposeAfterBack = false
+                lastComposeMode = CaregiverComposeMode.NONE
                 uiManager.showPatientComposeMode()
+            }
+        }
+
+        // M2 Alert — Milestone 1: confirmation UI only.
+        uiManager.setOnAlertClick {
+            if (MEMBER_ID == "M2") {
+                patientDictationActive = false
+                noteRecording = false
+                continuousSpeechManager.stopListening()
+                speechManager.stopListening()
+                uiManager.showRecordingState(false)
+                uiManager.showAlertConfirmationMode()
+            }
+        }
+
+        uiManager.setOnAlertMistakeClick {
+            if (MEMBER_ID == "M2") {
+                Toast.makeText(this, "Alert cancelled", Toast.LENGTH_SHORT).show()
+                uiManager.showConversationMode()
+            }
+        }
+
+        uiManager.setOnRealAlertClick {
+            if (MEMBER_ID == "M2") {
+                FirebaseManager.sendEmergencyAlert(
+                    memberId = "M2",
+                    source = FirebaseManager.AlertSource.PATIENT_BUTTON,
+                    details = "Patient pressed REAL ALERT"
+                )
+                uiManager.showConversationMode()
+                uiManager.showAlertSent()
+            }
+        }
+
+        FirebaseManager.listenForEmergencyAlert("M2") { alert ->
+            runOnUiThread {
+                if (MEMBER_ID == "M1") {
+                    if (alert.active) uiManager.showCaregiverAlert(alert.source)
+                    else uiManager.hideEmergencyStatus()
+                } else if (MEMBER_ID == "M2") {
+                    if (alert.active) {
+                        m2EmergencyWasActive = true
+                        uiManager.showAlertSent()
+                    } else if (m2EmergencyWasActive) {
+                        // Only show this after a real true -> false ACK transition.
+                        m2EmergencyWasActive = false
+                        uiManager.showAlertReceived()
+                    } else {
+                        // Normal startup state: no active alert, show nothing.
+                        uiManager.hideEmergencyStatus()
+                    }
+                }
+            }
+        }
+
+        // M1 acknowledges by pressing the large red alert.
+        uiManager.setOnEmergencyStatusClick {
+            if (MEMBER_ID == "M1") {
+                FirebaseManager.clearEmergencyAlert("M2")
+                Toast.makeText(this, "Mary alert acknowledged", Toast.LENGTH_SHORT).show()
+            } else if (MEMBER_ID == "M2") {
+                uiManager.hideEmergencyStatus()
             }
         }
 

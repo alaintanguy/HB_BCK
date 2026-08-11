@@ -351,6 +351,59 @@ object FirebaseManager {
 
 
     // =====================================================
+    // EMERGENCY ALERT SYSTEM
+    // =====================================================
+
+    enum class AlertSource {
+        PATIENT_BUTTON, VOICE_HELP, PENDANT, POSSIBLE_FALL, NO_MOVEMENT,
+        HEART_RATE, HEALTH_MEASUREMENT, GEOFENCE, AI_DETECTED
+    }
+
+    data class EmergencyAlert(
+        val active: Boolean = false,
+        val source: String = "",
+        val details: String = "",
+        val timestamp: Long = 0L
+    )
+
+    private fun emergencyAlertReference(memberId: String): DatabaseReference =
+        memberReference(memberId).child("alerts").child("emergency")
+
+    fun sendEmergencyAlert(memberId: String, source: AlertSource, details: String = "") {
+        val alert = hashMapOf<String, Any>(
+            "active" to true,
+            "source" to source.name,
+            "details" to details,
+            "timestamp" to com.google.firebase.database.ServerValue.TIMESTAMP
+        )
+        emergencyAlertReference(memberId).setValue(alert)
+            .addOnSuccessListener { Log.d("HB", "EMERGENCY ALERT SENT: $memberId ${source.name}") }
+            .addOnFailureListener { e -> Log.e("HB", "EMERGENCY ALERT SEND FAILED: $memberId", e) }
+    }
+
+    fun clearEmergencyAlert(memberId: String) {
+        emergencyAlertReference(memberId).child("active").setValue(false)
+            .addOnSuccessListener { Log.d("HB", "EMERGENCY ALERT CLEARED: $memberId") }
+            .addOnFailureListener { e -> Log.e("HB", "EMERGENCY ALERT CLEAR FAILED: $memberId", e) }
+    }
+
+    fun listenForEmergencyAlert(memberId: String, onAlertChanged: (EmergencyAlert) -> Unit) {
+        emergencyAlertReference(memberId).addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                onAlertChanged(EmergencyAlert(
+                    active = snapshot.child("active").getValue(Boolean::class.java) ?: false,
+                    source = snapshot.child("source").getValue(String::class.java) ?: "",
+                    details = snapshot.child("details").getValue(String::class.java) ?: "",
+                    timestamp = snapshot.child("timestamp").getValue(Long::class.java) ?: 0L
+                ))
+            }
+            override fun onCancelled(error: DatabaseError) {
+                Log.e("HB", "EMERGENCY ALERT LISTENER FAILED: $memberId", error.toException())
+            }
+        })
+    }
+
+    // =====================================================
     // LOCATION LISTENER
     // =====================================================
     fun listenToMemberLocation(
