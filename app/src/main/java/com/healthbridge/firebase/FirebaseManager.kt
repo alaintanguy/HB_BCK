@@ -32,6 +32,14 @@ object FirebaseManager {
             .child("messages")
             .child("current")
     }
+    private fun messageHistoryReference(): DatabaseReference {
+
+        return database
+            .child("groups")
+            .child("family_001")
+            .child("messages")
+            .child("history")
+    }
 
     // =====================================================
     // MESSAGE STATES
@@ -64,7 +72,17 @@ object FirebaseManager {
 
             "status" to MSG_NEW
         )
-
+// Save permanent copy in conversation history
+        messageHistoryReference()
+            .push()
+            .setValue(message)
+            .addOnSuccessListener {
+                Log.d("HB", "MESSAGE SAVED TO HISTORY")
+            }
+            .addOnFailureListener { error ->
+                Log.e("HB", "MESSAGE HISTORY SAVE FAILED", error)
+            }
+        // Keep existing live-message system
         messageReference()
             .setValue(message)
             .addOnSuccessListener {
@@ -197,6 +215,97 @@ object FirebaseManager {
             .child("lastSeen")
             .setValue(
                 System.currentTimeMillis()
+            )
+    }
+    fun updateHeartbeat(
+        memberId: String
+    ) {
+        val currentTime = System.currentTimeMillis()
+
+        val readableDate =
+            java.text.SimpleDateFormat(
+                "yyyy-MM-dd",
+                java.util.Locale.getDefault()
+            ).format(java.util.Date(currentTime))
+
+        val readableTime =
+            java.text.SimpleDateFormat(
+                "HH:mm:ss",
+                java.util.Locale.getDefault()
+            ).format(java.util.Date(currentTime))
+
+        val updates = mapOf<String, Any>(
+            "telemetry/timestamp" to currentTime,
+            "telemetry/readable/date" to readableDate,
+            "telemetry/readable/time" to readableTime,
+            "device/lastSeen" to currentTime
+        )
+
+        memberReference(memberId)
+            .updateChildren(updates)
+            .addOnSuccessListener {
+                Log.d("HB", "HEARTBEAT FIREBASE SUCCESS: $memberId $readableTime")
+            }
+            .addOnFailureListener { error ->
+                Log.e("HB", "HEARTBEAT FIREBASE FAILED: $memberId", error)
+            }
+    }
+    fun loadMessageHistory(
+        memberId: String,
+        onHistoryLoaded: (List<VoiceMessage>) -> Unit
+    ) {
+
+        messageHistoryReference()
+            .orderByChild("timestamp")
+            .addListenerForSingleValueEvent(
+
+                object : ValueEventListener {
+
+                    override fun onDataChange(
+                        snapshot: DataSnapshot
+                    ) {
+
+                        val messages =
+                            mutableListOf<VoiceMessage>()
+
+                        for (child in snapshot.children) {
+
+                            val message =
+                                child.getValue(
+                                    VoiceMessage::class.java
+                                )
+
+                            if (message != null) {
+
+                                // Keep messages involving this member.
+                                if (
+                                    message.from == memberId ||
+                                    message.to == memberId
+                                ) {
+                                    messages.add(message)
+                                }
+                            }
+                        }
+
+                        Log.d(
+                            "HB",
+                            "HISTORY LOADED: ${messages.size} messages"
+                        )
+
+                        onHistoryLoaded(messages)
+                    }
+
+                    override fun onCancelled(
+                        error: DatabaseError
+                    ) {
+
+                        Log.e(
+                            "HB",
+                            "MESSAGE HISTORY LOAD FAILED",
+                            error.toException()
+                        )
+                    }
+                }
             )
     }
     fun listenForMessages(
@@ -350,6 +459,102 @@ object FirebaseManager {
     }
 
 
+    fun listenForLowBatteryStatus(
+        memberId: String,
+        onChanged: (isLow: Boolean, battery: Int) -> Unit
+    ) {
+        memberReference(memberId)
+            .addValueEventListener(
+                object : ValueEventListener {
+                    override fun onDataChange(snapshot: DataSnapshot) {
+                        val isLow =
+                            snapshot.child("alerts").child("lowBattery")
+                                .getValue(Boolean::class.java) ?: false
+
+                        val battery =
+                            snapshot.child("device").child("phoneBattery")
+                                .getValue(Int::class.java) ?: -1
+
+                        onChanged(isLow, battery)
+                    }
+
+                    override fun onCancelled(error: DatabaseError) {
+                        Log.e(
+                            "HB",
+                            "LOW BATTERY LISTENER FAILED: $memberId",
+                            error.toException()
+                        )
+                    }
+                }
+            )
+    }
+
+    // =====================================================
+    // GEOFENCE ALERT — PROTOTYPE
+    // =====================================================
+
+    fun updateGeofenceAlert(
+        memberId: String,
+        isOutside: Boolean,
+        distanceMeters: Double
+    ) {
+        val updates = mapOf<String, Any>(
+            "alerts/geofenceOutside" to isOutside,
+            "geofences/home/distanceMeters" to distanceMeters,
+            "geofences/home/lastChecked" to
+                    com.google.firebase.database.ServerValue.TIMESTAMP
+        )
+
+        memberReference(memberId)
+            .updateChildren(updates)
+            .addOnSuccessListener {
+                Log.d(
+                    "HB",
+                    "GEOFENCE UPDATED: $memberId outside=$isOutside distance=$distanceMeters"
+                )
+            }
+            .addOnFailureListener { error ->
+                Log.e(
+                    "HB",
+                    "GEOFENCE UPDATE FAILED: $memberId",
+                    error
+                )
+            }
+    }
+
+    fun listenForGeofenceStatus(
+        memberId: String,
+        onChanged: (isOutside: Boolean, distanceMeters: Double) -> Unit
+    ) {
+        memberReference(memberId)
+            .addValueEventListener(
+                object : ValueEventListener {
+                    override fun onDataChange(snapshot: DataSnapshot) {
+                        val isOutside =
+                            snapshot.child("alerts")
+                                .child("geofenceOutside")
+                                .getValue(Boolean::class.java) ?: false
+
+                        val distance =
+                            snapshot.child("geofences")
+                                .child("home")
+                                .child("distanceMeters")
+                                .getValue(Double::class.java) ?: 0.0
+
+                        onChanged(isOutside, distance)
+                    }
+
+                    override fun onCancelled(error: DatabaseError) {
+                        Log.e(
+                            "HB",
+                            "GEOFENCE LISTENER FAILED: $memberId",
+                            error.toException()
+                        )
+                    }
+                }
+            )
+    }
+
     // =====================================================
     // EMERGENCY ALERT SYSTEM
     // =====================================================
@@ -434,6 +639,146 @@ object FirebaseManager {
                     }
                 }
             )
+    }
+
+
+    // =====================================================
+    // MEDICATION HISTORY — M2 PATIENT
+    // =====================================================
+
+    private fun medicationHistoryReference(
+        memberId: String,
+        date: String,
+        schedule: String
+    ): DatabaseReference {
+
+        val safeSchedule = schedule.replace(":", "-")
+
+        return memberReference(memberId)
+            .child("medications")
+            .child("history")
+            .child(date)
+            .child(safeSchedule)
+    }
+
+    fun saveMedicationResult(
+        memberId: String,
+        schedule: String,
+        missingMedicationNames: List<String>
+    ) {
+
+        val date = java.text.SimpleDateFormat(
+            "yyyy-MM-dd",
+            java.util.Locale.US
+        ).format(java.util.Date())
+
+        val status =
+            if (missingMedicationNames.isEmpty()) "all_taken"
+            else "missing"
+
+        val result = hashMapOf<String, Any>(
+            "status" to status,
+            "missing" to missingMedicationNames.joinToString(", "),
+            "timestamp" to com.google.firebase.database.ServerValue.TIMESTAMP
+        )
+
+        medicationHistoryReference(memberId, date, schedule)
+            .setValue(result)
+            .addOnSuccessListener {
+                Log.d(
+                    "HB-MED",
+                    "MEDICATION RESULT SAVED: $memberId $date $schedule status=$status"
+                )
+            }
+            .addOnFailureListener { error ->
+                Log.e(
+                    "HB-MED",
+                    "MEDICATION RESULT SAVE FAILED: $memberId $date $schedule",
+                    error
+                )
+            }
+    }
+
+    fun checkMedicationHandledToday(
+        memberId: String,
+        schedule: String,
+        onResult: (Boolean) -> Unit
+    ) {
+
+        val date = java.text.SimpleDateFormat(
+            "yyyy-MM-dd",
+            java.util.Locale.US
+        ).format(java.util.Date())
+
+        medicationHistoryReference(memberId, date, schedule)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                onResult(snapshot.exists())
+            }
+            .addOnFailureListener { error ->
+                Log.e(
+                    "HB-MED",
+                    "MEDICATION HISTORY CHECK FAILED: $memberId $date $schedule",
+                    error
+                )
+
+                // If Firebase cannot be checked, do not silently suppress a due dose.
+                onResult(false)
+            }
+    }
+
+    // =====================================================
+    // MEDICATION LOG
+    // =====================================================
+
+    fun recordMedicationBlock(
+        memberId: String,
+        schedule: String,
+        status: String,
+        missingMedications: List<String> = emptyList()
+    ) {
+
+        val today =
+            java.text.SimpleDateFormat(
+                "yyyy-MM-dd",
+                java.util.Locale.US
+            ).format(java.util.Date())
+
+        val safeSchedule =
+            schedule.replace(":", "-")
+
+        val updates =
+            hashMapOf<String, Any>(
+                "schedule" to schedule,
+                "status" to status,
+                "timestamp" to
+                        com.google.firebase.database.ServerValue.TIMESTAMP
+            )
+
+        if (missingMedications.isNotEmpty()) {
+            updates["missing"] = missingMedications
+        }
+
+        memberReference(memberId)
+            .child("medicationLog")
+            .child(today)
+            .child(safeSchedule)
+            .setValue(updates)
+            .addOnSuccessListener {
+
+                Log.d(
+                    "HB-MED",
+                    "MEDICATION LOG SAVED: $today $schedule $status"
+                )
+            }
+            .addOnFailureListener { error ->
+
+                Log.e(
+                    "HB-MED",
+                    "MEDICATION LOG SAVE FAILED",
+                    error
+                )
+            }
     }
 
 }

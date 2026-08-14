@@ -43,6 +43,9 @@ class UIManager(private val activity: AppCompatActivity) {
     private var alertFlashAnimator: android.animation.ObjectAnimator? = null
     private val alertHandler = android.os.Handler(android.os.Looper.getMainLooper())
     private var caregiverAlertSounding = false
+    private var lowBatteryVisible = false
+    private var geofenceVisible = false
+    private var lastGeofenceDistanceMeters = 0.0
     private val alertTone by lazy {
         android.media.ToneGenerator(android.media.AudioManager.STREAM_NOTIFICATION, 70)
     }
@@ -71,6 +74,16 @@ class UIManager(private val activity: AppCompatActivity) {
 
     private var soapMode = false
     private var configuredMemberId: String = ""
+
+    // ── Medication Mode views — M2 only ─────────────────
+    private lateinit var medicationModeContainer: View
+    private lateinit var medicationTitle: TextView
+    private lateinit var medicationListContainer: LinearLayout
+    private lateinit var btnMedicationAllTaken: Button
+    private lateinit var btnMedicationDone: Button
+    private val medicationChecks = mutableListOf<android.widget.CheckBox>()
+    private var medicationDoneAction: ((List<Medication>) -> Unit)? = null
+    private var currentMedicationBlock: MedicationTimeBlock? = null
 
     // =====================================================
     // INITIALIZATION
@@ -142,6 +155,43 @@ class UIManager(private val activity: AppCompatActivity) {
         btnClearCompose =
             activity.findViewById(R.id.btnClearCompose)
 
+        medicationModeContainer =
+            activity.findViewById(R.id.medicationModeContainer)
+        medicationTitle =
+            activity.findViewById(R.id.medicationTitle)
+        medicationListContainer =
+            activity.findViewById(R.id.medicationListContainer)
+        btnMedicationAllTaken =
+            activity.findViewById(R.id.btnMedicationAllTaken)
+        btnMedicationDone =
+            activity.findViewById(R.id.btnMedicationDone)
+
+        btnMedicationAllTaken.setOnClickListener {
+
+            medicationDoneAction?.invoke(emptyList())
+
+            hideMedicationMode()
+        }
+
+        btnMedicationDone.setOnClickListener {
+
+            val block = currentMedicationBlock
+
+            if (block != null) {
+
+                val missingMedications =
+                    block.medications.filterIndexed { index, _ ->
+
+                        index >= medicationChecks.size ||
+                                !medicationChecks[index].isChecked
+                    }
+
+                medicationDoneAction?.invoke(missingMedications)
+            }
+
+            hideMedicationMode()
+        }
+
         Log.d(TAG, "UIManager initialized")
     }
 
@@ -204,6 +254,7 @@ class UIManager(private val activity: AppCompatActivity) {
         conversationModeContainer.visibility = View.VISIBLE
         composeModeContainer.visibility = View.GONE
         alertModeContainer.visibility = View.GONE
+        medicationModeContainer.visibility = View.GONE
 
         hideKeyboard()
 
@@ -214,6 +265,7 @@ class UIManager(private val activity: AppCompatActivity) {
 
         conversationModeContainer.visibility = View.GONE
         alertModeContainer.visibility = View.GONE
+        medicationModeContainer.visibility = View.GONE
         composeModeContainer.visibility = View.VISIBLE
 
         // Voice-first compose: do not open the keyboard automatically.
@@ -313,10 +365,29 @@ class UIManager(private val activity: AppCompatActivity) {
             else -> ""
         }
 
-        val messageText = when {
+        val rawMessageText = when {
             text.startsWith("M1:") -> text.removePrefix("M1:").trim()
             text.startsWith("M2:") -> text.removePrefix("M2:").trim()
             else -> text
+        }
+
+        val geofenceExitPrefix = "SYSTEM_EVENT:GEOFENCE_EXIT:"
+        val geofenceReturnPrefix = "SYSTEM_EVENT:GEOFENCE_RETURN"
+
+        val isGeofenceExit = rawMessageText.startsWith(geofenceExitPrefix)
+        val isGeofenceReturn = rawMessageText == geofenceReturnPrefix
+
+        val messageText = when {
+            isGeofenceExit -> {
+                val yards = rawMessageText
+                    .removePrefix(geofenceExitPrefix)
+                    .toIntOrNull()
+
+                if (yards != null) "⚠ LEFT HOME AREA — $yards yards from home"
+                else "⚠ LEFT HOME AREA"
+            }
+            isGeofenceReturn -> "✓ RETURNED TO HOME AREA"
+            else -> rawMessageText
         }
 
         // Header row: Name + date/time + line filling remaining width
@@ -356,11 +427,24 @@ class UIManager(private val activity: AppCompatActivity) {
             }
         )
 
-        // Message itself: WHITE and larger
+        // Message itself. Normal messages stay white.
+        // Geofence crossing events are bold and color-coded.
         val messageView = TextView(activity).apply {
             this.text = messageText
             textSize = 16f
-            setTextColor(0xFFFFFFFF.toInt())
+
+            when {
+                isGeofenceExit -> {
+                    setTextColor(0xFFFF7043.toInt())
+                    setTypeface(typeface, android.graphics.Typeface.BOLD)
+                }
+                isGeofenceReturn -> {
+                    setTextColor(0xFF66BB6A.toInt())
+                    setTypeface(typeface, android.graphics.Typeface.BOLD)
+                }
+                else -> setTextColor(0xFFFFFFFF.toInt())
+            }
+
             setPadding(8, 2, 8, 10)
         }
 
@@ -427,8 +511,76 @@ class UIManager(private val activity: AppCompatActivity) {
     fun showAlertConfirmationMode() {
         conversationModeContainer.visibility = View.GONE
         composeModeContainer.visibility = View.GONE
+        medicationModeContainer.visibility = View.GONE
         alertModeContainer.visibility = View.VISIBLE
         hideKeyboard()
+    }
+
+    fun showLowBatteryWarning(percent: Int) {
+        lowBatteryVisible = true
+
+        // Do not replace an active emergency alert on M1.
+        if (caregiverAlertSounding) return
+
+        alertFlashAnimator?.cancel()
+        btnEmergencyStatus.alpha = 1f
+        btnEmergencyStatus.scaleX = 1f
+        btnEmergencyStatus.scaleY = 1f
+        emergencyStatusOverlay.visibility = View.VISIBLE
+        btnEmergencyStatus.isClickable = false
+        btnEmergencyStatus.text = "MARY — LOW BATTERY\n$percent%"
+        btnEmergencyStatus.setTextColor(0xFF000000.toInt())
+        btnEmergencyStatus.backgroundTintList =
+            android.content.res.ColorStateList.valueOf(0xFFFFFFFF.toInt())
+
+        // One short notification beep, not continuous emergency beeping.
+        alertTone.startTone(android.media.ToneGenerator.TONE_PROP_BEEP, 140)
+    }
+
+    fun hideLowBatteryWarning() {
+        lowBatteryVisible = false
+        if (!caregiverAlertSounding && !geofenceVisible) {
+            emergencyStatusOverlay.visibility = View.GONE
+        }
+    }
+
+    fun showGeofenceWarning(distanceMeters: Double) {
+        geofenceVisible = true
+        lastGeofenceDistanceMeters = distanceMeters
+
+        // SOS always has priority over automatic warnings.
+        if (caregiverAlertSounding) return
+
+        alertFlashAnimator?.cancel()
+        btnEmergencyStatus.alpha = 1f
+        btnEmergencyStatus.scaleX = 1f
+        btnEmergencyStatus.scaleY = 1f
+        emergencyStatusOverlay.visibility = View.VISIBLE
+        btnEmergencyStatus.isClickable = false
+
+        val yards = (distanceMeters * 1.09361).toInt()
+        btnEmergencyStatus.text =
+            "MARY — OUTSIDE HOME AREA\n$yards yards from home"
+
+        btnEmergencyStatus.setTextColor(0xFF000000.toInt())
+        btnEmergencyStatus.backgroundTintList =
+            android.content.res.ColorStateList.valueOf(0xFFFFFFFF.toInt())
+
+        // One short warning beep only.
+        alertTone.startTone(android.media.ToneGenerator.TONE_PROP_BEEP, 140)
+    }
+
+    fun hideGeofenceWarning() {
+        geofenceVisible = false
+
+        if (!caregiverAlertSounding) {
+            if (lowBatteryVisible) {
+                // Battery listener will refresh the exact percentage.
+                emergencyStatusOverlay.visibility = View.VISIBLE
+            } else {
+                emergencyStatusOverlay.visibility = View.GONE
+            }
+        }
     }
 
     fun showAlertSent() {
@@ -500,12 +652,85 @@ class UIManager(private val activity: AppCompatActivity) {
         btnEmergencyStatus.scaleY = 1f
         btnEmergencyStatus.isClickable = true
         emergencyStatusOverlay.visibility = View.GONE
+
+        if (lowBatteryVisible && configuredMemberId == "M1") {
+            // Firebase will refresh the exact percentage on its next callback.
+            emergencyStatusOverlay.visibility = View.VISIBLE
+        }
     }
 
     fun setOnEmergencyStatusClick(action: () -> Unit) {
         btnEmergencyStatus.setOnClickListener { action() }
         emergencyStatusOverlay.setOnClickListener { action() }
     }
+
+    // =====================================================
+    // MEDICATION MODE — M2 PATIENT
+    // =====================================================
+
+    fun showMedicationBlock(
+        block: MedicationTimeBlock,
+        onDone: (List<Medication>) -> Unit
+    ) {
+        if (configuredMemberId != "M2") return
+        currentMedicationBlock = block
+        medicationDoneAction = onDone
+        medicationChecks.clear()
+        medicationListContainer.removeAllViews()
+
+        medicationTitle.text = "MEDICATION — ${block.schedule}"
+
+        block.medications.forEach { medication ->
+            val check = android.widget.CheckBox(activity).apply {
+                text = listOf(
+                    medication.name,
+                    medication.strength,
+                    medication.dose
+                ).filter { it.isNotBlank() }.joinToString("   ")
+                textSize = 22f
+                setTextColor(0xFFFFFFFF.toInt())
+                buttonTintList =
+                    android.content.res.ColorStateList.valueOf(
+                        0xFFFFD700.toInt()
+                    )
+                setPadding(8, 16, 8, 16)
+            }
+
+            medicationChecks.add(check)
+            medicationListContainer.addView(
+                check,
+                LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+            )
+        }
+
+        conversationModeContainer.visibility = View.GONE
+        composeModeContainer.visibility = View.GONE
+        alertModeContainer.visibility = View.GONE
+        emergencyStatusOverlay.visibility = View.GONE
+        medicationModeContainer.visibility = View.VISIBLE
+        hideKeyboard()
+
+        Log.d(
+            TAG,
+            "Medication block displayed: ${block.schedule}, " +
+                    "${block.medications.size} medications"
+        )
+    }
+
+    private fun hideMedicationMode() {
+
+        medicationModeContainer.visibility = View.GONE
+
+        medicationDoneAction = null
+        currentMedicationBlock = null
+        medicationChecks.clear()
+
+        showConversationMode()
+    }
+
 
     // =====================================================
     // BUTTON WIRING

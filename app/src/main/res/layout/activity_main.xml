@@ -414,4 +414,64 @@
         </LinearLayout>
     </LinearLayout>
 
+
+    <!-- ======================================================
+         MEDICATION MODE — M2 PATIENT
+         ====================================================== -->
+    <LinearLayout
+        android:id="@+id/medicationModeContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="#000000"
+        android:padding="20dp"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/medicationTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="MEDICATION"
+            android:textColor="#FFD700"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:paddingBottom="16dp"/>
+
+        <Button
+            android:id="@+id/btnMedicationAllTaken"
+            android:layout_width="match_parent"
+            android:layout_height="72dp"
+            android:text="ALL TAKEN"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#2E7D32"/>
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_marginTop="16dp"
+            android:fillViewport="true">
+
+            <LinearLayout
+                android:id="@+id/medicationListContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"/>
+        </ScrollView>
+
+        <Button
+            android:id="@+id/btnMedicationDone"
+            android:layout_width="match_parent"
+            android:layout_height="72dp"
+            android:layout_marginTop="8dp"
+            android:text="REPORT MISSING"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#D32F2F"/>
+    </LinearLayout>
+
 </FrameLayout>
