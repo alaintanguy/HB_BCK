@@ -10,16 +10,16 @@
             "charging": true,
             "lastSeen": 1781202792083,
             "phoneBattery": 100,
-            "phoneBrand": "Motorola",
-            "phoneModel": "G Play",
-            "phoneYear": "2025",
+            "phoneBrand": "Samsung",
+            "phoneModel": "Tab A11",
+            "phoneYear": "2024",
             "status": "online"
           },
           "geofences": {
             "home": {
               "enabled": true,
-              "lat": 37.7749,
-              "lng": -122.4194,
+              "lat":  38.58195,
+              "lng": -122.58382,
               "name": "Home",
               "radius": 150
             }
@@ -70,9 +70,9 @@
             "charging": true,
             "lastSeen": 1786729866666,
             "phoneBattery": 100,
-            "phoneBrand": "Samsung",
-            "phoneModel": "Tab A11",
-            "phoneYear": "2024",
+            "phoneBrand": "Motorola",
+            "phoneModel": "G Play",
+            "phoneYear": "2025",
             "status": "online"
           },
           "geofences": {
@@ -80,8 +80,8 @@
               "distanceMeters": 47.70138168334961,
               "enabled": true,
               "lastChecked": 1786496648332,
-              "lat": 37.7749,
-              "lng": -122.4194,
+              "lat": 38.58195,
+              "lng": -122.58382,
               "name": "Home",
               "radius": 150
             }

@@ -508,6 +508,54 @@ object FirebaseManager {
     // GEOFENCE ALERT — PROTOTYPE
     // =====================================================
 
+    fun listenToHomeGeofence(
+        memberId: String,
+        onChanged: (latitude: Double, longitude: Double, radiusMeters: Double, enabled: Boolean) -> Unit
+    ) {
+        memberReference(memberId)
+            .child("geofences")
+            .child("home")
+            .addValueEventListener(
+                object : ValueEventListener {
+                    override fun onDataChange(snapshot: DataSnapshot) {
+                        val latitude =
+                            snapshot.child("lat").getValue(Double::class.java)
+
+                        val longitude =
+                            snapshot.child("lng").getValue(Double::class.java)
+
+                        val radius =
+                            snapshot.child("radius").getValue(Double::class.java)
+                                ?: snapshot.child("radius").getValue(Long::class.java)?.toDouble()
+                                ?: 150.0
+
+                        val enabled =
+                            snapshot.child("enabled").getValue(Boolean::class.java) ?: false
+
+                        if (latitude == null || longitude == null) {
+                            Log.e("HB", "GEOFENCE HOME INVALID: missing lat/lng for $memberId")
+                            return
+                        }
+
+                        Log.d(
+                            "HB",
+                            "GEOFENCE HOME LOADED: $latitude , $longitude radius=$radius enabled=$enabled"
+                        )
+
+                        onChanged(latitude, longitude, radius, enabled)
+                    }
+
+                    override fun onCancelled(error: DatabaseError) {
+                        Log.e(
+                            "HB",
+                            "GEOFENCE HOME LISTENER FAILED: $memberId",
+                            error.toException()
+                        )
+                    }
+                }
+            )
+    }
+
     fun updateGeofenceAlert(
         memberId: String,
         isOutside: Boolean,

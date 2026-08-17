@@ -27,7 +27,7 @@ class BootReceiver : BroadcastReceiver() {
         Log.d("HB-BOOT", "Phone boot/unlock completed — restarting HealthBridge telemetry")
         val serviceIntent =
             Intent(context, TelemetryForegroundService::class.java).apply {
-                putExtra("MEMBER_ID", "M2")
+                putExtra("MEMBER_ID", MainActivity.MEMBER_ID)
             }
 
         try {

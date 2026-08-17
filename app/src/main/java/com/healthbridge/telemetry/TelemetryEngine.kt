@@ -130,6 +130,33 @@ class TelemetryEngine(
             )
         }
 
+        if (memberId == "M2") {
+            FirebaseManager.listenToHomeGeofence(memberId) {
+                    latitude,
+                    longitude,
+                    radiusMeters,
+                    enabled ->
+
+                if (enabled) {
+                    homeLatitude = latitude
+                    homeLongitude = longitude
+                    geofenceRadiusMeters = radiusMeters.toFloat()
+
+                    Log.d(
+                        "HB",
+                        "GEOFENCE HOME FROM FIREBASE: " +
+                                "$latitude , $longitude radius=$radiusMeters"
+                    )
+                } else {
+                    homeLatitude = null
+                    homeLongitude = null
+                    geofenceOutside = false
+
+                    Log.d("HB", "GEOFENCE DISABLED IN FIREBASE")
+                }
+            }
+        }
+
         heartbeatHandler.post(
             heartbeatRunnable
         )
@@ -194,10 +221,10 @@ class TelemetryEngine(
                 val homeLng = homeLongitude
 
                 if (homeLat == null || homeLng == null) {
-                    // Prototype: first GPS fix becomes Home.
-                    homeLatitude = latitude
-                    homeLongitude = longitude
-                    Log.d("HB", "GEOFENCE HOME SET: $latitude , $longitude")
+                    Log.d(
+                        "HB",
+                        "GEOFENCE waiting for enabled Firebase Home coordinates"
+                    )
                 } else {
                     val homeDistance = FloatArray(1)
                     Location.distanceBetween(
