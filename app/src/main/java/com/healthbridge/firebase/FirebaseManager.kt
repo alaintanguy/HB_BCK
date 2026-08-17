@@ -217,6 +217,21 @@ object FirebaseManager {
                 System.currentTimeMillis()
             )
     }
+    fun listenToLastSeen(
+        memberId: String,
+        onChanged: (Long) -> Unit
+    ) {
+        memberReference(memberId).child("device").child("lastSeen")
+            .addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    onChanged(snapshot.getValue(Long::class.java) ?: 0L)
+                }
+                override fun onCancelled(error: DatabaseError) {
+                    Log.e("HB", "LAST SEEN LISTENER FAILED: $memberId", error.toException())
+                }
+            })
+    }
+
     fun updateHeartbeat(
         memberId: String
     ) {

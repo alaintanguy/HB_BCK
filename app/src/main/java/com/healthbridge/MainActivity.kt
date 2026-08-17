@@ -35,6 +35,24 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var messageManager: MessageManager
     private lateinit var telemetryEngine: TelemetryEngine
+    private lateinit var fallDetectionManager: FallDetectionManager
+
+    private var fallDialog: android.app.Dialog? = null
+    private var fallAlarmActive = false
+    private val fallAlarmHandler = android.os.Handler(android.os.Looper.getMainLooper())
+    private var fallToneGenerator: android.media.ToneGenerator? = null
+    private val fallNoResponseHandler = android.os.Handler(android.os.Looper.getMainLooper())
+    private val fallNoResponseRunnable = Runnable { handleFallNoResponse() }
+    private val fallAlarmRunnable = object : Runnable {
+        override fun run() {
+            if (!fallAlarmActive) return
+            if (fallToneGenerator == null) {
+                fallToneGenerator = android.media.ToneGenerator(android.media.AudioManager.STREAM_ALARM, 100)
+            }
+            fallToneGenerator?.startTone(android.media.ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 700)
+            fallAlarmHandler.postDelayed(this, 1200L)
+        }
+    }
 
     private enum class CaregiverComposeMode { NONE, PATIENT, NOTE }
 
@@ -53,6 +71,30 @@ class MainActivity : AppCompatActivity() {
     // M2: prevents Firebase active=false at app startup from being
     // mistaken for a newly acknowledged alert.
     private var m2EmergencyWasActive = false
+
+    // M2 geofence audible alarm
+    private var geofenceAlarmActive = false
+    // Suppress repeat alarms after M2 acknowledges this excursion.
+    // Reset only after M2 returns inside the geofence.
+    private var geofenceExitAcknowledged = false
+    private var geofenceMistakeDialog: android.app.Dialog? = null
+    private val geofenceAlarmHandler = android.os.Handler(android.os.Looper.getMainLooper())
+    private var geofenceToneGenerator: android.media.ToneGenerator? = null
+
+    private val geofenceAlarmRunnable = object : Runnable {
+        override fun run() {
+            if (!geofenceAlarmActive) return
+            if (geofenceToneGenerator == null) {
+                geofenceToneGenerator = android.media.ToneGenerator(
+                    android.media.AudioManager.STREAM_ALARM, 100
+                )
+            }
+            geofenceToneGenerator?.startTone(
+                android.media.ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 700
+            )
+            geofenceAlarmHandler.postDelayed(this, 1200L)
+        }
+    }
 
     // Patient-message voice dictation stays active across recognition phrases.
     // Saying "SEND TO MARY" sends the accumulated message.
@@ -166,6 +208,26 @@ class MainActivity : AppCompatActivity() {
                 "HB",
                 "M2 TELEMETRY ENGINE STARTED"
             )
+
+            fallDetectionManager = FallDetectionManager(this) { accelerationG ->
+                runOnUiThread { showPossibleFall(accelerationG) }
+            }
+            if (!fallDetectionManager.start()) {
+                Toast.makeText(this, "Fall detection unavailable: no accelerometer", Toast.LENGTH_LONG).show()
+            }
+
+            FirebaseManager.listenForGeofenceStatus("M2") { isOutside, distanceMeters ->
+                runOnUiThread {
+                    if (isOutside) {
+                        if (!geofenceExitAcknowledged) {
+                            startGeofenceAlarm(distanceMeters)
+                        }
+                    } else {
+                        geofenceExitAcknowledged = false
+                        stopGeofenceAlarm()
+                    }
+                }
+            }
         }
 
         // =====================================================
@@ -505,7 +567,7 @@ class MainActivity : AppCompatActivity() {
 
                 uiManager.showRecordingState(false)
 
-                uiManager.showAlertConfirmationMode()
+                showFullScreenSosConfirmation()
             }
         }
 
@@ -715,6 +777,7 @@ class MainActivity : AppCompatActivity() {
         // =====================================================
 
         uiManager.setOnSpeakClick {
+            android.util.Log.d("HB-COMPOSE", "SPEAK BUTTON PRESSED member=$MEMBER_ID")
 
             android.util.Log.d(
                 "HB",
@@ -1008,6 +1071,369 @@ class MainActivity : AppCompatActivity() {
 
 
     // =====================================================
+    // M2 SOS — STANDARD FULL-SCREEN EMERGENCY CONFIRMATION
+    // =====================================================
+
+    private fun showFullScreenSosConfirmation() {
+        if (MEMBER_ID != "M2") return
+
+        val d = resources.displayMetrics.density
+        fun dp(v: Int) = (v * d).toInt()
+
+        val root = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            setBackgroundColor(0xFFFFFFFF.toInt())
+            setPadding(dp(14), dp(12), dp(14), dp(14))
+        }
+
+        fun label(t: String, size: Float, color: Int) =
+            android.widget.TextView(this).apply {
+                text = t
+                textSize = size
+                gravity = android.view.Gravity.CENTER
+                setTextColor(color)
+                setTypeface(typeface, android.graphics.Typeface.BOLD)
+            }
+
+        val title = label("SOS / EMERGENCY", 30f, 0xFFD50000.toInt())
+        val detail = label("Do you need help?", 20f, 0xFF000000.toInt())
+        val choose = label("PLEASE CHOOSE:", 20f, 0xFF000000.toInt())
+
+        val cancel = android.widget.Button(this).apply {
+            text = "MISTAKE / CANCEL\nI AM SAFE"
+            textSize = 27f
+            gravity = android.view.Gravity.CENTER
+            setTextColor(0xFFFFFFFF.toInt())
+            setTypeface(typeface, android.graphics.Typeface.BOLD)
+            backgroundTintList =
+                android.content.res.ColorStateList.valueOf(0xFF169B22.toInt())
+            minHeight = 0
+            minimumHeight = 0
+        }
+
+        val help = android.widget.Button(this).apply {
+            text = "I NEED HELP\nSEND SOS NOW"
+            textSize = 27f
+            gravity = android.view.Gravity.CENTER
+            setTextColor(0xFFFFFFFF.toInt())
+            setTypeface(typeface, android.graphics.Typeface.BOLD)
+            backgroundTintList =
+                android.content.res.ColorStateList.valueOf(0xFFE00000.toInt())
+            minHeight = 0
+            minimumHeight = 0
+        }
+
+        root.addView(title)
+        root.addView(detail)
+        root.addView(choose)
+
+        root.addView(
+            cancel,
+            android.widget.LinearLayout.LayoutParams(-1, 0, 1f).apply {
+                bottomMargin = dp(8)
+            }
+        )
+        root.addView(
+            help,
+            android.widget.LinearLayout.LayoutParams(-1, 0, 1f).apply {
+                topMargin = dp(8)
+            }
+        )
+
+        val dialog = android.app.Dialog(
+            this,
+            android.R.style.Theme_Material_Light_NoActionBar_Fullscreen
+        ).apply {
+            setContentView(root)
+            setCancelable(false)
+        }
+
+        cancel.setOnClickListener {
+            dialog.dismiss()
+            Toast.makeText(
+                this,
+                "Alert cancelled",
+                Toast.LENGTH_SHORT
+            ).show()
+            uiManager.showConversationMode()
+        }
+
+        help.setOnClickListener {
+            dialog.dismiss()
+
+            FirebaseManager.sendEmergencyAlert(
+                memberId = "M2",
+                source = FirebaseManager.AlertSource.PATIENT_BUTTON,
+                details = "Patient pressed SOS — I NEED HELP"
+            )
+
+            messageManager.send("SOS — PATIENT NEEDS HELP")
+            uiManager.appendMessage("$MEMBER_ID: SOS — PATIENT NEEDS HELP")
+
+            uiManager.showConversationMode()
+            uiManager.showAlertSent()
+        }
+
+        dialog.show()
+    }
+
+
+    // =====================================================
+    // M2 FALL DETECTION — V1 PHONE ACCELEROMETER PROTOTYPE
+    // =====================================================
+
+    private fun showPossibleFall(accelerationG: Float) {
+        if (MEMBER_ID != "M2" || fallDialog?.isShowing == true) return
+
+        startFallAlarm()
+        fallNoResponseHandler.removeCallbacks(fallNoResponseRunnable)
+        fallNoResponseHandler.postDelayed(fallNoResponseRunnable, 60_000L)
+
+        val d = resources.displayMetrics.density
+        fun dp(v: Int) = (v * d).toInt()
+
+        val root = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            setBackgroundColor(0xFFFFFFFF.toInt())
+            setPadding(dp(14), dp(12), dp(14), dp(14))
+        }
+
+        fun label(t: String, size: Float, color: Int) =
+            android.widget.TextView(this).apply {
+                text = t
+                textSize = size
+                gravity = android.view.Gravity.CENTER
+                setTextColor(color)
+                setTypeface(typeface, android.graphics.Typeface.BOLD)
+            }
+
+        val title = label(
+            "POSSIBLE FALL DETECTED",
+            30f,
+            0xFFD50000.toInt()
+        )
+
+        val detail = label(
+            "Strong movement detected (%.1f g)".format(accelerationG),
+            18f,
+            0xFF000000.toInt()
+        )
+
+        val choose = label(
+            "PLEASE CHOOSE:",
+            20f,
+            0xFF000000.toInt()
+        )
+
+        val ok = android.widget.Button(this).apply {
+            text = "I'M OK / MISTAKE\nI AM SAFE"
+            textSize = 27f
+            gravity = android.view.Gravity.CENTER
+            setTextColor(0xFFFFFFFF.toInt())
+            setTypeface(typeface, android.graphics.Typeface.BOLD)
+            backgroundTintList =
+                android.content.res.ColorStateList.valueOf(0xFF169B22.toInt())
+            minHeight = 0
+            minimumHeight = 0
+        }
+
+        val help = android.widget.Button(this).apply {
+            text = "I NEED HELP\nSEND HELP NOW"
+            textSize = 27f
+            gravity = android.view.Gravity.CENTER
+            setTextColor(0xFFFFFFFF.toInt())
+            setTypeface(typeface, android.graphics.Typeface.BOLD)
+            backgroundTintList =
+                android.content.res.ColorStateList.valueOf(0xFFE00000.toInt())
+            minHeight = 0
+            minimumHeight = 0
+        }
+
+        root.addView(title)
+        root.addView(detail)
+        root.addView(choose)
+
+        // Exactly equal green/red button areas.
+        root.addView(
+            ok,
+            android.widget.LinearLayout.LayoutParams(-1, 0, 1f).apply {
+                bottomMargin = dp(8)
+            }
+        )
+        root.addView(
+            help,
+            android.widget.LinearLayout.LayoutParams(-1, 0, 1f).apply {
+                topMargin = dp(8)
+            }
+        )
+
+        fallDialog = android.app.Dialog(
+            this,
+            android.R.style.Theme_Material_Light_NoActionBar_Fullscreen
+        ).apply {
+            setContentView(root)
+            setCancelable(false)
+        }
+
+        ok.setOnClickListener {
+            fallDialog?.dismiss()
+            stopFallAlarmAndTimer()
+
+            val fallOkMessage = "FALL ALERT — I'M OK / MISTAKE"
+            FirebaseManager.sendMessage(
+                "M2",
+                "M1",
+                fallOkMessage
+            )
+            uiManager.appendMessage("$MEMBER_ID: $fallOkMessage")
+
+            Toast.makeText(
+                this,
+                "Fall cancelled",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+
+        help.setOnClickListener {
+            fallDialog?.dismiss()
+            stopFallAlarmAndTimer()
+
+            FirebaseManager.sendEmergencyAlert(
+                "M2",
+                FirebaseManager.AlertSource.POSSIBLE_FALL,
+                "Patient confirmed help needed after possible fall"
+            )
+
+            val fallHelpMessage = "FALL ALERT — PATIENT NEEDS HELP"
+            FirebaseManager.sendMessage(
+                "M2",
+                "M1",
+                fallHelpMessage
+            )
+            uiManager.appendMessage("$MEMBER_ID: $fallHelpMessage")
+
+            uiManager.showAlertSent()
+        }
+
+        fallDialog?.show()
+        speechManager.speak(
+            "A possible fall was detected. Are you OK?"
+        )
+    }
+
+    private fun handleFallNoResponse() {
+        if (MEMBER_ID != "M2" || fallDialog?.isShowing != true) return
+        stopFallAlarmOnly()
+        fallDialog?.dismiss()
+        fallDialog = null
+        FirebaseManager.sendEmergencyAlert(
+            "M2",
+            FirebaseManager.AlertSource.POSSIBLE_FALL,
+            "Possible fall detected — no patient response after 60 seconds"
+        )
+        val noResponseMessage = "FALL ALERT — NO RESPONSE"
+        FirebaseManager.sendMessage("M2", "M1", noResponseMessage)
+        uiManager.appendMessage("$MEMBER_ID: $noResponseMessage")
+        uiManager.showAlertSent()
+    }
+
+    private fun startFallAlarm() {
+        fallAlarmActive = true
+        fallAlarmHandler.removeCallbacks(fallAlarmRunnable)
+        fallAlarmHandler.post(fallAlarmRunnable)
+    }
+
+    private fun stopFallAlarmOnly() {
+        fallAlarmActive = false
+        fallAlarmHandler.removeCallbacks(fallAlarmRunnable)
+        fallToneGenerator?.stopTone()
+        fallToneGenerator?.release()
+        fallToneGenerator = null
+    }
+
+    private fun stopFallAlarmAndTimer() {
+        stopFallAlarmOnly()
+        fallNoResponseHandler.removeCallbacks(fallNoResponseRunnable)
+        fallDialog = null
+    }
+
+    // =====================================================
+    // M2 GEOFENCE AUDIBLE ALARM
+    // =====================================================
+
+    private fun startGeofenceAlarm(distanceMeters: Double) {
+        if (MEMBER_ID != "M2" || geofenceExitAcknowledged) return
+        if (!geofenceAlarmActive) {
+            geofenceAlarmActive = true
+            geofenceAlarmHandler.removeCallbacks(geofenceAlarmRunnable)
+            geofenceAlarmHandler.post(geofenceAlarmRunnable)
+        }
+        if (geofenceMistakeDialog?.isShowing == true) return
+
+        val yards = (distanceMeters * 1.09361).toInt()
+        val d = resources.displayMetrics.density
+        fun dp(v: Int) = (v * d).toInt()
+
+        val root = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            setBackgroundColor(0xFFFFFFFF.toInt())
+            setPadding(dp(14), dp(12), dp(14), dp(14))
+        }
+        fun label(t:String, size:Float, color:Int) = android.widget.TextView(this).apply {
+            text=t; textSize=size; gravity=android.view.Gravity.CENTER; setTextColor(color)
+            setTypeface(typeface, android.graphics.Typeface.BOLD)
+        }
+        val title=label("OUTSIDE HOME AREA",30f,0xFFD50000.toInt())
+        val dist=label("$yards yards from home",18f,0xFF000000.toInt())
+        val choose=label("PLEASE CHOOSE:",20f,0xFF000000.toInt())
+        val ok=android.widget.Button(this).apply {
+            text="I'M OK / MISTAKE\nI AM SAFE"; textSize=27f; gravity=android.view.Gravity.CENTER
+            setTextColor(0xFFFFFFFF.toInt()); setTypeface(typeface,android.graphics.Typeface.BOLD)
+            backgroundTintList=android.content.res.ColorStateList.valueOf(0xFF169B22.toInt())
+            minHeight=0; minimumHeight=0
+        }
+        val help=android.widget.Button(this).apply {
+            text="I NEED HELP\nSEND HELP NOW"; textSize=27f; gravity=android.view.Gravity.CENTER
+            setTextColor(0xFFFFFFFF.toInt()); setTypeface(typeface,android.graphics.Typeface.BOLD)
+            backgroundTintList=android.content.res.ColorStateList.valueOf(0xFFE00000.toInt())
+            minHeight=0; minimumHeight=0
+        }
+        root.addView(title)
+        root.addView(dist)
+        root.addView(choose)
+        root.addView(ok,android.widget.LinearLayout.LayoutParams(-1,0,1f).apply { bottomMargin=dp(8) })
+        root.addView(help,android.widget.LinearLayout.LayoutParams(-1,0,1f).apply { topMargin=dp(8) })
+
+        geofenceMistakeDialog = android.app.Dialog(this, android.R.style.Theme_Material_Light_NoActionBar_Fullscreen).apply {
+            setContentView(root); setCancelable(false)
+        }
+        ok.setOnClickListener {
+            geofenceExitAcknowledged=true; stopGeofenceAlarm()
+            messageManager.send("Geofence Mistake Pressed")
+            uiManager.appendMessage("$MEMBER_ID: Geofence Mistake Pressed")
+        }
+        help.setOnClickListener {
+            geofenceExitAcknowledged=true; stopGeofenceAlarm()
+            FirebaseManager.sendEmergencyAlert("M2", FirebaseManager.AlertSource.GEOFENCE, "Patient needs help while outside home area")
+            messageManager.send("GEOFENCE ALERT — PATIENT NEEDS HELP")
+            uiManager.appendMessage("$MEMBER_ID: GEOFENCE ALERT — PATIENT NEEDS HELP")
+        }
+        geofenceMistakeDialog?.show()
+    }
+
+    private fun stopGeofenceAlarm() {
+        geofenceAlarmActive = false
+        geofenceAlarmHandler.removeCallbacks(geofenceAlarmRunnable)
+        geofenceToneGenerator?.stopTone()
+        geofenceToneGenerator?.release()
+        geofenceToneGenerator = null
+        geofenceMistakeDialog?.dismiss()
+        geofenceMistakeDialog = null
+        android.util.Log.d("HB", "M2 GEOFENCE ALARM STOPPED")
+    }
+
+
+    // =====================================================
     // LOW BATTERY
     // =====================================================
 
@@ -1035,12 +1461,14 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
-
     // =====================================================
     // DESTROY
     // =====================================================
 
     override fun onDestroy() {
+        stopFallAlarmAndTimer()
+        if (::fallDetectionManager.isInitialized) fallDetectionManager.stop()
+        stopGeofenceAlarm()
 
         if (batteryReceiverRegistered) {
 

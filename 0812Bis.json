@@ -68,7 +68,7 @@
           },
           "device": {
             "charging": true,
-            "lastSeen": 1786672585332,
+            "lastSeen": 1786729866666,
             "phoneBattery": 100,
             "phoneBrand": "Samsung",
             "phoneModel": "Tab A11",
@@ -86,14 +86,22 @@
               "radius": 150
             }
           },
-          "medicationLog": "init",
+          "medicationLog": {
+            "2026-08-13": {
+              "19-00": {
+                "schedule": "19:00",
+                "status": "taken",
+                "timestamp": 1786675947907
+              }
+            }
+          },
           "medications": {
             "med_001": {
               "dose": "1 tablet",
               "enabled": true,
               "name": "Tylenol",
               "reminderMinutes": 15,
-              "schedule": "13:00",
+              "schedule": "12:55",
               "strength": "25 mg"
             },
             "med_002": {
@@ -101,7 +109,7 @@
               "enabled": true,
               "name": "Glucophage",
               "reminderMinutes": 15,
-              "schedule": "13:00",
+              "schedule": "12:55",
               "strength": "250 mg"
             },
             "med_003": {
@@ -134,16 +142,16 @@
           "telemetry": {
             "location": {
               "accuracy": 13.69,
-              "altitude": 81.5999984741211,
-              "lat": 38.581966,
-              "lng": -122.5838147,
+              "altitude": 81.5,
+              "lat": 38.5819683,
+              "lng": -122.5839052,
               "speed": 0
             },
             "readable": {
-              "date": "2026-08-13",
-              "time": "18:57:09"
+              "date": "2026-08-14",
+              "time": "10:51:27"
             },
-            "timestamp": 1786672629044,
+            "timestamp": 1786729887408,
             "watch": {
               "battery": 31,
               "heartRate": 78,
@@ -157,8 +165,8 @@
         "current": {
           "from": "M2",
           "status": "played",
-          "text": "MEDICATION ALERT — 13:00\nMissing: Tylenol",
-          "timestamp": 1786671527597,
+          "text": "a thing to say",
+          "timestamp": 1786679950720,
           "to": "M1"
         },
         "history": {
@@ -181,6 +189,27 @@
             "status": "new",
             "text": "MEDICATION ALERT — 13:00\nMissing: Tylenol",
             "timestamp": 1786671527567,
+            "to": "M1"
+          },
+          "-OzyPLg7cO0n3IajSLhc": {
+            "from": "M2",
+            "status": "new",
+            "text": "no no know why law one two three one two three a ship pyongyang the i have nothing to say anymore",
+            "timestamp": 1786679749700,
+            "to": "M1"
+          },
+          "-OzyPni5xUCAV8Uirwr2": {
+            "from": "M2",
+            "status": "new",
+            "text": "returning player a care of a particular racing her about pollute the rare it's clear only out of course as fish as scherzer two days maybe maybe him main reason last message",
+            "timestamp": 1786679868436,
+            "to": "M1"
+          },
+          "-OzyQ6nCuswkH7eqS7pt": {
+            "from": "M2",
+            "status": "new",
+            "text": "a thing to say",
+            "timestamp": 1786679950686,
             "to": "M1"
           }
         }

@@ -556,11 +556,23 @@ class UIManager(private val activity: AppCompatActivity) {
         btnEmergencyStatus.scaleX = 1f
         btnEmergencyStatus.scaleY = 1f
         emergencyStatusOverlay.visibility = View.VISIBLE
-        btnEmergencyStatus.isClickable = false
+        btnEmergencyStatus.isClickable = true
 
         val yards = (distanceMeters * 1.09361).toInt()
         btnEmergencyStatus.text =
-            "MARY — OUTSIDE HOME AREA\n$yards yards from home"
+            "MARY — OUTSIDE HOME AREA\n$yards yards from home\nTAP TO CLOSE"
+
+        // Acknowledge only the M1 display. Do not alter Firebase geofence state.
+        btnEmergencyStatus.setOnClickListener {
+            geofenceVisible = false
+            emergencyStatusOverlay.visibility = View.GONE
+            Log.d(TAG, "M1 geofence warning dismissed by caregiver")
+        }
+        emergencyStatusOverlay.setOnClickListener {
+            geofenceVisible = false
+            emergencyStatusOverlay.visibility = View.GONE
+            Log.d(TAG, "M1 geofence warning dismissed by caregiver")
+        }
 
         btnEmergencyStatus.setTextColor(0xFF000000.toInt())
         btnEmergencyStatus.backgroundTintList =
