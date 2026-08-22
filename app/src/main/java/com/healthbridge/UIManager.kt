@@ -46,6 +46,9 @@ class UIManager(private val activity: AppCompatActivity) {
     private var lowBatteryVisible = false
     private var geofenceVisible = false
     private var lastGeofenceDistanceMeters = 0.0
+    // M2 emergency/fall acknowledgement banner may coexist with Medication Mode.
+    // Medication gets the main screen; this banner is restored after medication closes.
+    private var m2AlertSentVisible = false
     private val alertTone by lazy {
         android.media.ToneGenerator(android.media.AudioManager.STREAM_NOTIFICATION, 70)
     }
@@ -596,6 +599,7 @@ class UIManager(private val activity: AppCompatActivity) {
     }
 
     fun showAlertSent() {
+        m2AlertSentVisible = configuredMemberId == "M2"
         stopCaregiverAlertEffects()
         emergencyStatusOverlay.visibility = View.VISIBLE
         btnEmergencyStatus.isClickable = false
@@ -615,6 +619,7 @@ class UIManager(private val activity: AppCompatActivity) {
     }
 
     fun showAlertReceived() {
+        m2AlertSentVisible = false
         stopCaregiverAlertEffects()
         alertFlashAnimator?.cancel()
         btnEmergencyStatus.alpha = 1f
@@ -657,6 +662,7 @@ class UIManager(private val activity: AppCompatActivity) {
     }
 
     fun hideEmergencyStatus() {
+        m2AlertSentVisible = false
         stopCaregiverAlertEffects()
         alertFlashAnimator?.cancel()
         btnEmergencyStatus.alpha = 1f
@@ -721,6 +727,9 @@ class UIManager(private val activity: AppCompatActivity) {
         conversationModeContainer.visibility = View.GONE
         composeModeContainer.visibility = View.GONE
         alertModeContainer.visibility = View.GONE
+        // Medication must never be blocked by an older fall/emergency banner.
+        // Keep the alert state, but temporarily hide its overlay while the
+        // medication controls occupy the main screen.
         emergencyStatusOverlay.visibility = View.GONE
         medicationModeContainer.visibility = View.VISIBLE
         hideKeyboard()
@@ -741,6 +750,13 @@ class UIManager(private val activity: AppCompatActivity) {
         medicationChecks.clear()
 
         showConversationMode()
+
+        // If a fall/emergency "ALERT SENT" is still active, show it again
+        // after the medication has been handled. This gives both events a
+        // visible life without allowing the older alert to block medication.
+        if (m2AlertSentVisible && configuredMemberId == "M2") {
+            showAlertSent()
+        }
     }
 
 
