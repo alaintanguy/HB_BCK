@@ -5,6 +5,6 @@
     <string name="battery_label">Battery</string>
     <string name="bpm_unit">BPM</string>
     <string name="percent_unit">%</string>
-    <string name="hr_unavailable">HR unavailable</string>
-    <string name="no_permission">No permission</string>
+    <string name="hr_unavailable">Heart rate sensor not found on this device</string>
+    <string name="no_permission">Heart rate permission denied</string>
 </resources>

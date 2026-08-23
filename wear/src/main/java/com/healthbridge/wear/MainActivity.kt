@@ -90,7 +90,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
         if (heartRateSensor == null) {
             // Heart rate sensor not available
-            statusMessage.text = "Heart rate sensor not found on this device"
+            statusMessage.text = getString(R.string.hr_unavailable)
             heartRateValue.text = "-- BPM"
             return
         }
@@ -141,7 +141,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 }
             } else {
                 // Permission denied
-                statusMessage.text = "Heart rate permission denied"
+                statusMessage.text = getString(R.string.no_permission)
                 heartRateValue.text = "-- BPM"
             }
         }
@@ -163,7 +163,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
      * Update battery display on UI
      */
     private fun updateBatteryDisplay() {
-        batteryValue.text = if (currentBattery > 0) {
+        batteryValue.text = if (currentBattery >= 0) {
             "$currentBattery %"
         } else {
             "-- %"
