@@ -6,6 +6,10 @@
 
     <!-- Heart rate sensor permission -->
     <uses-permission android:name="android.permission.BODY_SENSORS" />
+    
+    <!-- Background heart rate sensor access for Android 13+ -->
+    <uses-permission android:name="android.permission.BODY_SENSORS_BACKGROUND"
+        android:maxSdkVersion="32" />
 
     <application
         android:allowBackup="true"

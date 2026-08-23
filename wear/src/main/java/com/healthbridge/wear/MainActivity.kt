@@ -35,7 +35,13 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private val batteryReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent != null) {
-                currentBattery = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
+                val level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
+                val scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, 100)
+                currentBattery = if (level >= 0 && scale > 0) {
+                    (level / scale.toFloat() * 100).toInt()
+                } else {
+                    -1
+                }
                 updateBatteryDisplay()
             }
         }
@@ -91,7 +97,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         if (heartRateSensor == null) {
             // Heart rate sensor not available
             statusMessage.text = getString(R.string.hr_unavailable)
-            heartRateValue.text = "-- BPM"
+            heartRateValue.text = getString(R.string.hr_no_reading)
             return
         }
 
@@ -142,7 +148,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             } else {
                 // Permission denied
                 statusMessage.text = getString(R.string.no_permission)
-                heartRateValue.text = "-- BPM"
+                heartRateValue.text = getString(R.string.hr_no_reading)
             }
         }
     }
@@ -154,7 +160,13 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         val ifilter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
         val batteryStatus = registerReceiver(null, ifilter)
         if (batteryStatus != null) {
-            currentBattery = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
+            val level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
+            val scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, 100)
+            currentBattery = if (level >= 0 && scale > 0) {
+                (level / scale.toFloat() * 100).toInt()
+            } else {
+                -1
+            }
         }
         updateBatteryDisplay()
     }
@@ -166,7 +178,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         batteryValue.text = if (currentBattery >= 0) {
             "$currentBattery %"
         } else {
-            "-- %"
+            getString(R.string.battery_no_reading)
         }
     }
 
@@ -195,7 +207,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         heartRateValue.text = if (currentHeartRate > 0) {
             "$currentHeartRate BPM"
         } else {
-            "-- BPM"
+            getString(R.string.hr_no_reading)
         }
     }
 

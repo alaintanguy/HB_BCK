@@ -7,4 +7,6 @@
     <string name="percent_unit">%</string>
     <string name="hr_unavailable">Heart rate sensor not found on this device</string>
     <string name="no_permission">Heart rate permission denied</string>
+    <string name="hr_no_reading">-- BPM</string>
+    <string name="battery_no_reading">-- %</string>
 </resources>
