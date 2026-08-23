@@ -1,0 +1,219 @@
+{
+  "groups": {
+    "family_001": {
+      "members": {
+        "M1": {
+          "alerts": {
+            "lowBattery": false
+          },
+          "device": {
+            "charging": true,
+            "lastSeen": 1781202792083,
+            "phoneBattery": 100,
+            "phoneBrand": "Samsung",
+            "phoneModel": "Tab A11",
+            "phoneYear": "2024",
+            "status": "online"
+          },
+          "geofences": {
+            "home": {
+              "enabled": true,
+              "lat":  38.58195,
+              "lng": -122.58382,
+              "name": "Home",
+              "radius": 150
+            }
+          },
+          "profile": {
+            "age": 46,
+            "gender": "male",
+            "name": "alain",
+            "role": "caregiver"
+          },
+          "settings": {
+            "lowBatteryThreshold": 99,
+            "offlineThresholdMinutes": 3
+          },
+          "telemetry": {
+            "location": {
+              "accuracy": 13.69,
+              "altitude": 81.1,
+              "lat": 38.5819781,
+              "lng": -122.5838381,
+              "speed": 0
+            },
+            "readable": {
+              "date": "2026-06-07",
+              "time": "12:37:43"
+            },
+            "timestamp": 1780861063778,
+            "watch": {
+              "battery": 31,
+              "heartRate": 78,
+              "spo2": 98,
+              "steps": 2450
+            }
+          }
+        },
+        "M2": {
+          "alerts": {
+            "emergency": {
+              "active": false,
+              "details": "Patient pressed REAL ALERT",
+              "source": "PATIENT_BUTTON",
+              "timestamp": 1786422522314
+            },
+            "geofenceOutside": false,
+            "lowBattery": false
+          },
+          "device": {
+            "charging": true,
+            "lastSeen": 1786729866666,
+            "phoneBattery": 100,
+            "phoneBrand": "Motorola",
+            "phoneModel": "G Play",
+            "phoneYear": "2025",
+            "status": "online"
+          },
+          "geofences": {
+            "home": {
+              "distanceMeters": 47.70138168334961,
+              "enabled": true,
+              "lastChecked": 1786496648332,
+              "lat": 38.58195,
+              "lng": -122.58382,
+              "name": "Home",
+              "radius": 150
+            }
+          },
+          "medicationLog": {
+            "2026-08-13": {
+              "19-00": {
+                "schedule": "19:00",
+                "status": "taken",
+                "timestamp": 1786675947907
+              }
+            }
+          },
+          "medications": {
+            "med_001": {
+              "dose": "1 tablet",
+              "enabled": true,
+              "name": "Tylenol",
+              "reminderMinutes": 15,
+              "schedule": "12:55",
+              "strength": "25 mg"
+            },
+            "med_002": {
+              "dose": "1 tablet",
+              "enabled": true,
+              "name": "Glucophage",
+              "reminderMinutes": 15,
+              "schedule": "12:55",
+              "strength": "250 mg"
+            },
+            "med_003": {
+              "dose": "2 tablet",
+              "enabled": true,
+              "name": "Glucophage",
+              "reminderMinutes": 15,
+              "schedule": "19:00",
+              "strength": "250 mg"
+            },
+            "med_004": {
+              "dose": "1 tablet",
+              "enabled": true,
+              "name": "Ivermectin",
+              "reminderMinutes": 15,
+              "schedule": "19:00",
+              "strength": "12 mg"
+            }
+          },
+          "profile": {
+            "age": 36,
+            "gender": "female",
+            "name": "mary",
+            "role": "patient"
+          },
+          "settings": {
+            "lowBatteryThreshold": 20,
+            "offlineThresholdMinutes": 3
+          },
+          "telemetry": {
+            "location": {
+              "accuracy": 13.69,
+              "altitude": 81.5,
+              "lat": 38.5819683,
+              "lng": -122.5839052,
+              "speed": 0
+            },
+            "readable": {
+              "date": "2026-08-14",
+              "time": "10:51:27"
+            },
+            "timestamp": 1786729887408,
+            "watch": {
+              "battery": 31,
+              "heartRate": 78,
+              "spo2": 98,
+              "steps": 2450
+            }
+          }
+        }
+      },
+      "messages": {
+        "current": {
+          "from": "M2",
+          "status": "played",
+          "text": "a thing to say",
+          "timestamp": 1786679950720,
+          "to": "M1"
+        },
+        "history": {
+          "-OzxqzqM3CYNrIwgc5RS": {
+            "from": "M2",
+            "status": "new",
+            "text": "you know where are you",
+            "timestamp": 1786670480913,
+            "to": "M1"
+          },
+          "-OzxsHJPc76_gY2DDJDl": {
+            "from": "M2",
+            "status": "new",
+            "text": "message a story",
+            "timestamp": 1786670818703,
+            "to": "M1"
+          },
+          "-OzxuzLKcWBPwps2jB9e": {
+            "from": "M2",
+            "status": "new",
+            "text": "MEDICATION ALERT — 13:00\nMissing: Tylenol",
+            "timestamp": 1786671527567,
+            "to": "M1"
+          },
+          "-OzyPLg7cO0n3IajSLhc": {
+            "from": "M2",
+            "status": "new",
+            "text": "no no know why law one two three one two three a ship pyongyang the i have nothing to say anymore",
+            "timestamp": 1786679749700,
+            "to": "M1"
+          },
+          "-OzyPni5xUCAV8Uirwr2": {
+            "from": "M2",
+            "status": "new",
+            "text": "returning player a care of a particular racing her about pollute the rare it's clear only out of course as fish as scherzer two days maybe maybe him main reason last message",
+            "timestamp": 1786679868436,
+            "to": "M1"
+          },
+          "-OzyQ6nCuswkH7eqS7pt": {
+            "from": "M2",
+            "status": "new",
+            "text": "a thing to say",
+            "timestamp": 1786679950686,
+            "to": "M1"
+          }
+        }
+      }
+    }
+  }
+}

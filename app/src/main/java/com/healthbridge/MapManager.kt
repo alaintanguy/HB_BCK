@@ -1,145 +1,95 @@
 package com.healthbridge
 
-import androidx.fragment.app.FragmentManager
+import android.util.Log
+import androidx.appcompat.app.AppCompatActivity
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 
-class MapManager(
-    private val fragmentManager: FragmentManager
-) : OnMapReadyCallback {
+// =====================================================
+// MAP MANAGER — map-only responsibilities
+// =====================================================
+class MapManager(private val activity: AppCompatActivity) : OnMapReadyCallback {
 
-    companion object {
-        private const val DEFAULT_START_LATITUDE = 38.5816
-        private const val DEFAULT_START_LONGITUDE = -122.5825
-        private const val DEFAULT_START_ZOOM = 15f
-        private const val PRIMARY_MEMBER_ID = "M1"
-    }
+    private val TAG = "MapManager"
+    private var googleMap: GoogleMap? = null
+    private var patientMarker: Marker? = null
 
-    private lateinit var googleMap: GoogleMap
-
-    private val memberMarkers =
-        mutableMapOf<String, Marker>()
-
-    private val pendingLocations =
-        mutableMapOf<String, MemberLocation>()
-
+    // Initialize the SupportMapFragment and request map asynchronously
     fun initialize() {
+        val mapFragment = activity.supportFragmentManager
+            .findFragmentById(R.id.map) as? SupportMapFragment
 
-        val mapFragment =
-            fragmentManager
-                .findFragmentById(
-                    R.id.map
-                ) as SupportMapFragment
-
-        mapFragment.getMapAsync(this)
-    }
-
-    override fun onMapReady(
-        map: GoogleMap
-    ) {
-
-        googleMap = map
-
-        val start =
-            LatLng(
-                DEFAULT_START_LATITUDE,
-                DEFAULT_START_LONGITUDE
-            )
-
-        googleMap.moveCamera(
-            CameraUpdateFactory
-                .newLatLngZoom(
-                    start,
-                    DEFAULT_START_ZOOM
-                )
-        )
-
-        pendingLocations
-            .values
-            .forEach(::showMemberLocation)
-
-        pendingLocations.clear()
-    }
-
-    fun updateMemberLocation(
-        memberId: String,
-        memberName: String,
-        latitude: Double,
-        longitude: Double
-    ) {
-
-        val location =
-            MemberLocation(
-                memberId,
-                memberName,
-                latitude,
-                longitude
-            )
-
-        if (!::googleMap.isInitialized) {
-            pendingLocations[memberId] = location
-            return
-        }
-
-        showMemberLocation(location)
-    }
-
-    private fun showMemberLocation(
-        location: MemberLocation
-    ) {
-
-        val position =
-            LatLng(
-                location.latitude,
-                location.longitude
-            )
-
-        val marker =
-            memberMarkers[location.memberId]
-
-        if (marker == null) {
-
-            val newMarker =
-                googleMap.addMarker(
-
-                    MarkerOptions()
-                        .position(position)
-                        .title(location.memberName)
-                        .icon(
-                            BitmapDescriptorFactory.defaultMarker(
-                                if (location.memberId == PRIMARY_MEMBER_ID)
-                                    BitmapDescriptorFactory.HUE_RED
-                                else
-                                    BitmapDescriptorFactory.HUE_BLUE
-                            )
-                        )
-                )
-
-            if (newMarker != null) {
-                memberMarkers[location.memberId] = newMarker
-            }
-
+        if (mapFragment != null) {
+            mapFragment.getMapAsync(this)
         } else {
-
-            marker.position = position
+            Log.e(TAG, "SupportMapFragment not found (R.id.map)")
         }
+    }
 
-        googleMap.animateCamera(
-            CameraUpdateFactory
-                .newLatLng(position)
+    override fun onMapReady(map: GoogleMap) {
+        googleMap = map
+        Log.d(TAG, "Map ready")
+    }
+
+    // Move camera to a given location
+    fun moveCameraTo(lat: Double, lng: Double, zoom: Float = 15f) {
+        googleMap?.moveCamera(
+            CameraUpdateFactory.newLatLngZoom(
+                LatLng(lat, lng),
+                zoom
+            )
         )
     }
 
-    private data class MemberLocation(
-        val memberId: String,
-        val memberName: String,
-        val latitude: Double,
-        val longitude: Double
-    )
+    // Place a general marker on the map
+    fun placeMarker(lat: Double, lng: Double, title: String) {
+        googleMap?.addMarker(
+            MarkerOptions()
+                .position(LatLng(lat, lng))
+                .title(title)
+        )
+    }
+
+    // Create or move the patient marker
+    fun updatePatientMarker(
+        lat: Double,
+        lng: Double,
+        patientName: String = "Mary"
+    ) {
+        val map = googleMap ?: return
+        val position = LatLng(lat, lng)
+
+        if (patientMarker == null) {
+            patientMarker = map.addMarker(
+                MarkerOptions()
+                    .position(position)
+                    .title(patientName)
+            )
+
+            patientMarker?.showInfoWindow()
+
+            map.moveCamera(
+                CameraUpdateFactory.newLatLngZoom(
+                    position,
+                    15f
+                )
+            )
+
+            Log.d(TAG, "Patient marker created: $patientName $lat,$lng")
+        } else {
+            patientMarker?.position = position
+            patientMarker?.title = patientName
+            patientMarker?.showInfoWindow()
+
+            Log.d(TAG, "Patient marker updated: $patientName $lat,$lng")
+        }
+    }
+
+    // Expose the underlying GoogleMap for extended use
+    fun getMap(): GoogleMap? = googleMap
 }

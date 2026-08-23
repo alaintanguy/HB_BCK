@@ -1,115 +1,477 @@
 <?xml version="1.0" encoding="utf-8"?>
-
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:background="#000000">
 
-    <!-- ========================= -->
-    <!-- MAP -->
-    <!-- ========================= -->
-
-    <fragment
-        android:id="@+id/map"
-        android:name="com.google.android.gms.maps.SupportMapFragment"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"/>
-
-    <!-- ========================= -->
-    <!-- STATUS -->
-    <!-- ========================= -->
-
-    <TextView
-        android:id="@+id/statusText"
-        android:layout_marginTop="0dp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="#202020"
-        android:padding="6dp"
-        android:text="🟢 ONLINE    🕒 --:--    🔋 --%"
-        android:textAlignment="center"
-        android:textColor="#FFFF00"
-        android:textSize="12sp"
-        android:textStyle="bold"/>
-
-    <!-- ========================= -->
-    <!-- REMINDER -->
-    <!-- ========================= -->
-
-    <TextView
-        android:id="@+id/messageView"
-        android:layout_marginTop="10dp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:minLines="6"
-        android:maxLines="6"
-        android:background="#FFFFFF"
-        android:gravity="top|start"
-        android:textIsSelectable="true"
-        android:padding="12dp"
-        android:textColor="#000000"
-        android:textSize="22sp"/>
-
-    <EditText
-        android:id="@+id/composeEdit"
-        android:layout_width="match_parent"
-        android:layout_height="150dp"
-        android:background="#FFFFAA"
-        android:textColor="#000000"
-        android:minLines="6"
-        android:maxLines="6"
-        android:visibility="gone"/>
-
-    <!-- ========================= -->
-    <!-- ACTION BUTTONS -->
-    <!-- ========================= -->
+    <!-- ======================================================
+         CONVERSATION MODE
+         ====================================================== -->
 
     <LinearLayout
+        android:id="@+id/conversationModeContainer"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="horizontal"
-        android:paddingTop="12dp"
-        android:paddingBottom="0dp">
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-        <Button
-            android:id="@+id/speakButton"
-            android:layout_width="90dp"
-            android:layout_height="90dp"
-            android:layout_margin="12dp"
-            android:text="🎤"
-            android:textSize="34sp"/>
+        <!-- Google Map -->
+        <fragment
+            android:id="@+id/map"
+            android:name="com.google.android.gms.maps.SupportMapFragment"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
 
-        <Button
-            android:id="@+id/writeButton"
-            android:layout_width="90dp"
-            android:layout_height="90dp"
-            android:layout_margin="12dp"
-            android:text="✏️"
-            android:textSize="34sp"/>
+        <!-- ==================================================
+             STATUS LINE
+             ================================================== -->
 
-        <Button
-            android:id="@+id/sendButton"
-            android:layout_width="90dp"
-            android:layout_height="90dp"
-            android:layout_margin="12dp"
-            android:text="📤"
-            android:textSize="34sp"/>
+        <TextView
+            android:id="@+id/textStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#202020"
+            android:padding="6dp"
+            android:text="Ready"
+            android:textColor="#FFD700"
+            android:textStyle="bold"
+            android:textSize="14sp"
+            android:gravity="center_vertical"/>
 
+        <!-- ==================================================
+             CONVERSATION HISTORY
+             ================================================== -->
 
+        <ScrollView
+            android:id="@+id/conversationScroll"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:fillViewport="true">
 
-        <Button
-            android:id="@+id/ackButton"
-            android:layout_width="1dp"
-            android:layout_height="1dp"
-            android:visibility="gone"
-            android:text="ACK"/>
+            <LinearLayout
+                android:id="@+id/conversationContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="8dp">
+            </LinearLayout>
+        </ScrollView>
+
+        <!-- ==================================================
+             CONVERSATION ACTION BUTTONS
+             ================================================== -->
+
+        <LinearLayout
+            android:id="@+id/conversationButtonBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:padding="12dp"
+            android:background="#1a1a1a">
+
+            <!-- ================= Patient ================= -->
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="8dp"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/btnWrite"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="Patient"
+                    app:backgroundTint="#FFD700"
+                    app:srcCompat="@android:drawable/ic_menu_edit" />
+
+                <TextView
+                    android:id="@+id/patientLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Patient"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12sp"/>
+            </LinearLayout>
+
+            <!-- ================= Copy ================= -->
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="8dp"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/btnCopy"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="Copy"
+                    app:backgroundTint="#7B1FA2"
+                    app:srcCompat="@android:drawable/ic_menu_upload"/>
+
+                <TextView
+                    android:id="@+id/copyLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Copy"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12sp"/>
+            </LinearLayout>
+
+            <!-- ================= Save ================= -->
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="8dp"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/btnSave"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="Save"
+                    app:backgroundTint="#757575"
+                    app:srcCompat="@android:drawable/ic_menu_agenda"/>
+
+                <TextView
+                    android:id="@+id/saveLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Save"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12sp"/>
+
+            </LinearLayout>
+
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1"/>
+
+            <!-- ================= Alert (M2 only, right edge) ================= -->
+            <LinearLayout
+                android:id="@+id/alertButtonGroup"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="8dp"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:visibility="gone">
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/btnAlert"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="Alert"
+                    app:backgroundTint="#D32F2F"
+                    app:srcCompat="@android:drawable/ic_dialog_alert" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="ALERT"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12sp"
+                    android:textStyle="bold"/>
+            </LinearLayout>
+
+        </LinearLayout>
 
     </LinearLayout>
 
+    <!-- Patient/caregiver emergency status overlay -->
+    <LinearLayout
+        android:id="@+id/emergencyStatusOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:clickable="false"
+        android:focusable="false"
+        android:visibility="gone">
+
+        <FrameLayout
+            android:layout_width="296dp"
+            android:layout_height="156dp"
+            android:background="#D32F2F"
+            android:padding="6dp">
+
+            <Button
+                android:id="@+id/btnEmergencyStatus"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="ALERT SENT"
+                android:textColor="#FFFFFF"
+                android:textSize="28sp"
+                android:textStyle="bold"
+                android:backgroundTint="#D32F2F"/>
+        </FrameLayout>
+    </LinearLayout>
+
+    <!-- ======================================================
+         ALERT CONFIRMATION MODE
+         ====================================================== -->
+    <LinearLayout
+        android:id="@+id/alertModeContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="24dp"
+        android:background="#000000"
+        android:visibility="gone">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="DO YOU NEED HELP?"
+            android:textColor="#FFFFFF"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:layout_marginBottom="36dp"/>
+        <Button
+            android:id="@+id/btnRealAlert"
+            android:layout_width="match_parent"
+            android:layout_height="110dp"
+            android:text="REAL ALERT"
+            android:textColor="#FFFFFF"
+            android:textSize="26sp"
+            android:textStyle="bold"
+            android:backgroundTint="#D32F2F"/>
+        <Button
+            android:id="@+id/btnAlertMistake"
+            android:layout_width="match_parent"
+            android:layout_height="110dp"
+            android:layout_marginTop="28dp"
+            android:text="MISTAKE"
+            android:textColor="#FFFFFF"
+            android:textSize="26sp"
+            android:textStyle="bold"
+            android:backgroundTint="#2E7D32"/>
+    </LinearLayout>
+
+    <!-- ======================================================
+         COMPOSE MODE
+         ====================================================== -->
+
+    <LinearLayout
+        android:id="@+id/composeModeContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="#000000"
+        android:padding="16dp"
+        android:visibility="gone">
+        <TextView
+            android:id="@+id/composeTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="MESSAGE"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:paddingBottom="10dp"
+            android:textColor="#FF0000"/>
+        <!-- Compose editor -->
+
+        <EditText
+            android:id="@+id/composeEditor"
+            android:layout_width="match_parent"
+            android:layout_height="220dp"
+            android:gravity="top|start"
+            android:background="#1A1A1A"
+            android:padding="12dp"
+            android:hint="Type or speak your message..."
+            android:textColor="#FFFFFF"
+            android:textColorHint="#888888"
+            android:textSize="16sp"
+            android:inputType="textMultiLine|textCapSentences"
+            android:minLines="10"
+            android:maxLines="10"
+            android:lines="10"/>
+
+        <!-- Small destructive action: clear current compose text -->
+        <Button
+            android:id="@+id/btnClearCompose"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:layout_gravity="end"
+            android:layout_marginTop="6dp"
+            android:minWidth="72dp"
+            android:text="CLEAR"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#B71C1C"
+            android:contentDescription="Clear current text"/>
+
+        <!-- ==================================================
+ COMPOSE ACTION BUTTONS
+ ================================================== -->
+
+        <LinearLayout
+            android:id="@+id/composeButtonBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="89dp"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <!-- ================= Speak ================= -->
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/btnSpeak"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="Speak"
+                    app:backgroundTint="#FF9800"
+                    app:srcCompat="@android:drawable/ic_btn_speak_now"/>
+
+                <TextView
+                    android:id="@+id/speakLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Speak"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12sp"/>
+
+            </LinearLayout>
+            <!-- ================= Back ================= -->
+
+            <LinearLayout
+                android:id="@+id/backButtonGroup"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/btnBack"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="Back to Conversation"
+                    app:backgroundTint="#757575"
+                    app:srcCompat="@android:drawable/ic_menu_revert"/>
+
+                <TextView
+                    android:id="@+id/backLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Back"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12sp"/>
+
+            </LinearLayout>
+
+            <!-- ================= Send ================= -->
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/btnSend"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="Send"
+                    app:backgroundTint="#2196F3"
+                    app:srcCompat="@android:drawable/ic_menu_send"/>
+
+                <TextView
+                    android:id="@+id/sendLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Send"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12sp"/>
+
+            </LinearLayout>
+
+        </LinearLayout>
+    </LinearLayout>
 
 
-</LinearLayout>
+    <!-- ======================================================
+         MEDICATION MODE — M2 PATIENT
+         ====================================================== -->
+    <LinearLayout
+        android:id="@+id/medicationModeContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="#000000"
+        android:padding="20dp"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/medicationTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="MEDICATION"
+            android:textColor="#FFD700"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:paddingBottom="16dp"/>
+
+        <Button
+            android:id="@+id/btnMedicationAllTaken"
+            android:layout_width="match_parent"
+            android:layout_height="72dp"
+            android:text="ALL TAKEN"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#2E7D32"/>
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_marginTop="16dp"
+            android:fillViewport="true">
+
+            <LinearLayout
+                android:id="@+id/medicationListContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"/>
+        </ScrollView>
+
+        <Button
+            android:id="@+id/btnMedicationDone"
+            android:layout_width="match_parent"
+            android:layout_height="72dp"
+            android:layout_marginTop="8dp"
+            android:text="REPORT MISSING"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#D32F2F"/>
+    </LinearLayout>
+
+</FrameLayout>

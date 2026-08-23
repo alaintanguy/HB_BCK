@@ -55,7 +55,7 @@ class TelemetryForegroundService : Service() {
         val memberId =
             intent?.getStringExtra(
                 "MEMBER_ID"
-            ) ?: "unknown"
+            ) ?: "M2"
 
         telemetryEngine =
             TelemetryEngine(
@@ -63,7 +63,7 @@ class TelemetryForegroundService : Service() {
                 memberId
             )
 
-       // telemetryEngine.start()
+        telemetryEngine.start()
 
         return START_STICKY
     }

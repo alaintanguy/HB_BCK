@@ -5,6 +5,7 @@ import android.location.Location
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.widget.Toast
 import com.healthbridge.firebase.FirebaseManager
 
 class TelemetryEngine(
@@ -39,6 +40,12 @@ class TelemetryEngine(
 
     private var lowBatteryThreshold = 20
 
+    // Simple geofence prototype.
+    private var homeLatitude: Double? = null
+    private var homeLongitude: Double? = null
+    private var geofenceRadiusMeters = 91f
+    private var geofenceOutside = false
+
     private val heartbeatHandler =
         Handler(Looper.getMainLooper())
 
@@ -64,7 +71,9 @@ class TelemetryEngine(
                     battery
                 )
 
-                FirebaseManager.updateLastSeen(
+                // Heartbeat must refresh telemetry timestamp/date/time
+                // even when the patient has not moved.
+                FirebaseManager.updateHeartbeat(
                     memberId
                 )
 
@@ -121,6 +130,33 @@ class TelemetryEngine(
             )
         }
 
+        if (memberId == "M2") {
+            FirebaseManager.listenToHomeGeofence(memberId) {
+                    latitude,
+                    longitude,
+                    radiusMeters,
+                    enabled ->
+
+                if (enabled) {
+                    homeLatitude = latitude
+                    homeLongitude = longitude
+                    geofenceRadiusMeters = radiusMeters.toFloat()
+
+                    Log.d(
+                        "HB",
+                        "GEOFENCE HOME FROM FIREBASE: " +
+                                "$latitude , $longitude radius=$radiusMeters"
+                    )
+                } else {
+                    homeLatitude = null
+                    homeLongitude = null
+                    geofenceOutside = false
+
+                    Log.d("HB", "GEOFENCE DISABLED IN FIREBASE")
+                }
+            }
+        }
+
         heartbeatHandler.post(
             heartbeatRunnable
         )
@@ -137,6 +173,15 @@ class TelemetryEngine(
                 "HB",
                 "GPS UPDATE: $latitude , $longitude"
             )
+
+            // TEMPORARY GPS DIAGNOSTIC — display M2 coordinates.
+            if (memberId == "M2") {
+                Toast.makeText(
+                    context,
+                    "M2 GPS  Lat: %.6f  Lng: %.6f".format(latitude, longitude),
+                    Toast.LENGTH_LONG
+                ).show()
+            }
 
             val previousLat = lastLatitude
             val previousLng = lastLongitude
@@ -170,6 +215,61 @@ class TelemetryEngine(
                 longitude,
                 altitude
             )
+
+            if (memberId == "M2") {
+                val homeLat = homeLatitude
+                val homeLng = homeLongitude
+
+                if (homeLat == null || homeLng == null) {
+                    Log.d(
+                        "HB",
+                        "GEOFENCE waiting for enabled Firebase Home coordinates"
+                    )
+                } else {
+                    val homeDistance = FloatArray(1)
+                    Location.distanceBetween(
+                        homeLat,
+                        homeLng,
+                        latitude,
+                        longitude,
+                        homeDistance
+                    )
+
+                    val distanceFromHome = homeDistance[0]
+                    val outsideNow = distanceFromHome > geofenceRadiusMeters
+
+                    Log.d(
+                        "HB",
+                        "GEOFENCE distance=$distanceFromHome m " +
+                                "radius=$geofenceRadiusMeters m outside=$outsideNow"
+                    )
+
+                    if (outsideNow != geofenceOutside) {
+                        geofenceOutside = outsideNow
+
+                        FirebaseManager.updateGeofenceAlert(
+                            memberId,
+                            outsideNow,
+                            distanceFromHome.toDouble()
+                        )
+
+                        // Send one conversation event only when Mary crosses the border.
+                        val eventText =
+                            if (outsideNow) {
+                                val yards = (distanceFromHome * 1.09361f).toInt()
+                                "SYSTEM_EVENT:GEOFENCE_EXIT:$yards"
+                            } else {
+                                "SYSTEM_EVENT:GEOFENCE_RETURN"
+                            }
+
+                        FirebaseManager.sendMessage(
+                            memberId,
+                            "M1",
+                            eventText
+                        )
+                    }
+                }
+            }
 
             lastLatitude = latitude
             lastLongitude = longitude

@@ -1,3 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">HB_CLEAN</string>
+    <string name="app_name">HealthBridge</string>
+    <string name="btn_write_desc">Write message</string>
+    <string name="btn_mic_desc">Voice message</string>
+    <string name="label_i_am">👤 I AM</string>
+    <string name="label_view_member">👁 VIEW MEMBER</string>
+    <string name="label_heart_rate">❤️ Heart Rate</string>
+    <string name="label_last_update">⏱ Last Update</string>
+    <string name="label_conversation">Conversation</string>
 </resources>

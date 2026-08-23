@@ -1,0 +1,170 @@
+{
+  "groups": {
+    "family_001": {
+      "members": {
+        "M1": {
+          "alerts": {
+            "lowBattery": false
+          },
+          "device": {
+            "charging": true,
+            "lastSeen": 1781202792083,
+            "phoneBattery": 100,
+            "phoneBrand": "Motorola",
+            "phoneModel": "G Play",
+            "phoneYear": "2025",
+            "status": "online"
+          },
+          "geofences": {
+            "home": {
+              "enabled": true,
+              "lat": 37.7749,
+              "lng": -122.4194,
+              "name": "Home",
+              "radius": 150
+            }
+          },
+         "profile": {
+            "age": 46,
+            "gender": "male",
+            "name": "alain",
+            "role": "caregiver"
+          },
+          "settings": {
+            "lowBatteryThreshold": 99,
+            "offlineThresholdMinutes": 3
+          },
+          "telemetry": {
+            "location": {
+              "accuracy": 13.69,
+              "altitude": 81.1,
+              "lat": 38.5819781,
+              "lng": -122.5838381,
+              "speed": 0
+            },
+            "readable": {
+              "date": "2026-06-07",
+              "time": "12:37:43"
+            },
+            "timestamp": 1780861063778,
+            "watch": {
+              "battery": 31,
+              "heartRate": 78,
+              "spo2": 98,
+              "steps": 2450
+            }
+          }
+        },
+        "M2": {
+          "alerts": {
+            "emergency": {
+              "active": false,
+              "details": "Patient pressed REAL ALERT",
+              "source": "PATIENT_BUTTON",
+              "timestamp": 1786422522314
+            },
+            "geofenceOutside": false,
+            "lowBattery": false
+          },
+          "device": {
+            "charging": true,
+            "lastSeen": 1786504296719,
+            "phoneBattery": 100,
+            "phoneBrand": "Samsung",
+            "phoneModel": "Tab A11",
+            "phoneYear": "2024",
+            "status": "online"
+          },
+          "geofences": {
+            "home": {
+              "distanceMeters": 47.70138168334961,
+              "enabled": true,
+              "lastChecked": 1786496648332,
+              "lat": 37.7749,
+              "lng": -122.4194,
+              "name": "Home",
+              "radius": 150
+            }
+          },
+          "medications": {
+            "med_001": {
+              "name": "Tylenol",
+			  "strength": "25 mg",
+			  "dose": "1 tablet",
+			  "schedule": "13:00",
+			  "reminderMinutes": 15,
+			  "enabled": true			  
+            },
+			"med_002": {
+              "name": "Glucophage",
+			  "strength": "250 mg",
+			  "dose": "1 tablet",
+			  "schedule": "13:00",
+			  "reminderMinutes": 15,
+			  "enabled": true			  
+            },
+			"med_003": {
+              "name": "Glucophage",
+			  "strength": "250 mg",
+			  "dose": "2 tablet",
+			  "schedule": "19:00",
+			  "reminderMinutes": 15,
+			  "enabled": true			  
+            },
+			"med_004": {
+              "name": "Ivermectin",
+			  "strength": "12 mg",
+			  "dose": "1 tablet",
+              "schedule": "19:00",
+			  "reminderMinutes": 15,
+			  "enabled": true			  
+            }
+          },
+          "profile": {
+            "age": 36,
+            "gender": "female",
+            "name": "mary",
+            "role": "patient"
+          },
+          "settings": {
+            "lowBatteryThreshold": 20,
+            "offlineThresholdMinutes": 3
+          },
+          "telemetry": {
+            "location": {
+              "accuracy": 13.69,
+              "altitude": 81.5,
+              "lat": 38.5819059,
+              "lng": -122.5838263,
+              "speed": 0
+            },
+            "readable": {
+              "date": "2026-08-11",
+              "time": "20:11:36"
+            },
+            "timestamp": 1786504296719,
+            "watch": {
+              "battery": 31,
+              "heartRate": 78,
+              "spo2": 98,
+              "steps": 2450
+            }
+          }
+        }
+      },
+      "messages": {
+        "current": {
+          "from": "M2",
+          "status": "played",
+          "text": "i'm ahmed they never washington see you see something",
+          "timestamp": 1786496563327,
+          "to": "M1"
+        },
+		"history": {
+			"init":{
+			}
+		}
+      }
+    }
+  }
+}
