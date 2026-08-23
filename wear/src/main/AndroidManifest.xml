@@ -6,9 +6,6 @@
 
     <!-- Heart rate sensor permission -->
     <uses-permission android:name="android.permission.BODY_SENSORS" />
-    
-    <!-- Internet permission for potential future use -->
-    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:allowBackup="true"

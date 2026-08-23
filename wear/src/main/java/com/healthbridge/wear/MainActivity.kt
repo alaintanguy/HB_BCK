@@ -11,7 +11,6 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.BatteryManager
-import android.os.Build
 import android.os.Bundle
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -116,13 +115,11 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
      * Request BODY_SENSORS permission
      */
     private fun requestHeartRatePermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            ActivityCompat.requestPermissions(
-                this,
-                arrayOf(Manifest.permission.BODY_SENSORS),
-                PERMISSION_REQUEST_BODY_SENSORS
-            )
-        }
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(Manifest.permission.BODY_SENSORS),
+            PERMISSION_REQUEST_BODY_SENSORS
+        )
     }
 
     /**
@@ -154,24 +151,10 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
      * Get and display current battery level
      */
     private fun updateBatteryLevel() {
-        val batteryManager = getSystemService(Context.BATTERY_SERVICE) as BatteryManager
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            currentBattery = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER)
-            if (currentBattery == 0) {
-                // Fallback: try using the battery intent
-                val ifilter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
-                val batteryStatus = registerReceiver(null, ifilter)
-                if (batteryStatus != null) {
-                    currentBattery = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
-                }
-            }
-        } else {
-            // Fallback for older Android versions
-            val ifilter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
-            val batteryStatus = registerReceiver(null, ifilter)
-            if (batteryStatus != null) {
-                currentBattery = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
-            }
+        val ifilter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+        val batteryStatus = registerReceiver(null, ifilter)
+        if (batteryStatus != null) {
+            currentBattery = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
         }
         updateBatteryDisplay()
     }
