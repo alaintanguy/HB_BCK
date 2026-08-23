@@ -355,12 +355,17 @@ class UIManager(private val activity: AppCompatActivity) {
     // CONVERSATION AREA
     // =====================================================
 
-    fun appendMessage(text: String) {
+    fun appendMessage(
+        text: String,
+        timestampMillis: Long? = null
+    ) {
 
         val timestamp = java.text.SimpleDateFormat(
             "M/d  h:mm a",
             java.util.Locale.US
-        ).format(java.util.Date())
+        ).format(
+            java.util.Date(timestampMillis ?: System.currentTimeMillis())
+        )
 
         val senderName = when {
             text.startsWith("M1:") -> "Alain"

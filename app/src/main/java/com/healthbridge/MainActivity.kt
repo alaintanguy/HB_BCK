@@ -448,8 +448,16 @@ class MainActivity : AppCompatActivity() {
 
                 for (message in history) {
 
+                    val historyTimestamp = when (val value = message.timestamp) {
+                        is Long -> value
+                        is Double -> value.toLong()
+                        is Number -> value.toLong()
+                        else -> null
+                    }
+
                     uiManager.appendMessage(
-                        "${message.from}: ${message.text}"
+                        "${message.from}: ${message.text}",
+                        historyTimestamp
                     )
                 }
 

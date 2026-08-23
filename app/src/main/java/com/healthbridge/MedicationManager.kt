@@ -244,10 +244,6 @@ class MedicationManager(
 
         if (dueBlock == null) return
 
-        if (lastReportedSchedule == dueBlock.schedule) {
-            return
-        }
-
         val callback = dueBlockCallback
 
         if (callback == null) {
@@ -295,8 +291,10 @@ class MedicationManager(
                         }
 
                         // Not handled yet — show medication table.
-                        lastReportedSchedule =
-                            dueBlock.schedule
+                        // Do not mark it as reported here. Until M2 actually
+                        // records a result in medicationLog, the block remains
+                        // due and may be presented again if the UI was hidden
+                        // or interrupted.
 
                         Log.d(
                             TAG,
