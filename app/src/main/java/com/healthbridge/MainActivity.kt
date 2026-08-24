@@ -293,6 +293,24 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
+            // =====================================================
+            // WATCH DATA — M1 CAREGIVER MONITORING (PHASE 2)
+            // =====================================================
+
+            FirebaseManager.listenToMemberWatchData(
+                "M2"
+            ) { heartRate, watchBattery, timestamp ->
+
+                runOnUiThread {
+                    Log.d(
+                        "HB-WATCH",
+                        "M1 received watch data: HR=$heartRate, Watch Battery=$watchBattery"
+                    )
+                    // Watch data is now available in M2's telemetry/watch for caregiver monitoring
+                    // Can be displayed in UIManager if needed
+                }
+            }
+
             FirebaseManager.listenForGeofenceStatus(
                 "M2"
             ) { isOutside, distanceMeters ->

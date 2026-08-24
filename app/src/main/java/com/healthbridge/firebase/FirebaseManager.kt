@@ -704,6 +704,39 @@ object FirebaseManager {
             )
     }
 
+    fun listenToMemberWatchData(
+        memberId: String,
+        onWatchData: (heartRate: Int, watchBattery: Int, timestamp: Long) -> Unit
+    ) {
+        memberReference(memberId)
+            .child("telemetry")
+            .child("watch")
+            .addValueEventListener(
+                object : ValueEventListener {
+                    override fun onDataChange(snapshot: DataSnapshot) {
+                        val heartRate = snapshot.child("heart_rate").getValue(Int::class.java) ?: 0
+                        val watchBattery = snapshot.child("battery").getValue(Int::class.java) ?: 0
+                        val timestamp = snapshot.child("heart_rate_timestamp").getValue(Long::class.java)
+                            ?: snapshot.child("battery_timestamp").getValue(Long::class.java)
+                            ?: System.currentTimeMillis()
+
+                        if (heartRate > 0 || watchBattery > 0) {
+                            Log.d("HB-WATCH", "WATCH DATA RECEIVED: $memberId HR=$heartRate Battery=$watchBattery")
+                            onWatchData(heartRate, watchBattery, timestamp)
+                        }
+                    }
+
+                    override fun onCancelled(error: DatabaseError) {
+                        Log.e(
+                            "HB-WATCH",
+                            "WATCH DATA LISTENER FAILED: $memberId",
+                            error.toException()
+                        )
+                    }
+                }
+            )
+    }
+
 
     // =====================================================
     // MEDICATION HISTORY — M2 PATIENT
