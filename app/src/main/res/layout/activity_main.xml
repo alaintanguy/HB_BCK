@@ -23,6 +23,19 @@
             android:layout_height="0dp"
             android:layout_weight="1" />
 
+        <!-- Watch Telemetry Display (M1 only) -->
+        <TextView
+            android:id="@+id/watchTelemetryDisplay"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#1a3a1a"
+            android:padding="6dp"
+            android:text=""
+            android:textColor="#00FF00"
+            android:textSize="12sp"
+            android:gravity="center_vertical"
+            android:visibility="gone" />
+
         <!-- ==================================================
              STATUS LINE
              ================================================== -->

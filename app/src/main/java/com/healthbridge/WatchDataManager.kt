@@ -1,6 +1,9 @@
 package com.healthbridge
 
 import android.util.Log
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.ValueEventListener
 import com.healthbridge.firebase.FirebaseManager
 
 class WatchDataManager(
@@ -18,28 +21,42 @@ class WatchDataManager(
     fun startListeningForWatchData() {
         Log.d(TAG, "Starting to listen for watch data")
 
-        FirebaseManager.listenForWatchData { heartRate, watchBattery, timestamp ->
-            currentWatchHeartRate = heartRate
-            currentWatchBattery = watchBattery
-            lastWatchDataTimestamp = timestamp
+        // Listen to the watch telemetry path where M2 publishes data received from Watch
+        FirebaseManager.memberReference(memberId)
+            .child("telemetry")
+            .child("watch")
+            .addValueEventListener(
+                object : ValueEventListener {
+                    override fun onDataChange(snapshot: DataSnapshot) {
+                        try {
+                            val heartRate = snapshot.child("heart_rate").getValue(Int::class.java) ?: 0
+                            val battery = snapshot.child("battery").getValue(Int::class.java) ?: 0
+                            val timestamp = snapshot.child("heart_rate_timestamp").getValue(Long::class.java)
+                                ?: snapshot.child("battery_timestamp").getValue(Long::class.java)
+                                ?: System.currentTimeMillis()
 
-            // Update the member's telemetry with watch data
-            if (currentWatchHeartRate > 0) {
-                FirebaseManager.updateWatchHeartRate(memberId, currentWatchHeartRate, timestamp)
-            }
+                            currentWatchHeartRate = heartRate
+                            currentWatchBattery = battery
+                            lastWatchDataTimestamp = timestamp
 
-            if (currentWatchBattery > 0) {
-                FirebaseManager.updateWatchBattery(memberId, currentWatchBattery, timestamp)
-            }
+                            Log.d(
+                                TAG,
+                                "Watch data received: HR=$currentWatchHeartRate, Battery=$currentWatchBattery"
+                            )
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Error parsing watch data", e)
+                        }
+                    }
 
-            Log.d(
-                TAG,
-                "Watch data received and forwarded: HR=$currentWatchHeartRate, Battery=$currentWatchBattery"
+                    override fun onCancelled(error: DatabaseError) {
+                        Log.e(TAG, "Watch data listener failed", error.toException())
+                    }
+                }
             )
-        }
     }
 
     fun getWatchHeartRate(): Int = currentWatchHeartRate
     fun getWatchBattery(): Int = currentWatchBattery
     fun getLastWatchDataTimestamp(): Long = lastWatchDataTimestamp
 }
+

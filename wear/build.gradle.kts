@@ -39,11 +39,8 @@ dependencies {
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation("androidx.wear:wear:1.3.0")
 
-    // Firebase
-    implementation(platform("com.google.firebase:firebase-bom:33.1.0"))
-    implementation("com.google.firebase:firebase-database-ktx")
-    implementation("com.google.firebase:firebase-auth-ktx")
-    implementation("com.google.firebase:firebase-messaging-ktx")
+    // Wear OS Data Layer for Watch-to-Phone communication
+    implementation("com.google.android.gms:play-services-wearable:18.1.0")
 
     // Health Services API for heart rate
     implementation("androidx.health:health-services-client:1.0.0-beta02")

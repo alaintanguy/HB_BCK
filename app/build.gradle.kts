@@ -66,6 +66,9 @@ dependencies {
 
     implementation("com.google.android.gms:play-services-maps:18.2.0")
 
+    // Wear OS Data Layer for Watch-to-Phone communication
+    implementation("com.google.android.gms:play-services-wearable:18.1.0")
+
     implementation("com.alphacephei:vosk-android:0.3.75@aar")
 
     implementation("net.java.dev.jna:jna:5.18.1@aar")

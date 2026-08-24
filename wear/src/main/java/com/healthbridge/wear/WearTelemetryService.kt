@@ -10,19 +10,21 @@ import android.hardware.SensorManager
 import android.os.Binder
 import android.os.IBinder
 import android.util.Log
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ServerValue
-import java.util.Calendar
+import com.google.android.gms.wearable.MessageClient
+import com.google.android.gms.wearable.Wearable
+import java.nio.ByteBuffer
 
 class WearTelemetryService : Service(), SensorEventListener {
 
     private lateinit var sensorManager: SensorManager
     private var heartRateSensor: Sensor? = null
     private val binder = LocalBinder()
+    private lateinit var messageClient: MessageClient
 
     companion object {
         private const val TAG = "WearTelemetry"
-        private const val HEART_RATE_UPDATE_INTERVAL = 10000L // 10 seconds
+        private const val WATCH_DATA_UPDATE_INTERVAL = 60000L // 60 seconds
+        private const val WATCH_DATA_MESSAGE_PATH = "/healthbridge/watch/telemetry"
     }
 
     inner class LocalBinder : Binder() {
@@ -32,6 +34,8 @@ class WearTelemetryService : Service(), SensorEventListener {
     override fun onCreate() {
         super.onCreate()
         Log.d(TAG, "WearTelemetryService created")
+
+        messageClient = Wearable.getMessageClient(this)
 
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
         heartRateSensor = sensorManager.getDefaultSensor(Sensor.TYPE_HEART_RATE)
@@ -77,9 +81,9 @@ class WearTelemetryService : Service(), SensorEventListener {
 
                     Log.d(TAG, "Collected - Heart Rate: $currentHeartRate, Battery: $batteryLevel")
 
-                    sendDataToFirebase(currentHeartRate, batteryLevel, timestamp)
+                    sendDataToPhone(currentHeartRate, batteryLevel, timestamp)
 
-                    Thread.sleep(HEART_RATE_UPDATE_INTERVAL)
+                    Thread.sleep(WATCH_DATA_UPDATE_INTERVAL)
                 } catch (e: Exception) {
                     Log.e(TAG, "Error in data collection", e)
                 }
@@ -121,28 +125,33 @@ class WearTelemetryService : Service(), SensorEventListener {
         }
     }
 
-    private fun sendDataToFirebase(heartRate: Int, battery: Int, timestamp: Long) {
+    private fun sendDataToPhone(heartRate: Int, battery: Int, timestamp: Long) {
         try {
-            val database = FirebaseDatabase.getInstance()
-            val watchDataRef = database.reference
-                .child("watch_data")
-                .child("latest")
+            // Prepare message payload: heartRate (4 bytes) + battery (4 bytes) + timestamp (8 bytes)
+            val payload = ByteBuffer.allocate(16)
+                .putInt(heartRate)
+                .putInt(battery)
+                .putLong(timestamp)
+                .array()
 
-            val data = hashMapOf(
-                "heart_rate" to heartRate,
-                "battery" to battery,
-                "timestamp" to timestamp
-            )
+            Log.d(TAG, "Sending watch data to phone: HR=$heartRate, Battery=$battery")
 
-            watchDataRef.setValue(data)
-                .addOnSuccessListener {
-                    Log.d(TAG, "Watch data sent to Firebase: HR=$heartRate, Battery=$battery")
+            // Send to all connected nodes (should be the phone)
+            Wearable.getNodeClient(this).connectedNodes.addOnSuccessListener { nodes ->
+                for (node in nodes) {
+                    messageClient.sendMessage(node.id, WATCH_DATA_MESSAGE_PATH, payload)
+                        .addOnSuccessListener {
+                            Log.d(TAG, "Watch data sent to phone: HR=$heartRate, Battery=$battery")
+                        }
+                        .addOnFailureListener { error ->
+                            Log.e(TAG, "Failed to send watch data to phone", error)
+                        }
                 }
-                .addOnFailureListener { error ->
-                    Log.e(TAG, "Failed to send watch data to Firebase", error)
-                }
+            }.addOnFailureListener { error ->
+                Log.e(TAG, "Failed to get connected nodes", error)
+            }
         } catch (e: Exception) {
-            Log.e(TAG, "Error sending data to Firebase", e)
+            Log.e(TAG, "Error sending data to phone", e)
         }
     }
 
@@ -155,3 +164,4 @@ class WearTelemetryService : Service(), SensorEventListener {
         }
     }
 }
+

@@ -297,6 +297,9 @@ class MainActivity : AppCompatActivity() {
             // WATCH DATA — M1 CAREGIVER MONITORING (PHASE 2)
             // =====================================================
 
+            val watchTelemetryDisplay = findViewById<android.widget.TextView>(R.id.watchTelemetryDisplay)
+            watchTelemetryDisplay.visibility = android.view.View.VISIBLE
+
             FirebaseManager.listenToMemberWatchData(
                 "M2"
             ) { heartRate, watchBattery, timestamp ->
@@ -306,8 +309,16 @@ class MainActivity : AppCompatActivity() {
                         "HB-WATCH",
                         "M1 received watch data: HR=$heartRate, Watch Battery=$watchBattery"
                     )
-                    // Watch data is now available in M2's telemetry/watch for caregiver monitoring
-                    // Can be displayed in UIManager if needed
+                    // Display watch telemetry
+                    val displayText = if (heartRate > 0 || watchBattery > 0) {
+                        val hrText = if (heartRate > 0) "Watch HR: $heartRate BPM" else ""
+                        val batteryText = if (watchBattery > 0) "Watch Battery: $watchBattery%" else ""
+                        val parts = listOf(hrText, batteryText).filter { it.isNotEmpty() }
+                        parts.joinToString("  |  ")
+                    } else {
+                        "Waiting for Watch data..."
+                    }
+                    watchTelemetryDisplay.text = displayText
                 }
             }
 
