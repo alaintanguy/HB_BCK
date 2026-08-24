@@ -36,3 +36,4 @@ dependencyResolutionManagement {
 rootProject.name = "HB_CLEAN"
 
 include(":app")
+include(":wear")

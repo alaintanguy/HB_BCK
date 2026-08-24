@@ -36,6 +36,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var messageManager: MessageManager
     private lateinit var telemetryEngine: TelemetryEngine
     private lateinit var fallDetectionManager: FallDetectionManager
+    private lateinit var watchDataManager: WatchDataManager
 
     private var fallDialog: android.app.Dialog? = null
     private var fallAlarmActive = false
@@ -207,6 +208,18 @@ class MainActivity : AppCompatActivity() {
             android.util.Log.d(
                 "HB",
                 "M2 TELEMETRY ENGINE STARTED"
+            )
+
+            // =====================================================
+            // WATCH DATA INTEGRATION — PHASE 2
+            // =====================================================
+
+            watchDataManager = WatchDataManager(MEMBER_ID)
+            watchDataManager.startListeningForWatchData()
+
+            android.util.Log.d(
+                "HB",
+                "M2 WATCH DATA MANAGER STARTED"
             )
 
             fallDetectionManager = FallDetectionManager(this) { accelerationG ->

@@ -844,4 +844,77 @@ object FirebaseManager {
             }
     }
 
+    // =====================================================
+    // WATCH DATA — GALAXY WATCH INTEGRATION (PHASE 2)
+    // =====================================================
+
+    fun listenForWatchData(
+        onWatchDataChanged: (heartRate: Int, watchBattery: Int, timestamp: Long) -> Unit
+    ) {
+        database
+            .child("watch_data")
+            .child("latest")
+            .addValueEventListener(
+                object : ValueEventListener {
+                    override fun onDataChange(snapshot: DataSnapshot) {
+                        try {
+                            val heartRate = snapshot.child("heart_rate").getValue(Int::class.java) ?: 0
+                            val watchBattery = snapshot.child("battery").getValue(Int::class.java) ?: 0
+                            val timestamp = snapshot.child("timestamp").getValue(Long::class.java) ?: System.currentTimeMillis()
+
+                            Log.d("HB-WATCH", "Watch data received: HR=$heartRate, Battery=$watchBattery")
+                            onWatchDataChanged(heartRate, watchBattery, timestamp)
+                        } catch (e: Exception) {
+                            Log.e("HB-WATCH", "Error parsing watch data", e)
+                        }
+                    }
+
+                    override fun onCancelled(error: DatabaseError) {
+                        Log.e("HB-WATCH", "Watch data listener failed", error.toException())
+                    }
+                }
+            )
+    }
+
+    fun updateWatchHeartRate(
+        memberId: String,
+        heartRate: Int,
+        timestamp: Long = System.currentTimeMillis()
+    ) {
+        Log.d("HB-WATCH", "Updating watch heart rate: $heartRate BPM")
+        memberReference(memberId)
+            .child("telemetry")
+            .child("watch")
+            .updateChildren(
+                mapOf(
+                    "heart_rate" to heartRate,
+                    "heart_rate_timestamp" to timestamp
+                )
+            )
+            .addOnFailureListener { error ->
+                Log.e("HB-WATCH", "Failed to update watch heart rate", error)
+            }
+    }
+
+    fun updateWatchBattery(
+        memberId: String,
+        watchBattery: Int,
+        timestamp: Long = System.currentTimeMillis()
+    ) {
+        Log.d("HB-WATCH", "Updating watch battery: $watchBattery%")
+        memberReference(memberId)
+            .child("telemetry")
+            .child("watch")
+            .updateChildren(
+                mapOf(
+                    "battery" to watchBattery,
+                    "battery_timestamp" to timestamp
+                )
+            )
+            .addOnFailureListener { error ->
+                Log.e("HB-WATCH", "Failed to update watch battery", error)
+            }
+    }
+
+
 }
