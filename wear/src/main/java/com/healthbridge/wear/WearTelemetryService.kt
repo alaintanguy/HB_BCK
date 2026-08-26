@@ -16,6 +16,7 @@ import android.os.Binder
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import com.healthbridge.wear.health.WearLogTags
 import com.google.android.gms.wearable.MessageClient
 import com.google.android.gms.wearable.Wearable
 import java.nio.ByteBuffer
@@ -33,7 +34,6 @@ class WearTelemetryService : Service(), SensorEventListener {
     private var latestHeartRate: Int = 0
 
     companion object {
-        private const val TAG = "WearTelemetry"
         private const val WATCH_DATA_UPDATE_INTERVAL = 60000L
         private const val WATCH_DATA_MESSAGE_PATH = "/healthbridge/watch/telemetry"
         private const val NOTIFICATION_CHANNEL_ID = "healthbridge_watch_telemetry"
@@ -46,7 +46,7 @@ class WearTelemetryService : Service(), SensorEventListener {
 
     override fun onCreate() {
         super.onCreate()
-        Log.d(TAG, "WearTelemetryService created")
+        Log.d(WearLogTags.API, "WearTelemetryService created")
 
         createNotificationChannel()
         startForeground(NOTIFICATION_ID, buildNotification())
@@ -56,14 +56,14 @@ class WearTelemetryService : Service(), SensorEventListener {
         heartRateSensor = sensorManager.getDefaultSensor(Sensor.TYPE_HEART_RATE)
 
         if (heartRateSensor == null) {
-            Log.w(TAG, "Heart rate sensor not available on this device")
+            Log.w(WearLogTags.API, "Heart rate sensor not available on this device")
         }
 
         startTelemetryCollection()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d(TAG, "WearTelemetryService started")
+        Log.d(WearLogTags.API, "WearTelemetryService started")
         return START_STICKY
     }
 
@@ -77,6 +77,7 @@ class WearTelemetryService : Service(), SensorEventListener {
             NotificationManager.IMPORTANCE_LOW
         )
         manager.createNotificationChannel(channel)
+        Log.d(WearLogTags.API, "Telemetry notification channel created")
     }
 
     private fun buildNotification(): Notification {
@@ -104,7 +105,7 @@ class WearTelemetryService : Service(), SensorEventListener {
                 heartRateSensor,
                 SensorManager.SENSOR_DELAY_NORMAL
             )
-            Log.d(TAG, "Heart rate sensor registered")
+            Log.d(WearLogTags.API, "Heart rate sensor registered for telemetry")
         }
 
         if (telemetryRunning) return
@@ -117,7 +118,10 @@ class WearTelemetryService : Service(), SensorEventListener {
                     val currentHeartRate = getLatestHeartRate()
                     val timestamp = System.currentTimeMillis()
 
-                    Log.d(TAG, "Collected - Heart Rate: $currentHeartRate, Battery: $batteryLevel")
+                    Log.d(
+                        WearLogTags.HEALTH,
+                        "Collected watch telemetry: heartRate=$currentHeartRate, battery=$batteryLevel"
+                    )
                     sendDataToPhone(currentHeartRate, batteryLevel, timestamp)
 
                     Thread.sleep(WATCH_DATA_UPDATE_INTERVAL)
@@ -125,10 +129,10 @@ class WearTelemetryService : Service(), SensorEventListener {
                     Thread.currentThread().interrupt()
                     break
                 } catch (e: Exception) {
-                    Log.e(TAG, "Error in data collection", e)
+                    Log.e(WearLogTags.HEALTH, "Error in watch data collection", e)
                 }
             }
-            Log.d(TAG, "Telemetry loop stopped")
+            Log.d(WearLogTags.API, "Telemetry loop stopped")
         }.also { it.start() }
     }
 
@@ -137,7 +141,7 @@ class WearTelemetryService : Service(), SensorEventListener {
             val reading = event.values.firstOrNull()?.toInt() ?: 0
             if (reading > 0) {
                 latestHeartRate = reading
-                Log.d(TAG, "Heart rate update: $latestHeartRate BPM")
+                Log.d(WearLogTags.HEALTH, "Heart rate = $latestHeartRate BPM")
             }
         }
     }
@@ -161,7 +165,7 @@ class WearTelemetryService : Service(), SensorEventListener {
                 -1
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error getting battery level", e)
+            Log.e(WearLogTags.HEALTH, "Error getting battery level", e)
             -1
         }
     }
@@ -174,33 +178,39 @@ class WearTelemetryService : Service(), SensorEventListener {
                 .putLong(timestamp)
                 .array()
 
-            Log.d(TAG, "Sending watch data to phone: HR=$heartRate, Battery=$battery")
+            Log.d(
+                WearLogTags.API,
+                "Sending watch telemetry to phone: HR=$heartRate, battery=$battery"
+            )
 
             Wearable.getNodeClient(this).connectedNodes
                 .addOnSuccessListener { nodes ->
                     if (nodes.isEmpty()) {
-                        Log.w(TAG, "No connected phone node found")
+                        Log.w(WearLogTags.API, "No connected phone node found")
                     }
                     for (node in nodes) {
                         messageClient.sendMessage(node.id, WATCH_DATA_MESSAGE_PATH, payload)
                             .addOnSuccessListener {
-                                Log.d(TAG, "Watch data sent to phone: HR=$heartRate, Battery=$battery")
+                                Log.d(
+                                    WearLogTags.API,
+                                    "Watch telemetry sent to phone: HR=$heartRate, battery=$battery"
+                                )
                             }
                             .addOnFailureListener { error ->
-                                Log.e(TAG, "Failed to send watch data to phone", error)
+                                Log.e(WearLogTags.API, "Failed to send watch data to phone", error)
                             }
                     }
                 }
                 .addOnFailureListener { error ->
-                    Log.e(TAG, "Failed to get connected nodes", error)
+                    Log.e(WearLogTags.API, "Failed to get connected nodes", error)
                 }
         } catch (e: Exception) {
-            Log.e(TAG, "Error sending data to phone", e)
+            Log.e(WearLogTags.API, "Error sending data to phone", e)
         }
     }
 
     override fun onDestroy() {
-        Log.d(TAG, "WearTelemetryService destroyed")
+        Log.d(WearLogTags.API, "WearTelemetryService destroyed")
         telemetryRunning = false
         telemetryThread?.interrupt()
         telemetryThread = null

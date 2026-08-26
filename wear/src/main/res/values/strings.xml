@@ -9,4 +9,14 @@
     <string name="no_permission">Heart rate permission denied</string>
     <string name="hr_no_reading">-- BPM</string>
     <string name="battery_no_reading">-- %</string>
+    <string name="open_diagnostics">Diagnostics</string>
+    <string name="diagnostic_screen_title">Watch Diagnostics</string>
+    <string name="diagnostic_summary">Phase 2A capability matrix for Galaxy Watch 4 / Wear OS.</string>
+    <string name="last_refresh_prefix">Last refresh:</string>
+    <string name="refresh_capabilities">Refresh</string>
+    <string name="request_body_sensors">Request BODY_SENSORS</string>
+    <string name="request_activity_recognition">Request ACTIVITY_RECOGNITION</string>
+    <string name="permissions_section_title">Permissions</string>
+    <string name="capability_section_title">Capability Table</string>
+    <string name="unknown_value">--</string>
 </resources>
