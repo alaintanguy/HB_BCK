@@ -7,7 +7,7 @@ import com.healthbridge.wear.health.model.PermissionState
 import com.healthbridge.wear.health.model.WatchMeasurementStatus
 import com.healthbridge.wear.health.model.WatchMeasurementType
 
-private abstract class CapabilityOnlyManager(
+abstract class CapabilityOnlyManager(
     private val measurementTypes: List<WatchMeasurementType>
 ) : WatchHealthDataManager {
 
