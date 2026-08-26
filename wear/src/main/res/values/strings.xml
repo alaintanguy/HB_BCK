@@ -19,4 +19,12 @@
     <string name="permissions_section_title">Permissions</string>
     <string name="capability_section_title">Capability Table</string>
     <string name="unknown_value">--</string>
+    <string name="measurement_availability_format">Available: %1$s | HB access: %2$s</string>
+    <string name="measurement_api_format">API: %1$s | Access: %2$s</string>
+    <string name="measurement_permission_format">Permission: %1$s</string>
+    <string name="measurement_current_value_format">Current Value: %1$s</string>
+    <string name="measurement_last_updated_format">Last Updated: %1$s</string>
+    <string name="measurement_sampling_format">Sampling: %1$s | Battery: %2$s</string>
+    <string name="measurement_restrictions_format">Restrictions: %1$s</string>
+    <string name="measurement_notes_format">Notes: %1$s</string>
 </resources>

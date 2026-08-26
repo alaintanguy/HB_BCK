@@ -287,9 +287,12 @@ object WatchCapabilityCatalog {
             notes = "Treat blood-pressure access as historical-only unless Samsung publishes a public integration path."
         )
     )
+    private val definitionsByType: Map<WatchMeasurementType, WatchCapabilityDefinition> =
+        orderedDefinitions.associateBy { it.type }
 
     fun definitionFor(type: WatchMeasurementType): WatchCapabilityDefinition {
-        return orderedDefinitions.first { it.type == type }
+        return definitionsByType[type]
+            ?: throw IllegalArgumentException("Missing watch capability definition for ${type.name}")
     }
 
     private fun capability(

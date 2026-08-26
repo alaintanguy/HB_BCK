@@ -10,7 +10,7 @@ import com.healthbridge.wear.health.model.PermissionState
 import com.healthbridge.wear.health.model.WatchMeasurementStatus
 import com.healthbridge.wear.health.model.WatchMeasurementType
 
-class ConnectivityManager(context: Context) : WatchHealthDataManager {
+class WearConnectivityManager(context: Context) : WatchHealthDataManager {
 
     private val appContext = context.applicationContext
     private var currentValue = "Checking..."

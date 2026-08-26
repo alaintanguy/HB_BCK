@@ -4,6 +4,8 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -27,6 +29,7 @@ class DiagnosticActivity : AppCompatActivity() {
 
     companion object {
         private const val REQUEST_CODE_DIAGNOSTIC_PERMISSIONS = 202
+        private const val RENDER_DEBOUNCE_MS = 500L
         private val TIME_FORMAT = SimpleDateFormat("HH:mm:ss", Locale.US)
     }
 
@@ -36,6 +39,10 @@ class DiagnosticActivity : AppCompatActivity() {
     private lateinit var refreshButton: Button
     private lateinit var bodySensorsButton: Button
     private lateinit var activityRecognitionButton: Button
+    private val mainHandler = Handler(Looper.getMainLooper())
+    private val debouncedRender = Runnable {
+        render(collector.snapshot())
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,15 +73,14 @@ class DiagnosticActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         collector.start {
-            runOnUiThread {
-                render(collector.snapshot())
-            }
+            scheduleRender()
         }
         collector.refresh()
         render(collector.snapshot())
     }
 
     override fun onPause() {
+        mainHandler.removeCallbacks(debouncedRender)
         collector.stop()
         super.onPause()
     }
@@ -106,6 +112,11 @@ class DiagnosticActivity : AppCompatActivity() {
         )
     }
 
+    private fun scheduleRender() {
+        mainHandler.removeCallbacks(debouncedRender)
+        mainHandler.postDelayed(debouncedRender, RENDER_DEBOUNCE_MS)
+    }
+
     private fun render(data: WatchHealthData) {
         lastRefreshView.text = TIME_FORMAT.format(Date(data.collectedAt))
         updatePermissionButtons()
@@ -133,21 +144,43 @@ class DiagnosticActivity : AppCompatActivity() {
         val view = inflater.inflate(R.layout.item_diagnostic_capability, capabilityContainer, false)
         view.findViewById<TextView>(R.id.measurement_name).text = measurement.definition.displayName
         view.findViewById<TextView>(R.id.measurement_availability).text =
-            "Available: ${yesNo(measurement.definition.watchSupports)} | HB access: ${measurement.definition.hbAccess.label}"
+            getString(
+                R.string.measurement_availability_format,
+                yesNo(measurement.definition.watchSupports),
+                measurement.definition.hbAccess.label
+            )
         view.findViewById<TextView>(R.id.measurement_api).text =
-            "API: ${measurement.definition.api} | Access: ${measurement.definition.accessType.label}"
+            getString(
+                R.string.measurement_api_format,
+                measurement.definition.api,
+                measurement.definition.accessType.label
+            )
         view.findViewById<TextView>(R.id.measurement_permission).text =
-            "Permission: ${formatPermission(measurement.permissionState, measurement.definition.permissions)}"
+            getString(
+                R.string.measurement_permission_format,
+                formatPermission(measurement.permissionState, measurement.definition.permissions)
+            )
         view.findViewById<TextView>(R.id.measurement_current_value).text =
-            "Current Value: ${measurement.currentValue}"
+            getString(R.string.measurement_current_value_format, measurement.currentValue)
         view.findViewById<TextView>(R.id.measurement_last_updated).text =
-            "Last Updated: ${measurement.lastUpdatedAt?.let { TIME_FORMAT.format(Date(it)) } ?: getString(R.string.unknown_value)}"
+            getString(
+                R.string.measurement_last_updated_format,
+                measurement.lastUpdatedAt?.let { TIME_FORMAT.format(Date(it)) }
+                    ?: getString(R.string.unknown_value)
+            )
         view.findViewById<TextView>(R.id.measurement_sampling).text =
-            "Sampling: ${measurement.definition.samplingFrequency} | Battery: ${measurement.definition.batteryImpact.label}"
+            getString(
+                R.string.measurement_sampling_format,
+                measurement.definition.samplingFrequency,
+                measurement.definition.batteryImpact.label
+            )
         view.findViewById<TextView>(R.id.measurement_restrictions).text =
-            "Restrictions: ${measurement.definition.restrictions}"
+            getString(
+                R.string.measurement_restrictions_format,
+                measurement.definition.restrictions
+            )
         view.findViewById<TextView>(R.id.measurement_notes).text =
-            "Notes: ${measurement.statusNotes}"
+            getString(R.string.measurement_notes_format, measurement.statusNotes)
         return view
     }
 

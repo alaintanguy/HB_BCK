@@ -3,13 +3,13 @@ package com.healthbridge.wear.health
 import android.content.Context
 import com.healthbridge.wear.health.managers.BatteryStatusManager
 import com.healthbridge.wear.health.managers.CardiovascularHistoryManager
-import com.healthbridge.wear.health.managers.ConnectivityManager
 import com.healthbridge.wear.health.managers.ExerciseSummaryManager
 import com.healthbridge.wear.health.managers.HeartRateManager
 import com.healthbridge.wear.health.managers.MotionSensorManager
 import com.healthbridge.wear.health.managers.SleepManager
 import com.healthbridge.wear.health.managers.SpO2Manager
 import com.healthbridge.wear.health.managers.StepsManager
+import com.healthbridge.wear.health.managers.WearConnectivityManager
 import com.healthbridge.wear.health.model.WatchHealthData
 
 class WatchHealthDataCollector(
@@ -46,7 +46,7 @@ class WatchHealthDataCollector(
             StepsManager(context),
             MotionSensorManager(context),
             BatteryStatusManager(context),
-            ConnectivityManager(context),
+            WearConnectivityManager(context),
             SpO2Manager(),
             CardiovascularHistoryManager(),
             SleepManager(),
