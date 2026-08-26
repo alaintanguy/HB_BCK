@@ -68,7 +68,14 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         // Register for battery updates
         val intentFilter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
         registerReceiver(batteryReceiver, intentFilter)
-    }
+
+// Start Phase 2 telemetry when permission was already granted
+        if (hasHeartRatePermission()) {
+            startForegroundService(Intent(this, WearTelemetryService::class.java))
+        }
+
+
+}
 
     override fun onResume() {
         super.onResume()
@@ -144,7 +151,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 if (heartRateSensor != null) {
                     sensorManager?.registerListener(this, heartRateSensor, SensorManager.SENSOR_DELAY_UI)
                     statusMessage.text = ""
-                }
+                    // Start Phase 2 Watch telemetry after permission is granted
+                    startForegroundService(Intent(this, WearTelemetryService::class.java))                }
             } else {
                 // Permission denied
                 statusMessage.text = getString(R.string.no_permission)

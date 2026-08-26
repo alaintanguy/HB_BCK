@@ -844,4 +844,43 @@ object FirebaseManager {
             }
     }
 
+
+    // =====================================================
+    // WATCH TELEMETRY — PHASE 2
+    // =====================================================
+    fun updateWatchHeartRate(memberId: String, heartRate: Int, timestamp: Long = System.currentTimeMillis()) {
+        if (heartRate <= 0) return
+        memberReference(memberId).child("telemetry").child("watch").updateChildren(
+            mapOf("heart_rate" to heartRate, "heart_rate_timestamp" to timestamp, "timestamp" to timestamp)
+        ).addOnFailureListener { error -> Log.e("HB-WATCH", "Failed to update watch heart rate", error) }
+    }
+
+    fun updateWatchBattery(memberId: String, watchBattery: Int, timestamp: Long = System.currentTimeMillis()) {
+        if (watchBattery < 0) return
+        memberReference(memberId).child("telemetry").child("watch").updateChildren(
+            mapOf("battery" to watchBattery, "battery_timestamp" to timestamp, "timestamp" to timestamp)
+        ).addOnFailureListener { error -> Log.e("HB-WATCH", "Failed to update watch battery", error) }
+    }
+
+    fun listenToMemberWatchData(
+        memberId: String,
+        onWatchData: (heartRate: Int, watchBattery: Int, timestamp: Long) -> Unit
+    ) {
+        memberReference(memberId).child("telemetry").child("watch").addValueEventListener(
+            object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val heartRate = snapshot.child("heart_rate").getValue(Int::class.java) ?: 0
+                    val watchBattery = snapshot.child("battery").getValue(Int::class.java) ?: -1
+                    val timestamp = snapshot.child("timestamp").getValue(Long::class.java) ?: 0L
+                    if (heartRate > 0 || watchBattery >= 0) {
+                        onWatchData(heartRate, watchBattery, timestamp)
+                    }
+                }
+                override fun onCancelled(error: DatabaseError) {
+                    Log.e("HB-WATCH", "WATCH DATA LISTENER FAILED: $memberId", error.toException())
+                }
+            }
+        )
+    }
+
 }

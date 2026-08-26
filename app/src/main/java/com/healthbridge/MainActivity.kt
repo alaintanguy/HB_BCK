@@ -301,6 +301,21 @@ class MainActivity : AppCompatActivity() {
         }
 
         // =====================================================
+        // WATCH TELEMETRY — M1 CAREGIVER (PHASE 2)
+        // =====================================================
+
+        if (MEMBER_ID == "M1") {
+            FirebaseManager.listenToMemberWatchData("M2") { heartRate, watchBattery, timestamp ->
+                runOnUiThread {
+                    android.util.Log.d(
+                        "HB-WATCH",
+                        "M1 received watch data: HR=$heartRate Battery=$watchBattery Timestamp=$timestamp"
+                    )
+                }
+            }
+        }
+
+        // =====================================================
         // MESSAGE MANAGER
         // =====================================================
 
