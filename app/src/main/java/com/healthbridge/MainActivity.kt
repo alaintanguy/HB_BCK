@@ -22,7 +22,7 @@ import java.util.Locale
 class MainActivity : AppCompatActivity() {
 
     companion object {
-        const val MEMBER_ID = "M1" // M1 = Caregiver, M2 = Patient
+        const val MEMBER_ID = "M2" +"" // M1 = Caregiver, M2 = Patient
         private const val REQUEST_CODE_RECORD_AUDIO = 200
     }
 
