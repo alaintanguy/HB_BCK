@@ -9,7 +9,7 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.healthbridge.wear"
+        applicationId = "com.healthbridge"
         minSdk = 24
         targetSdk = 35
         versionCode = 1
@@ -40,4 +40,6 @@ dependencies {
     implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation("com.google.android.gms:play-services-wearable:18.1.0")
+
+    testImplementation("junit:junit:4.13.2")
 }

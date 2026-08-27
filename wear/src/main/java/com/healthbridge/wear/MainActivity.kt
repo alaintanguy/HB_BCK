@@ -12,10 +12,13 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.BatteryManager
 import android.os.Bundle
+import android.util.Log
+import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.healthbridge.wear.health.WearLogTags
 
 class MainActivity : AppCompatActivity(), SensorEventListener {
 
@@ -26,6 +29,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private lateinit var heartRateValue: TextView
     private lateinit var batteryValue: TextView
     private lateinit var statusMessage: TextView
+    private lateinit var diagnosticsButton: Button
 
     private var sensorManager: SensorManager? = null
     private var heartRateSensor: Sensor? = null
@@ -55,6 +59,11 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         heartRateValue = findViewById(R.id.heart_rate_value)
         batteryValue = findViewById(R.id.battery_value)
         statusMessage = findViewById(R.id.status_message)
+        diagnosticsButton = findViewById(R.id.open_diagnostics_button)
+        diagnosticsButton.setOnClickListener {
+            Log.d(WearLogTags.DIAG, "Opening diagnostic screen from main UI")
+            startActivity(Intent(this, DiagnosticActivity::class.java))
+        }
 
         // Initialize sensor manager
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
@@ -103,6 +112,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
         if (heartRateSensor == null) {
             // Heart rate sensor not available
+            Log.w(WearLogTags.API, "TYPE_HEART_RATE sensor not available on this watch")
             statusMessage.text = getString(R.string.hr_unavailable)
             heartRateValue.text = getString(R.string.hr_no_reading)
             return
@@ -110,6 +120,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
         // Check if we have permission to access heart rate
         if (!hasHeartRatePermission()) {
+            Log.d(WearLogTags.API, "Requesting BODY_SENSORS permission for heart rate access")
             requestHeartRatePermission()
         }
     }
@@ -148,13 +159,16 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         if (requestCode == PERMISSION_REQUEST_BODY_SENSORS) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 // Permission granted, register sensor
+                Log.d(WearLogTags.API, "BODY_SENSORS permission granted")
                 if (heartRateSensor != null) {
                     sensorManager?.registerListener(this, heartRateSensor, SensorManager.SENSOR_DELAY_UI)
                     statusMessage.text = ""
                     // Start Phase 2 Watch telemetry after permission is granted
-                    startForegroundService(Intent(this, WearTelemetryService::class.java))                }
+                    startForegroundService(Intent(this, WearTelemetryService::class.java))
+                }
             } else {
                 // Permission denied
+                Log.w(WearLogTags.API, "BODY_SENSORS permission denied")
                 statusMessage.text = getString(R.string.no_permission)
                 heartRateValue.text = getString(R.string.hr_no_reading)
             }
@@ -202,6 +216,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
                 // Clear any status messages when we get valid readings
                 if (currentHeartRate > 0) {
+                    Log.d(WearLogTags.HEALTH, "Heart rate = $currentHeartRate BPM")
                     statusMessage.text = ""
                 }
             }
