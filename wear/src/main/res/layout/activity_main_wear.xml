@@ -8,10 +8,14 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
         android:orientation="vertical"
         android:gravity="center"
-        android:padding="16dp">
+        android:paddingStart="16dp"
+        android:paddingTop="12dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="40dp">
 
         <!-- App Title -->
         <TextView
@@ -95,16 +99,22 @@
             android:gravity="center"
             android:layout_marginTop="24dp" />
 
-        <Button
-            android:id="@+id/open_diagnostics_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:minWidth="0dp"
-            android:text="@string/open_diagnostics"
-            android:textAllCaps="false"
-            android:textSize="12sp" />
-
     </LinearLayout>
+
+    <Button
+        android:id="@+id/open_diagnostics_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="12dp"
+        android:minWidth="0dp"
+        android:minHeight="0dp"
+        android:paddingStart="14dp"
+        android:paddingTop="6dp"
+        android:paddingEnd="14dp"
+        android:paddingBottom="6dp"
+        android:text="@string/open_diagnostics"
+        android:textAllCaps="false"
+        android:textSize="12sp" />
 
 </androidx.wear.widget.BoxInsetLayout>
